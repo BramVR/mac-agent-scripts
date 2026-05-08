@@ -1,6 +1,12 @@
 # Agent Scripts
 
-This folder collects the Sweetistics guardrail helpers so they are easy to reuse in other repos or share during onboarding. Everything here is copied verbatim from `/Users/steipete/Projects/sweetistics` on 2025-11-08 unless otherwise noted.
+This folder collects Bram's shared agent instructions, local skills, and small
+guardrail helpers for reuse across projects.
+
+This repo is a BramVR-maintained fork of the original `steipete/agent-scripts`
+setup. Some skills and docs still preserve upstream provenance or optional
+Peter/OpenClaw-specific workflows; the active shared defaults live in
+`AGENTS.MD`.
 
 Additional skills (copied 2025-12-31) are from @Dimillian’s public `Dimillian/Skills` repository:
 - `skills/swift-concurrency-expert`
@@ -9,9 +15,9 @@ Additional skills (copied 2025-12-31) are from @Dimillian’s public `Dimillian/
 - `skills/swiftui-view-refactor`
 
 ## Syncing With Other Repos
-- Treat this repo as the canonical mirror for the shared guardrail helpers. Whenever you edit `scripts/committer` or `scripts/docs-list.ts` in any repo, copy the change here and then back out to every other repo that carries the same helpers so they stay byte-identical.
-- When someone says “sync agent scripts,” pull the latest changes here, ensure downstream repos have the pointer-style `AGENTS.MD`, copy any helper updates into place, and reconcile differences before moving on.
-- Keep every file dependency-free and portable: the scripts must run in isolation across repos. Do not add `tsconfig` path aliases, shared source folders, or any other Sweetistics-specific imports—inline tiny helpers or duplicate the minimum code needed so the mirror stays self-contained.
+- Treat this repo as Bram's canonical shared agent setup.
+- When someone says "sync agent scripts," pull the latest changes here, ensure downstream repos have the pointer-style `AGENTS.MD`, copy any helper updates into place, and reconcile differences before moving on.
+- Keep shared helper scripts dependency-light and portable. Do not add repo-specific imports to helpers that are meant to be copied into other projects.
 
 ## Pointer-Style AGENTS
 - Shared guardrail text now lives only inside this repo: `AGENTS.MD` (shared rules + tool list).
@@ -20,15 +26,16 @@ Additional skills (copied 2025-12-31) are from @Dimillian’s public `Dimillian/
 - When updating the shared instructions, edit `agent-scripts/AGENTS.MD`; global Codex/Claude files consume it through symlinks.
 
 ## Global Agent Setup
-- Global Codex and Claude instructions should point at this repo:
+- Global Codex/Claude instructions can point at this repo:
   - `~/.codex/AGENTS.md -> ~/Projects/agent-scripts/AGENTS.MD`
   - `~/.claude/CLAUDE.md -> ~/Projects/agent-scripts/AGENTS.MD`
   - `~/.claude/AGENTS.md -> ~/Projects/agent-scripts/AGENTS.MD`
-- Global skill discovery should also point at this repo:
-  - `~/.codex/skills -> ~/Projects/agent-scripts/skills`
-  - `~/.claude/skills -> ~/Projects/agent-scripts/skills`
-- Keep shared skills as real folders in `skills/`. For repo-owned skills, keep the canonical skill in the owning repo and expose it here with a tracked relative symlink, for example `skills/birdclaw -> ../../birdclaw/.agents/skills/birdclaw`.
-- Local crawler skills follow that repo-owned pattern: `birdclaw`, `discrawl`, `slacrawl`, `wacrawl`, `imsg`, and `gog`. `beeper`, `notcrawl`, and `discord-clawd` live here until they have repo homes.
+- Current global Codex skills are installed individually:
+  - `~/.codex/skills/oracle -> ~/Projects/agent-scripts/skills/oracle`
+  - `~/.codex/skills/video-transcript-downloader -> ~/Projects/agent-scripts/skills/video-transcript-downloader`
+  - `~/.codex/skills/gog -> ~/Projects/gogcli/.agents/skills/gog`
+- Keep shared skills as real folders in `skills/`. For repo-owned skills, keep the canonical skill in the owning repo and expose it here with a tracked relative symlink only when that repo exists locally.
+- Some optional crawler/messaging symlinks may be absent on Bram's machine; agents must check before use.
 
 ## Committer Helper (`scripts/committer`)
 - **What it is:** Bash helper that stages exactly the files you list, enforces non-empty commit messages, and creates the commit.
@@ -44,12 +51,10 @@ Additional skills (copied 2025-12-31) are from @Dimillian’s public `Dimillian/
 - **Portability:** The tool has zero repo-specific imports. Copy the script or the binary into other automation projects as needed and keep this copy in sync with downstream forks. It detects Chrome sessions launched via `--remote-debugging-port` **and** `--remote-debugging-pipe`, so list/kill works for both styles.
 
 ## Sync Expectations
-- This repository is the canonical mirror for the guardrail helpers used in mcporter and other Sweetistics projects. Whenever you edit `scripts/committer`, `scripts/docs-list.ts`, or related guardrail files in another repo, copy the changes back here immediately (and vice versa) so the code stays byte-identical.
+- This repository is Bram's canonical mirror for shared guardrail helpers. Whenever you edit `scripts/committer`, `scripts/docs-list.ts`, or related guardrail files in another repo, copy the changes back here when those helpers should stay shared.
 - When someone asks to “sync agent scripts,” update this repo, compare it against the active project, and reconcile differences in both directions before continuing.
 
-## @steipete Agent Instructions (pointer workflow)
-- The only full copies of the guardrails are `agent-scripts/AGENTS.MD` and `~/AGENTS.MD`. Downstream repos should contain the pointer line plus any repo-local additions.
-- During a sync sweep: pull latest `agent-scripts`, ensure each target repo’s `AGENTS.MD` contains the pointer line at the top, append any repo-local notes beneath it, and update the helper scripts as needed.
+## Bram Agent Instructions (pointer workflow)
+- The shared guardrails live in `agent-scripts/AGENTS.MD`. Downstream repos should contain the pointer line plus any repo-local additions.
+- During a sync sweep: pull latest `agent-scripts`, ensure each target repo's `AGENTS.MD` contains the pointer line at the top, append any repo-local notes beneath it, and update helper scripts as needed.
 - If a repo needs custom instructions, clearly separate them from the pointer so future sweeps don’t overwrite local content.
-- For submodules (Peekaboo/*), repeat the pointer check inside each subrepo, push those changes, then bump submodule SHAs in the parent repo.
-- Skip experimental repos (e.g., `poltergeist-pitui`) unless explicitly requested.

@@ -24,21 +24,21 @@ Follow the official CLI get-started steps. Don't guess install commands.
 6. Verify access inside tmux: `op whoami` (must succeed before any secret read).
 7. If multiple accounts: use `--account` or `OP_ACCOUNT`.
 
-## Peter account defaults
+## Bram account defaults
 
-- Peter's default account for personal/work secrets is `my.1password.com` ("Peter Steinberger's Clan").
-- Do not silently use `my.1password.eu` / Titan unless Peter asks for it.
-- Pass `--account my.1password.com` on every `op` command when storing or reading Peter's secrets. Do not rely on ambient account selection.
-- `op account list` is metadata-only, but still must run inside tmux. Use it to confirm account names when routing is unclear.
-- `op signin --account my.1password.com` can return status 0 with no useful output and still not make a later shell signed in. Prefer doing sign-in, create/edit/get, and verification in the same tmux shell.
+- Bram's 1Password account domain is `my.1password.com`.
+- Do not guess a vault or item name. If routing is unclear, ask Bram for the exact vault/item/field.
+- `op account list` is metadata-only, but still must run inside tmux. Use it only when Bram asks to identify accounts.
+- Pass `--account my.1password.com` on every `op` command for Bram's secrets. Do not rely on ambient account selection.
+- `op signin --account <account>` can return status 0 with no useful output and still not make a later shell signed in. Prefer doing sign-in, create/edit/get, and verification in the same tmux shell.
 
 ## Service account tokens
 
 - 1Password service accounts are non-interactive tokens for a specific vault/scope, useful for automation without unlocking the desktop app.
-- The current service-account env var is `MOLTY_OP_SERVICE_ACCOUNT_TOKEN` in `~/.profile`; use it only for known items in the restricted `Molty` vault.
+- No 1Password service account is configured by default.
 - Check `~/.profile` first for service-account tokens before asking the user to unlock the 1Password desktop app.
-- Export it only for the single command that needs it: `OP_SERVICE_ACCOUNT_TOKEN="$MOLTY_OP_SERVICE_ACCOUNT_TOKEN" op item get "<known item>" --vault Molty ...`.
-- Service-account `op` reads require an explicit vault query; omitting `--vault Molty` fails even when the token is valid.
+- If Bram provides one, export it only for the single command that needs it: `OP_SERVICE_ACCOUNT_TOKEN="$ENV_VAR_VALUE" op item get "<known item>" --vault "<known vault>" ...`.
+- Service-account `op` reads should use an explicit vault query.
 - Keep the tmux rule: every `op` command, including service-account reads, still runs inside one named tmux session.
 - Do not enumerate vaults/items with service accounts. If the known item or field is not accessible, stop and ask the user instead of probing.
 - Print presence/shape only, never token or secret values.
@@ -65,12 +65,14 @@ tmux -S "$SOCKET" kill-session -t "$SESSION"
 
 ## Known working secret-write pattern
 
-Use a fresh tmux session, read the secret from the clipboard without printing it, optionally validate an expected token prefix, and write to Peter's account explicitly. The `op` category string is human-readable and case-sensitive in this CLI build; use `"API Credential"`, not `api_credential`.
+Use a fresh tmux session, read the secret from the clipboard without printing it, optionally validate an expected token prefix, and write to the configured 1Password account/vault. The `op` category string is human-readable and case-sensitive in this CLI build; use `"API Credential"`, not `api_credential`.
 
 ```bash
 tmux new-session -d -s op-store-secret 'bash -lc '\''set -euo pipefail
 set +x
-ACCOUNT="my.1password.com"
+ACCOUNT="${OP_ACCOUNT:-my.1password.com}"
+ACCOUNT_ARGS=()
+if [ -n "$ACCOUNT" ]; then ACCOUNT_ARGS=(--account "$ACCOUNT"); fi
 ITEM_TITLE="Service API Tokens"
 FIELD_NAME="api_token"
 EXPECTED_PREFIX=""
@@ -79,8 +81,8 @@ TOKEN="$(pbpaste)"
 if [ -n "$EXPECTED_PREFIX" ]; then
   case "$TOKEN" in "$EXPECTED_PREFIX"*) ;; *) echo "clipboard value does not match expected prefix" >&2; exit 2;; esac
 fi
-op item create --account "$ACCOUNT" --category "API Credential" --title "$ITEM_TITLE" "$FIELD_NAME[password]=$TOKEN" "notesPlain=$NOTES" >/dev/null
-op item get "$ITEM_TITLE" --account "$ACCOUNT" --fields "label=$FIELD_NAME" >/dev/null
+op item create "${ACCOUNT_ARGS[@]}" --category "API Credential" --title "$ITEM_TITLE" "$FIELD_NAME[password]=$TOKEN" "notesPlain=$NOTES" >/dev/null
+op item get "$ITEM_TITLE" "${ACCOUNT_ARGS[@]}" --fields "label=$FIELD_NAME" >/dev/null
 echo "stored and verified secret field without printing it"
 sleep 30
 '\'''
@@ -91,7 +93,9 @@ For a second secret on the same item:
 ```bash
 tmux new-session -d -s op-edit-secret 'bash -lc '\''set -euo pipefail
 set +x
-ACCOUNT="my.1password.com"
+ACCOUNT="${OP_ACCOUNT:-my.1password.com}"
+ACCOUNT_ARGS=()
+if [ -n "$ACCOUNT" ]; then ACCOUNT_ARGS=(--account "$ACCOUNT"); fi
 ITEM_TITLE="Service API Tokens"
 FIELD_NAME="app_token"
 EXPECTED_PREFIX=""
@@ -99,8 +103,8 @@ TOKEN="$(pbpaste)"
 if [ -n "$EXPECTED_PREFIX" ]; then
   case "$TOKEN" in "$EXPECTED_PREFIX"*) ;; *) echo "clipboard value does not match expected prefix" >&2; exit 2;; esac
 fi
-op item edit "$ITEM_TITLE" --account "$ACCOUNT" "$FIELD_NAME[password]=$TOKEN" >/dev/null
-op item get "$ITEM_TITLE" --account "$ACCOUNT" --fields "label=$FIELD_NAME" >/dev/null
+op item edit "$ITEM_TITLE" "${ACCOUNT_ARGS[@]}" "$FIELD_NAME[password]=$TOKEN" >/dev/null
+op item get "$ITEM_TITLE" "${ACCOUNT_ARGS[@]}" --fields "label=$FIELD_NAME" >/dev/null
 echo "stored and verified secret field without printing it"
 sleep 30
 '\'''

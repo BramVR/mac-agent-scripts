@@ -1,11 +1,13 @@
 # Tools Reference
 
-CLI tools available on Peter's machines. Use these for agentic tasks.
+CLI tools available or known to agents. Use only when installed/configured on Bram's machine; check paths before relying on optional tools.
 
 ## bird 🐦
 Twitter/X CLI for posting, replying, reading tweets.
 
 **Location**: `~/Projects/bird/bird`
+
+**Status**: Not configured on Bram's machine.
 
 **Commands**:
 ```bash
@@ -28,6 +30,8 @@ bird check                             # Show credential sources
 Control Sonos speakers over local network (UPnP/SOAP).
 
 **Location**: `~/Projects/sonoscli/bin/sonos`
+
+**Status**: Not configured on Bram's machine.
 
 **Commands**:
 ```bash
@@ -60,6 +64,8 @@ Screenshot, screen inspection, and click automation.
 
 **Location**: `~/Projects/Peekaboo`
 
+**Status**: Not configured on Bram's machine.
+
 **Commands**:
 ```bash
 peekaboo capture                       # Take screenshot
@@ -81,6 +87,8 @@ Twitter/X analytics desktop app (Tauri).
 
 **Location**: `~/Projects/sweetistics`
 
+**Status**: Not configured on Bram's machine.
+
 Use for deeper Twitter data analysis beyond what `bird` provides.
 
 ---
@@ -89,6 +97,8 @@ Use for deeper Twitter data analysis beyond what `bird` provides.
 WhatsApp/Telegram messaging gateway and agent interface.
 
 **Location**: `~/Projects/clawdis`
+
+**Status**: Not configured on Bram's machine.
 
 **Commands**:
 ```bash
@@ -104,12 +114,37 @@ clawdis status                         # Session health
 ## oracle 🧿
 Hand prompts + files to other AIs (GPT-5 Pro, etc.).
 
+**Status**: Configured as a global Codex skill symlink; CLI is fetched via `npx`.
+
 **Usage**: `npx -y @steipete/oracle --help` (run once per session to learn syntax)
+
+---
+
+## gog
+Google services CLI for Gmail, Calendar, Drive, Docs, Sheets, Slides, Forms,
+Apps Script, Contacts, Tasks, People, and Workspace flows.
+
+**Location**: `~/Projects/gogcli/bin/gog`
+
+**Status**: Installed on PATH at `/opt/homebrew/bin/gog`; auth not configured yet.
+
+**Commands**:
+```bash
+gog --version
+gog auth list --check --json --no-input
+gog auth doctor --check --json --no-input
+gog schema --json
+```
+
+For agents, prefer `--json`, `--no-input`, explicit `--account`, and
+`--gmail-no-send` unless sending mail was explicitly requested.
 
 ---
 
 ## gh
 GitHub CLI for PRs, issues, CI, releases.
+
+**Status**: Installed at `/opt/homebrew/bin/gh`.
 
 **Usage**: `gh help`
 
@@ -124,6 +159,8 @@ gh run list / gh run view <id>
 
 ## mcporter
 MCP server launcher for browser automation, web scraping.
+
+**Status**: Available through `npx` if network/package access is available.
 
 **Usage**: `npx mcporter --help`
 

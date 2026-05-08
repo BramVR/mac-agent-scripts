@@ -3,11 +3,11 @@
 Work style: telegraph; noun-phrases ok; drop grammar; min tokens.
 
 ## Agent Protocol
-- Contact: Peter Steinberger (@steipete, steipete@gmail.com).
-- Workspace: `~/Projects`. Missing steipete repo: clone `https://github.com/steipete/<repo>.git`.
-- 3rd-party/OSS (non-steipete): clone under `~/Projects/oss`.
-- `~/Projects/manager`: private ops (domains/DNS, redirects/workers, runbooks).
-- “MacBook” / “Mac Studio” => SSH there; find hosts/IPs via `tailscale status`. If Tailscale/SSH host is down or times out, look on LAN: mDNS (`*.local`), `dns-sd -B _ssh._tcp local`, ARP/router leases, then retry SSH with `-o RequestTTY=no -o RemoteCommand=none`.
+- Contact: Bram (GitHub: `BramVR`, email: `bram.van.rompuy@gmail.com`).
+- Workspace: `~/Projects`. Missing Bram repo: clone `https://github.com/BramVR/<repo>.git`.
+- 3rd-party/OSS (non-BramVR): clone under `~/Projects/oss`.
+- Private ops repo: none configured. If domain/DNS/runbook work appears, ask Bram where to store it before creating a new repo.
+- Remote machines: none configured. Do not assume MacBook/Mac Studio SSH targets.
 - Files: repo or `~/Projects/agent-scripts`.
 - PRs: use `gh pr view/diff` (no URLs).
 - “Make a note” => edit AGENTS.md (shortcut; not a blocker). Ignore `CLAUDE.md`.
@@ -30,28 +30,22 @@ Work style: telegraph; noun-phrases ok; drop grammar; min tokens.
 - Replace asset; keep dimensions; commit; run gate; verify CI.
 
 ## Important Locations
-- Blog repo: `~/Projects/steipete.me`
-- Notes/Runbooks: `~/Projects/manager/docs/` (e.g. `mac-studio.md`, `mac-vm.md`)
-- OpenAI/Codex limits tracking: `~/Documents/steipete/codex limits.md`
+- Blog repo: none configured.
+- Notes/Runbooks: none configured.
+- OpenAI/Codex limits tracking: none configured.
 - Codex debugging: read local source first: `~/Projects/codex`; start `codex-rs/AGENTS.md`, then targeted `rg` in `codex-rs/{core,tui,exec,cli,app-server,app-server-protocol,config}`.
-- Obsidian vault: `~/obsidian`; CLI `notesmd-cli` (`obsidian-cli` shim); default vault `obsidian`; list `notesmd-cli list`, print `notesmd-cli print "Note Title"`, content search `notesmd-cli search-content "term" --format json`.
-- Sparkle keys: `~/Library/CloudStorage/Dropbox/Backup/Sparkle`
+- Obsidian/notes vault: none configured.
+- Sparkle keys: none configured.
 
 ## Data Sources
-- Prefer local archives before web/API for message/history questions; check freshness first; sync when asked; state freshness + gaps.
-- `discrawl`: Discord archive/search; use `$discrawl`.
-- `slacrawl`: Slack local/API mirror; use `$slacrawl`.
-- `whatsapp`: WhatsApp router; use `$whatsapp` first. Primary reads via read-only `wacrawl`; alt accounts/sending via `wacli`.
-- `wacrawl`: WhatsApp Desktop archive; read-only; use `$wacrawl` for explicit wacrawl work.
-- `notcrawl`: Notion SQLite/Markdown mirror; use `$notcrawl`.
-- `imsg`: iMessage/SMS archive + send; send only on request; use `$imsg`.
-- `beeper`: Beeper local cache/FTS; use `$beeper`.
-- `birdclaw`: X/Twitter archive/inbox; use `$birdclaw` and `$xurl` for live X.
-- `gog`: Google services CLI when connectors are insufficient; use `$gog`.
+- Local message/archive tools are not configured by default on Bram's machine.
+- Do not assume `discrawl`, `slacrawl`, `whatsapp`/`wacrawl`/`wacli`, `notcrawl`, `imsg`, `beeper`, `birdclaw`, or `xurl` exist. Check the repo/tool first, and ask Bram before setting up new local archives or sending messages.
+- `gog`: Google services CLI at `/opt/homebrew/bin/gog`, source at `~/Projects/gogcli`; auth not configured until Bram provides a Google Desktop OAuth client JSON and completes browser consent.
+- For message/history questions, prefer explicitly configured local archives over web/API when available; state freshness + gaps.
 - Env/API keys: check `~/.profile`; secrets/tokens via `op` only inside tmux, and only when strictly needed. Never call `op` directly.
 
 ## Docs
-- Start: run docs list (`docs:list` script, or `bin/docs-list` here if present; ignore if not installed); open docs before coding.
+- Start: run docs list (`docs:list` script, or repo-local `bin/docs-list` if present). If the repo has neither and `~/Projects/agent-scripts/bin/docs-list` exists, run that shared helper as a fallback and treat its output as an inventory, not proof the repo has its own helper. Ignore if no helper is installed.
 - Follow links until domain makes sense; honor `Read when` hints.
 - Keep notes short; update docs when behavior/API changes (no ship w/o docs).
 - Add `read_when` hints on cross-cutting docs.
@@ -68,13 +62,13 @@ Work style: telegraph; noun-phrases ok; drop grammar; min tokens.
 - Passwords/secrets: check `~/.profile` first. `op`/1Password CLI is last resort, must always run inside `tmux`, never directly.
 - NEVER run `op` directly in a normal shell. No exceptions. This includes harmless-looking diagnostics: no direct `op --version`, `op account list`, `op whoami`, `op vault list`, `op item list`, `op read`, or `op item get`.
 - `tmux` is necessary for `op`, but not sufficient: do not spam 1Password. No parallel `op`; no repeated probe sessions; no broad vault/item enumeration; no trial-and-error secret discovery.
-- Before any `op` call, state the exact single item/field/secret needed and why. If more than one 1Password command seems necessary, stop and ask Peter before continuing.
+- Before any `op` call, state the exact single item/field/secret needed and why. If more than one 1Password command seems necessary, stop and ask Bram before continuing.
 - Every command whose executable is `op` must run inside one named `tmux` session. The whole pipeline must be inside that `tmux` command: pipes, redirects, command substitution, OTP reads, and publish commands that call `op`.
 - Do not probe `op` outside `tmux` to check whether it works. If `tmux` cannot be used, stop and say so.
 - `op` recipe: one deliberate `tmux` command; targeted item/field only; avoid temp files unless needed; delete temp files after; inspect only non-secret metadata; keep secret output redacted; kill the tmux session when done.
-- Molty service account: `~/.profile` may define `MOLTY_OP_SERVICE_ACCOUNT_TOKEN` for the restricted Molty vault. Use only when the requested secret is known to live there. Service-account `op` reads need an explicit vault, e.g. one tmux-scoped command with `OP_SERVICE_ACCOUNT_TOKEN="$MOLTY_OP_SERVICE_ACCOUNT_TOKEN" op item get "<known item>" --vault Molty ...`; no broad vault/item enumeration, no repeated probes, no repo-stored token, no secret output.
+- 1Password account: `my.1password.com`. Service account: none configured. If automation needs one, ask Bram for the env var name, vault name, and exact item/field; do not invent or enumerate.
 - Remote secret files: stream without printing. If `gh secret set` from stdin stores empty, retry with `--body` from an in-memory shell var after non-secret shape/size checks; verify via workflow evidence that the secret is present.
-- OpenClaw Gateway: Peter runs it via a pm2 watcher. Never start/load it via launchd/LaunchAgent on this machine. Do not run `openclaw gateway start/install` or `launchctl bootstrap` for `ai.openclaw.gateway`; if gateway is down, ask before touching the pm2 watcher.
+- OpenClaw: not configured. Do not assume OpenClaw, Molty, Clownfish, or Clawsweeper workflows.
 
 ## Build / Test
 - Before handoff: run full gate (lint/typecheck/tests/docs).
@@ -101,6 +95,7 @@ Read `~/Projects/agent-scripts/tools.md` for the full tool catalog if it exists.
 ### peekaboo
 - Screen tools: `~/Projects/Peekaboo`. Cmds: `capture`, `see`, `click`, `list`, `tools`, `permissions status`.
 - Needs Screen Recording + Accessibility. Docs: `~/Projects/Peekaboo/docs/commands/`.
+- Not configured on Bram's machine; check path before use.
 
 ### committer
 - Commit helper (PATH). Stages only listed paths; required here. Repo may also ship `./scripts/committer`.
@@ -110,6 +105,7 @@ Read `~/Projects/agent-scripts/tools.md` for the full tool catalog if it exists.
 
 ### imsg
 - iMessage/SMS CLI. Use `$imsg`. Send only when explicitly asked.
+- Not configured on Bram's machine; do not assume it exists.
 
 ### gh
 - GitHub CLI for PRs/CI/releases. Given issue/PR URL (or `/pull/5`): use `gh`, not web search.

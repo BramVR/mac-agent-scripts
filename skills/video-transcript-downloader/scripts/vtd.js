@@ -5,8 +5,6 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { YoutubeTranscript } from "youtube-transcript-plus";
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -242,7 +240,8 @@ async function cmdTranscript({ url, lang, timestamps, keepBrackets, extra }) {
     if (id) {
       try {
         // Preferred path: direct transcript fetch (no yt-dlp / no files).
-        const transcript = await YoutubeTranscript.fetchTranscript(id);
+        const { YoutubeTranscript } = await import("youtube-transcript-plus");
+        const transcript = await YoutubeTranscript.fetchTranscript(id, { lang });
         if (timestamps) {
           for (const entry of transcript) {
             const ts = formatTimestamp(entry.offset / 1000);
