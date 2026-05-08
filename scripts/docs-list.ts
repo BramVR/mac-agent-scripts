@@ -1,14 +1,27 @@
 #!/usr/bin/env tsx
 
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const docsListFile = fileURLToPath(import.meta.url);
 const docsListDir = dirname(docsListFile);
-const DOCS_DIR = join(docsListDir, '..', 'docs');
 
 const EXCLUDED_DIRS = new Set(['archive', 'research']);
+
+function resolveDocsDir(): string {
+  const cwdDocsDir = join(process.cwd(), 'docs');
+  if (existsSync(cwdDocsDir)) {
+    return cwdDocsDir;
+  }
+
+  const scriptRelativeDocsDir = join(docsListDir, '..', 'docs');
+  if (existsSync(scriptRelativeDocsDir)) {
+    return scriptRelativeDocsDir;
+  }
+
+  return cwdDocsDir;
+}
 
 function compactStrings(values: unknown[]): string[] {
   const result: string[] = [];
@@ -124,10 +137,11 @@ function extractMetadata(fullPath: string): {
 
 console.log('Listing all markdown files in docs folder:');
 
-const markdownFiles = walkMarkdownFiles(DOCS_DIR);
+const docsDir = resolveDocsDir();
+const markdownFiles = walkMarkdownFiles(docsDir);
 
 for (const relativePath of markdownFiles) {
-  const fullPath = join(DOCS_DIR, relativePath);
+  const fullPath = join(docsDir, relativePath);
   const { summary, readWhen, error } = extractMetadata(fullPath);
   if (summary) {
     console.log(`${relativePath} - ${summary}`);
