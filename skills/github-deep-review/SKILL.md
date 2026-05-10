@@ -1,6 +1,6 @@
 ---
 name: github-deep-review
-description: Use when the user asks to review a GitHub issue, pull request, bug report, or maintainer thread, especially with wording like "review", "dig in", "best possible fix", "read more code", "is this still an issue", or "should we refactor".
+description: "GitHub deep review: bugs, PRs, best fix, stale-or-real, read-code-first."
 ---
 
 # GitHub Deep Review
@@ -18,6 +18,7 @@ gh pr diff <n> --patch
 ```
 
 For PRs, collect author context by default unless the author is Peter (`steipete` or an obvious Peter-owned account). Use the local workflow in `~/Projects/agent-scripts/skills/github-author-context/SKILL.md` and include a short `Author context:` block near the top of the review when the author is not Peter.
+After merge/rejection/close/review, use that same author-context workflow to append a contributor note only when the interaction creates durable future-review signal.
 
 For repo-local review, also inspect:
 

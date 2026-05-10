@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const docsListFile = fileURLToPath(import.meta.url);
 const docsListDir = dirname(docsListFile);
+const repoDir = docsListDir.includes('$bunfs') ? process.cwd() : join(docsListDir, '..');
 
 const EXCLUDED_DIRS = new Set(['archive', 'research']);
 
@@ -15,7 +16,7 @@ function resolveDocsDir(): string {
     return cwdDocsDir;
   }
 
-  const scriptRelativeDocsDir = join(docsListDir, '..', 'docs');
+  const scriptRelativeDocsDir = join(repoDir, 'docs');
   if (existsSync(scriptRelativeDocsDir)) {
     return scriptRelativeDocsDir;
   }

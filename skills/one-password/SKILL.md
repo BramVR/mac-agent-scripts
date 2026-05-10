@@ -1,7 +1,7 @@
 ---
 name: one-password
-description: Use 1Password CLI (op, one-password, 1Password) for desktop sign-in, account selection, and storing/reading/injecting secrets. Always use tmux for op commands.
-metadata: {"clawdbot":{"emoji":"🔐","requires":{"bins":["op"]},"install":[{"id":"brew","kind":"brew","formula":"1password-cli","bins":["op"],"label":"Install 1Password CLI (brew)"}]}}
+description: "1Password/op: sign-in, account choice, targeted secret read/store/inject; tmux only."
+metadata: {"clawdbot":{"emoji":"🔐","requires":{"bins":["op","tmux"]},"install":[{"id":"brew","kind":"brew","formula":"1password-cli","bins":["op"],"label":"Install 1Password CLI (brew)"}]}}
 ---
 
 # 1Password CLI
@@ -19,17 +19,19 @@ Follow the official CLI get-started steps. Don't guess install commands.
 1. Check OS + shell.
 2. Verify CLI present inside tmux: `op --version`.
 3. Confirm desktop app integration is enabled (per get-started) and the app is unlocked.
-4. REQUIRED: create a fresh tmux session for all `op` commands (no direct `op` calls outside tmux).
-5. Sign in / authorize inside tmux: `op signin` (expect app prompt).
-6. Verify access inside tmux: `op whoami` (must succeed before any secret read).
+4. REQUIRED: create exactly one persistent named tmux session for the whole secret task.
+5. Sign in / authorize once inside that same session: `op signin` (expect one app prompt).
+6. Verify access inside that same session: `op whoami` (must succeed before any secret read).
 7. If multiple accounts: use `--account` or `OP_ACCOUNT`.
+8. If a command fails, reuse the same tmux session with `tmux send-keys`; do not start a second session just to retry.
 
 ## Bram account defaults
 
 - Bram's 1Password account domain is `my.1password.com`.
+- Do not silently use `my.1password.eu` / Titan unless explicitly asked.
 - Do not guess a vault or item name. If routing is unclear, ask Bram for the exact vault/item/field.
-- `op account list` is metadata-only, but still must run inside tmux. Use it only when Bram asks to identify accounts.
 - Pass `--account my.1password.com` on every `op` command for Bram's secrets. Do not rely on ambient account selection.
+- `op account list` is metadata-only, but still must run inside tmux. Use it only when Bram asks to identify accounts.
 - `op signin --account <account>` can return status 0 with no useful output and still not make a later shell signed in. Prefer doing sign-in, create/edit/get, and verification in the same tmux shell.
 
 ## Service account tokens
@@ -43,32 +45,48 @@ Follow the official CLI get-started steps. Don't guess install commands.
 - Do not enumerate vaults/items with service accounts. If the known item or field is not accessible, stop and ask the user instead of probing.
 - Print presence/shape only, never token or secret values.
 
-## REQUIRED tmux session (T-Max)
+## Required Persistent Tmux Session
 
-The shell tool uses a fresh TTY per command. To avoid re-prompts and failures, always run `op` inside a dedicated tmux session with a fresh socket/session name.
+The shell tool uses a fresh TTY per command. To avoid repeated 1Password prompts, run `op` inside one dedicated tmux session and keep using that same session until the whole secret task is done.
 
-Example (see `tmux` skill for socket conventions, do not reuse old session names):
+Example:
 
 ```bash
 SOCKET_DIR="${CLAWDBOT_TMUX_SOCKET_DIR:-${TMPDIR:-/tmp}/clawdbot-tmux-sockets}"
 mkdir -p "$SOCKET_DIR"
 SOCKET="$SOCKET_DIR/clawdbot-op.sock"
-SESSION="op-auth-$(date +%Y%m%d-%H%M%S)"
+SESSION="op-work"
 
-tmux -S "$SOCKET" new -d -s "$SESSION" -n shell
+tmux -S "$SOCKET" has-session -t "$SESSION" 2>/dev/null ||
+  tmux -S "$SOCKET" new -d -s "$SESSION" -n shell
 tmux -S "$SOCKET" send-keys -t "$SESSION":0.0 -- "op signin --account my.1password.com" Enter
 tmux -S "$SOCKET" send-keys -t "$SESSION":0.0 -- "op whoami" Enter
-tmux -S "$SOCKET" send-keys -t "$SESSION":0.0 -- "op vault list" Enter
 tmux -S "$SOCKET" capture-pane -p -J -t "$SESSION":0.0 -S -200
-tmux -S "$SOCKET" kill-session -t "$SESSION"
 ```
+
+Do not create a new tmux session after a quoting, item-name, or command failure. Send a corrected command into the existing session.
+
+## Service-Specific Workflows
+
+- Keep service-specific auth details in the owning skill.
+- For npm registry/package work, use `$npm`; it documents the `npmjs` item, username/password/TOTP flow, and package reservation helper.
+- This skill owns only the generic 1Password rules: tmux-only `op`, targeted reads, one persistent session, no broad enumeration, no secret output.
 
 ## Known working secret-write pattern
 
-Use a fresh tmux session, read the secret from the clipboard without printing it, optionally validate an expected token prefix, and write to the configured 1Password account/vault. The `op` category string is human-readable and case-sensitive in this CLI build; use `"API Credential"`, not `api_credential`.
+Use the persistent tmux session. Write the exact secret task to a temp script, then send that script into `op-work`; do not create a second tmux session for retries.
+Read the secret from the clipboard without printing it, optionally validate an expected token prefix, and write to the configured 1Password account/vault.
 
 ```bash
-tmux new-session -d -s op-store-secret 'bash -lc '\''set -euo pipefail
+SOCKET_DIR="${CLAWDBOT_TMUX_SOCKET_DIR:-${TMPDIR:-/tmp}/clawdbot-tmux-sockets}"
+SOCKET="$SOCKET_DIR/clawdbot-op.sock"
+SESSION="op-work"
+tmux -S "$SOCKET" has-session -t "$SESSION" 2>/dev/null ||
+  tmux -S "$SOCKET" new -d -s "$SESSION" -n shell
+
+cat > /tmp/op-store-secret.sh <<'SCRIPT'
+#!/usr/bin/env bash
+set -euo pipefail
 set +x
 ACCOUNT="${OP_ACCOUNT:-my.1password.com}"
 ACCOUNT_ARGS=()
@@ -84,14 +102,17 @@ fi
 op item create "${ACCOUNT_ARGS[@]}" --category "API Credential" --title "$ITEM_TITLE" "$FIELD_NAME[password]=$TOKEN" "notesPlain=$NOTES" >/dev/null
 op item get "$ITEM_TITLE" "${ACCOUNT_ARGS[@]}" --fields "label=$FIELD_NAME" >/dev/null
 echo "stored and verified secret field without printing it"
-sleep 30
-'\'''
+SCRIPT
+chmod 700 /tmp/op-store-secret.sh
+tmux -S "$SOCKET" send-keys -t "$SESSION" -- "bash /tmp/op-store-secret.sh; rm -f /tmp/op-store-secret.sh" C-m
 ```
 
 For a second secret on the same item:
 
 ```bash
-tmux new-session -d -s op-edit-secret 'bash -lc '\''set -euo pipefail
+cat > /tmp/op-edit-secret.sh <<'SCRIPT'
+#!/usr/bin/env bash
+set -euo pipefail
 set +x
 ACCOUNT="${OP_ACCOUNT:-my.1password.com}"
 ACCOUNT_ARGS=()
@@ -106,22 +127,28 @@ fi
 op item edit "$ITEM_TITLE" "${ACCOUNT_ARGS[@]}" "$FIELD_NAME[password]=$TOKEN" >/dev/null
 op item get "$ITEM_TITLE" "${ACCOUNT_ARGS[@]}" --fields "label=$FIELD_NAME" >/dev/null
 echo "stored and verified secret field without printing it"
-sleep 30
-'\'''
+SCRIPT
+chmod 700 /tmp/op-edit-secret.sh
+tmux -S "$SOCKET" send-keys -t "$SESSION" -- "bash /tmp/op-edit-secret.sh; rm -f /tmp/op-edit-secret.sh" C-m
 ```
+
+The `op` category string is human-readable and case-sensitive in this CLI build; use `"API Credential"`, not `api_credential`.
 
 ## Redacted debugging
 
-Keep the whole pipeline inside tmux. Inspect status and output length, never secret values.
+Keep the whole pipeline inside the same tmux session. Inspect status and output length, never secret values.
 
 ```bash
-tmux new-session -d -s op-debug 'bash -lc '\''set -euo pipefail
+cat > /tmp/op-debug.sh <<'SCRIPT'
+#!/usr/bin/env bash
+set -euo pipefail
 set +x
 SIGNIN_OUTPUT="$(op signin --account my.1password.com 2>&1 || true)"
 echo "signin output bytes: ${#SIGNIN_OUTPUT}"
 op account list 2>&1 | sed -E "s/(xox[baprs]-)[A-Za-z0-9-]+/\\1REDACTED/g; s/(xapp-)[A-Za-z0-9-]+/\\1REDACTED/g"
-sleep 30
-'\'''
+SCRIPT
+chmod 700 /tmp/op-debug.sh
+tmux -S "$SOCKET" send-keys -t "$SESSION" -- "bash /tmp/op-debug.sh; rm -f /tmp/op-debug.sh" C-m
 ```
 
 ## Guardrails

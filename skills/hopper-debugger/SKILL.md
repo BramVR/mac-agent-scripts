@@ -1,6 +1,6 @@
 ---
 name: hopper-debugger
-description: Debug native macOS/iOS binaries with Hopper Disassembler through mcporter MCP. Use for reverse-engineering AppKit, SwiftUI, Objective-C/Swift symbols, status item/menu click paths, dyld-cache framework inspection, or when Hopper, LLDB, and disassembly should guide a macOS bug investigation.
+description: "Hopper native debugging: macOS/iOS binaries, ObjC/Swift symbols, dyld, LLDB."
 ---
 
 # Hopper Debugger

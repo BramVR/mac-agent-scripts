@@ -1,7 +1,6 @@
 ---
 name: openclaw-relay
-description: "Relay prompts or posts through OpenClaw sessions. One skill; two transports: direct local acpx or remote acpx over SSH."
-user-invocable: false
+description: "OpenClaw session relay: prompts/posts via local acpx or remote acpx over SSH."
 ---
 
 # OpenClaw Relay
@@ -20,6 +19,8 @@ One skill. Two transports:
 2. `ssh`
 
 Default to `local` for direct telephone-game work from the current OpenClaw checkout. Use `ssh` when the target agent/session lives on another machine.
+
+For Peter's setup, Molty normally lives on the Mac Studio gateway, reached as `steipete@steipete-macstudio.local`; avoid the `mac-studio` SSH alias for one-shot relay work because that alias auto-attaches tmux.
 
 Script path: `scripts/openclaw_relay.py`
 
@@ -46,7 +47,7 @@ The script avoids baked-in personal paths. Override with env or flags when neede
 - transport: `local`
 - local repo cwd: current working directory
 - local acpx repo: `<cwd>/extensions/acpx`
-- ssh host: `mac-studio`
+- ssh host: `steipete@steipete-macstudio.local`
 - remote repo cwd: `<remote-home>/clawdbot`
 - remote acpx repo: `<remote-home>/Projects/oss/acpx`
 - gateway token file: `<home>/.openclaw/gateway.token`
@@ -100,6 +101,17 @@ python3 scripts/openclaw_relay.py force-send \
   --text "Deploy is done."
 ```
 
+Force-send media when the user explicitly wants a channel post:
+
+```bash
+python3 scripts/openclaw_relay.py force-send \
+  --transport ssh \
+  --host steipete@steipete-macstudio.local \
+  --target maintainers \
+  --text "Demo video." \
+  --media /tmp/demo.mp4
+```
+
 Use the persistent control session:
 
 ```bash
@@ -111,10 +123,10 @@ python3 scripts/openclaw_relay.py show
 Remote host example:
 
 ```bash
-python3 scripts/openclaw_relay.py doctor --transport ssh --host mac-studio
+python3 scripts/openclaw_relay.py doctor --transport ssh --host steipete@steipete-macstudio.local
 python3 scripts/openclaw_relay.py send \
   --transport ssh \
-  --host mac-studio \
+  --host steipete@steipete-macstudio.local \
   --message "Reply with exactly OK."
 ```
 

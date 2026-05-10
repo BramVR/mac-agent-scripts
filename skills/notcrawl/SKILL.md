@@ -1,6 +1,6 @@
 ---
 name: notcrawl
-description: Use for local Notion desktop/API archive sync, Markdown export, page search, and read-only SQL.
+description: "Local Notion archive: desktop/API sync, Markdown export, page search, read-only SQL."
 ---
 
 # notcrawl
@@ -34,10 +34,13 @@ notcrawl sync --source api
 3. Use `export-md` when the user needs Markdown files refreshed.
 4. Report date spans, page/database IDs, counts, and source limits.
 
+Use root or subcommand help for syntax: `notcrawl --help`,
+`notcrawl search --help`, `notcrawl sql --help`.
+
 Common commands:
 
 ```bash
-notcrawl search "query"
+notcrawl search --limit 20 "query"
 notcrawl databases
 notcrawl sql "select count(*) from pages;"
 notcrawl export-md

@@ -1,6 +1,6 @@
 ---
 name: whatsapp
-description: Use for WhatsApp history, search, read/unread checks, archive freshness, alternate accounts, and sending decisions; routes primary-account reads to wacrawl and alt-account/live/send work to wacli.
+description: "WhatsApp router: history/search/read/send decisions; wacrawl read, wacli live."
 ---
 
 # WhatsApp

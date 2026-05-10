@@ -1,6 +1,6 @@
 ---
 name: github-cache-hygiene
-description: Use when GitHub work may hit rate limits, when using gh for issues/PRs/actions, or when a task mentions ghx, gh xcache, gitcrawl, caching, local GitHub mirrors, quota pressure, or many Codex agents.
+description: "GitHub quota/cache hygiene: gh, ghx, xcache, gitcrawl, mirrors, rate limits."
 ---
 
 # GitHub Cache Hygiene

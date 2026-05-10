@@ -18,7 +18,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 SKILL_DIR = SCRIPT_DIR.parent
 
 DEFAULT_TRANSPORT = os.environ.get("OPENCLAW_RELAY_TRANSPORT", "local")
-DEFAULT_HOST = os.environ.get("OPENCLAW_RELAY_HOST", "mac-studio")
+DEFAULT_HOST = os.environ.get("OPENCLAW_RELAY_HOST", "steipete@steipete-macstudio.local")
 DEFAULT_CWD = os.environ.get("OPENCLAW_RELAY_CWD")
 DEFAULT_ACPX_REPO = os.environ.get("OPENCLAW_RELAY_ACPX_REPO")
 DEFAULT_SESSION = os.environ.get("OPENCLAW_RELAY_SESSION", "codex-bridge")
@@ -58,7 +58,15 @@ def run_local(
 
 def run_ssh(host: str, command: str, check: bool = True) -> subprocess.CompletedProcess[str]:
     proc = subprocess.run(
-        ["ssh", host, f"bash -lc {shlex.quote(command)}"],
+        [
+            "ssh",
+            "-o",
+            "RequestTTY=no",
+            "-o",
+            "RemoteCommand=none",
+            host,
+            f"bash -lc {shlex.quote(command)}",
+        ],
         text=True,
         capture_output=True,
         check=False,
@@ -84,12 +92,19 @@ def remote_home(host: str) -> str:
 def normalize_args(args: argparse.Namespace) -> argparse.Namespace:
     if args.transport == "local":
         cwd = args.cwd or DEFAULT_CWD or os.getcwd()
+        if not args.cwd and not DEFAULT_CWD and not (Path(cwd) / "scripts" / "run-node.mjs").exists():
+            for candidate in (Path.home() / "clawdbot", Path.home() / "Projects" / "clawdbot"):
+                if (candidate / "scripts" / "run-node.mjs").exists():
+                    cwd = str(candidate)
+                    break
         gateway_token_file = args.gateway_token_file or DEFAULT_GATEWAY_TOKEN_FILE
-        if not gateway_token_file:
-            gateway_token_file = str(Path.home() / ".openclaw" / "gateway.token")
         args.cwd = str(Path(cwd).expanduser())
-        args.acpx_repo = str(Path(args.acpx_repo or DEFAULT_ACPX_REPO or Path(args.cwd) / "extensions" / "acpx").expanduser())
-        args.gateway_token_file = str(Path(gateway_token_file).expanduser())
+        acpx_repo = args.acpx_repo or DEFAULT_ACPX_REPO
+        if not acpx_repo:
+            oss_acpx = Path.home() / "Projects" / "oss" / "acpx"
+            acpx_repo = str(oss_acpx if oss_acpx.exists() else Path(args.cwd) / "extensions" / "acpx")
+        args.acpx_repo = str(Path(acpx_repo).expanduser())
+        args.gateway_token_file = str(Path(gateway_token_file).expanduser()) if gateway_token_file else None
         return args
 
     home = remote_home(args.host)
@@ -379,11 +394,14 @@ def resolve_target(args: argparse.Namespace, target: str) -> dict[str, Any]:
 
 def build_openclaw_agent_command(args: argparse.Namespace, session_key: str) -> str:
     runner = shlex.quote(f"{args.cwd}/scripts/run-node.mjs")
+    token_file_arg = (
+        f" --token-file {shlex.quote(args.gateway_token_file)}" if args.gateway_token_file else ""
+    )
     return (
         "env OPENCLAW_HIDE_BANNER=1 OPENCLAW_SUPPRESS_NOTES=1 "
         f"node {runner} acp "
         f"--url {shlex.quote(args.gateway_url)} "
-        f"--token-file {shlex.quote(args.gateway_token_file)} "
+        f"{token_file_arg} "
         f"--session {shlex.quote(session_key)}"
     )
 
@@ -642,6 +660,10 @@ def cmd_publish(args: argparse.Namespace) -> None:
 
 
 def cmd_force_send(args: argparse.Namespace) -> None:
+    text = (args.text or "").strip()
+    media = (args.media or "").strip()
+    if not text and not media:
+        raise RelayError("force-send needs --text, --media, or both")
     target = resolve_target(args, args.target)
     delivery = {
         **derive_delivery_from_key(str(target["sessionKey"])),
@@ -659,14 +681,22 @@ def cmd_force_send(args: argparse.Namespace) -> None:
         str(delivery["channel"]),
         "--target",
         str(delivery["to"]),
-        "--message",
-        args.text,
         "--json",
     ]
+    if text:
+        argv.extend(["--message", text])
+    if media:
+        argv.extend(["--media", media])
     if delivery.get("accountId"):
         argv.extend(["--account", str(delivery["accountId"])])
     if delivery.get("threadId"):
         argv.extend(["--thread-id", str(delivery["threadId"])])
+    if args.force_document:
+        argv.append("--force-document")
+    if args.gif_playback:
+        argv.append("--gif-playback")
+    if args.silent:
+        argv.append("--silent")
     if args.dry_run:
         print_json({"target": target, "delivery": delivery, "argv": argv})
         return
@@ -828,11 +858,15 @@ def build_parser() -> argparse.ArgumentParser:
     force_send = subparsers.add_parser("force-send")
     add_shared_flags(force_send)
     force_send.add_argument("--target", required=True)
-    force_send.add_argument("--text", required=True)
+    force_send.add_argument("--text")
+    force_send.add_argument("--media", help="Attach media path or URL when the channel supports it")
     force_send.add_argument("--channel")
     force_send.add_argument("--to")
     force_send.add_argument("--account-id")
     force_send.add_argument("--thread-id")
+    force_send.add_argument("--force-document", action="store_true")
+    force_send.add_argument("--gif-playback", action="store_true")
+    force_send.add_argument("--silent", action="store_true")
     force_send.add_argument("--dry-run", action="store_true")
     force_send.set_defaults(func=cmd_force_send)
 

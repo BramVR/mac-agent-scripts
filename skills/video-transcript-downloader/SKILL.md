@@ -1,6 +1,6 @@
 ---
 name: video-transcript-downloader
-description: Download videos, audio, subtitles, and clean paragraph-style transcripts from YouTube and any other yt-dlp supported site. Use when asked to “download this video”, “save this clip”, “rip audio”, “get subtitles”, “get transcript”, or to troubleshoot yt-dlp/ffmpeg and formats/playlists.
+description: "yt-dlp downloads: video, audio, subtitles, transcripts, clips, formats, playlists."
 ---
 
 # Video Transcript Downloader
@@ -18,6 +18,15 @@ Transcript behavior:
 ```bash
 cd ~/Projects/agent-scripts/skills/video-transcript-downloader && npm ci
 ```
+
+CLI syntax:
+
+```bash
+./scripts/vtd.js --help
+./scripts/vtd.js transcript --help
+```
+
+Subcommands support focused help without requiring `--url`.
 
 ## Transcript (default: clean paragraph)
 

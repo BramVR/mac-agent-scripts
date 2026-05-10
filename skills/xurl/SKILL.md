@@ -1,6 +1,6 @@
 ---
 name: xurl
-description: Use the official xurl CLI for the X API. Covers install, safe auth setup, app selection, common shortcuts, and raw endpoint access.
+description: "xurl X API CLI: install, auth, app choice, shortcuts, raw endpoints."
 metadata:
   {
     "openclaw":
