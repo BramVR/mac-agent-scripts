@@ -18,6 +18,7 @@ Use when the user says `hermes-win`, `Hermes`, Windows laptop, VirtualBox host, 
 - VMs: `HA` running, `HA NEW` unused, `Hermes` running.
 - Hermes VM: Ubuntu 24.04, SSH/Tailscale alias `hermes-vm`, user `bram`.
 - Hermes VM tooling: Docker, Tailscale, `tmux`, Hermes Agent installed; Hermes setup/model config not run.
+- Windows scheduled task: `Start Hermes VM` starts `Hermes` headless at user logon.
 
 Source of truth:
 
@@ -78,6 +79,7 @@ Check:
 
 ```bash
 ssh hermes-win 'powershell -NoProfile -Command "Get-Service Tailscale,sshd | Select Name,Status,StartType"'
+ssh hermes-win 'powershell -NoProfile -Command "Get-ScheduledTask -TaskName \"Start Hermes VM\""'
 ```
 
 ## Safety
