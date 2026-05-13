@@ -62,13 +62,13 @@ sonos open --name "Room" spotify:track:<id>
 ## peekaboo 👀
 Screenshot, screen inspection, and click automation.
 
-**Location**: `~/Projects/Peekaboo`
+**Location**: `/opt/homebrew/bin/peekaboo` (Homebrew: `steipete/tap/peekaboo`)
 
-**Status**: Not configured on Bram's machine.
+**Status**: Configured on Bram's machine. Version 3.1.2; Screen Recording + Accessibility granted.
 
 **Commands**:
 ```bash
-peekaboo capture                       # Take screenshot
+peekaboo image                         # Take screenshot
 peekaboo see                           # Describe what's on screen (OCR)
 peekaboo click                         # Click at coordinates
 peekaboo list                          # List windows/apps
@@ -78,7 +78,7 @@ peekaboo permissions status            # Check TCC permissions
 
 **Requirements**: Screen Recording + Accessibility permissions.
 
-**Docs**: `~/Projects/Peekaboo/docs/commands/`
+**Docs**: `https://github.com/openclaw/Peekaboo/tree/main/docs/commands`
 
 ---
 
