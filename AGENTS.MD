@@ -7,7 +7,7 @@ Codex CLI output: avoid Markdown tables by default; they render poorly there. Us
 - Workspace: `~/Projects`. Missing Bram repo: clone `https://github.com/BramVR/<repo>.git`.
 - 3rd-party/OSS (non-BramVR): clone under `~/Projects/oss`.
 - Private ops repo: none configured. If domain/DNS/runbook work appears, ask Bram where to store it before creating a new repo.
-- Remote machines: none configured. Do not assume MacBook/Mac Studio SSH targets.
+- Remote host: `hermes-win`; see `skills/hermes-win/SKILL.md`.
 - Files: repo or `~/Projects/agent-scripts`.
 - "Make a note" here => terse `AGENTS.MD` edit. Ignore `CLAUDE.md`.
 - `ship` => changelog, commit in groups, push, pull.
