@@ -77,7 +77,7 @@ Codex CLI output: avoid Markdown tables by default; they render poorly there. Us
 - Remote secret files: stream without printing. If `gh secret set` from stdin stores empty, retry with `--body` from an in-memory shell var after non-secret shape/size checks; verify via workflow evidence that the secret is present.
 - Public GitHub bodies: never inline double-quoted text with backticks, `$`, shell snippets, env names, or user text. Use temp file + `cat <<'EOF'` + inspect + `--body-file`.
 - After touching secrets/env, public `gh` writes use token env unset where possible: `env -u GITHUB_TOKEN -u GH_TOKEN -u HOMEBREW_GITHUB_API_TOKEN ...`.
-- OpenClaw: not configured. Do not assume OpenClaw, Molty, Clownfish, or Clawsweeper workflows.
+- OpenClaw: not configured. Do not assume OpenClaw, Molty, Clownfish, Clawsweeper, or ClickClack workflows.
 
 ## Data Sources
 
