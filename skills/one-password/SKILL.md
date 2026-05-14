@@ -40,7 +40,7 @@ Follow the official CLI get-started steps. Don't guess install commands.
 - No 1Password service account is configured by default.
 - Check `~/.profile` first for service-account tokens before asking the user to unlock the 1Password desktop app.
 - If Bram provides one, export it only for the single command that needs it: `OP_SERVICE_ACCOUNT_TOKEN="$ENV_VAR_VALUE" op item get "<known item>" --vault "<known vault>" ...`.
-- Service-account `op` reads should use an explicit vault query.
+- Service-account `op` reads require an explicit vault query.
 - Keep the tmux rule: every `op` command, including service-account reads, still runs inside one named tmux session.
 - Do not enumerate vaults/items with service accounts. If the known item or field is not accessible, stop and ask the user instead of probing.
 - Print presence/shape only, never token or secret values.

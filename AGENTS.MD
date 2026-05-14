@@ -13,8 +13,12 @@ Codex CLI output: avoid Markdown tables by default; they render poorly there. Us
 - `ship` => changelog, commit in groups, push, pull.
 - Release closeout: after verified release, bump changelog to next patch `Unreleased`, commit.
 - Release verify: confirm release docs/notes contain changelog; if missing/stale, fix before closeout.
+- npm release verify: `npm view <pkg>@<version>` shows version, dist-tag, tarball, integrity, publish time; GitHub tag + Release exist; Release body links npm version page, registry tarball, integrity, CI/proof.
+- Changelogs: match file style; prefer one bullet per entry on one line. Do not hard-wrap changelog bullets just because prose is long.
 - Skills are canonical for tool workflows. Keep this file to hard rules only.
 - Editing here/skills: token-efficient, relaxed grammar, terse descriptions.
+- Skill descriptions: short generic trigger phrase, not summary; no personal names, long paths, or workflow narration unless needed for routing.
+- Skill frontmatter: quote `description`; after SKILL.md edits, YAML-parse frontmatter before commit.
 - Read `~/Projects/agent-scripts/tools.md` when the tool catalog matters.
 
 ## Routing
@@ -31,6 +35,7 @@ Codex CLI output: avoid Markdown tables by default; they render poorly there. Us
 - Bugs: add regression test when it fits.
 - Use repo package manager/runtime; no swaps without approval.
 - Docs: read repo docs before coding; update docs/changelog for user-visible behavior changes.
+- Inline code comments: brief notes for tricky, bug-prone, or previously buggy logic.
 - New deps: quick health check for recent releases/commits/adoption.
 - Start docs work: run docs list (`docs:list`, repo-local `bin/docs-list`, or shared `~/Projects/agent-scripts/bin/docs-list` as inventory only).
 - Follow docs links until domain makes sense; honor `Read when` hints.
@@ -38,17 +43,23 @@ Codex CLI output: avoid Markdown tables by default; they render poorly there. Us
 
 ## PR / CI
 
+- GitHub broad reads: prefer shimmed `gh` / `gitcrawl gh` first. Raw `gh api search/* -f ...` needs `--method GET`; gitcrawl shim sanitizes this.
 - PR refs: use `gh pr view/diff`, not web search.
 - PRs: prefer rewriting/fixing the PR, then merging it, over closing and committing equivalent files directly.
 - Landing own draft PR after explicit land request: ignore draft status; mark ready if needed and continue.
 - `fix ci`: consent to pull, commit, push; fix/rerun/watch until CI green.
 - CI: `gh run list/view`; rerun/fix until green when asked.
+- `rewrite commits + land`: clean stack, agreed focused proof only, force-push, merge. No Codex review, PR-body proof polish, or CI babysitting unless asked.
 - Replies: cite fix + file/line; resolve threads only after fix lands.
+- Issue fixed on `main` with proof: comment proof + commit/PR, then close.
 - User-facing fixes/landed PRs: changelog unless pure test/internal.
+- Contributor PR authors should not edit changelog; maintainer/AI adds entry at merge.
+- After landing: final includes 2-5 sentence recap of what landed.
+- After landing: checkout `main`, pull `--ff-only`, verify `git status -sb`, then final.
 - When merging contributor PRs: thank contributor in `CHANGELOG.md`.
 - Unpushable contributor PRs (`maintainerCanModify=false`/no head write): if fixups needed, recreate locally from PR head/diff, make one maintainer commit, push it, then close PR with comment.
 - Preserve contributor credit: commit body includes `Co-authored-by: Name <email>` from PR commit author; changelog still thanks `@login` when user-facing.
-- Prefer cherry-pick PR commit(s) when clean; otherwise apply PR diff/checkout to temp branch. Keep PR ref in commit/comment.
+- PR fixups from repo cwd: use that checkout. No worktrees unless asked; if awkward, ask.
 - Close comment: link landed commit, explain PR branch could not be updated, thank author, suggest enabling "Allow edits by maintainers" for future PRs.
 
 ## Runtime Safety
@@ -62,7 +73,10 @@ Codex CLI output: avoid Markdown tables by default; they render poorly there. Us
 - Do not probe `op` outside `tmux` to check whether it works. If `tmux` cannot be used, stop and say so.
 - `op` recipe: one deliberate `tmux` command; targeted item/field only; avoid temp files unless needed; delete temp files after; inspect only non-secret metadata; keep secret output redacted; kill the tmux session when done.
 - 1Password account: `my.1password.com`. Service account: none configured. If automation needs one, ask Bram for the env var name, vault name, and exact item/field; do not invent or enumerate.
+- Secrets: never run `env`, `set`, `export -p`, or broad secret regex dumps in a normal shell. Query exact names only; redact values.
 - Remote secret files: stream without printing. If `gh secret set` from stdin stores empty, retry with `--body` from an in-memory shell var after non-secret shape/size checks; verify via workflow evidence that the secret is present.
+- Public GitHub bodies: never inline double-quoted text with backticks, `$`, shell snippets, env names, or user text. Use temp file + `cat <<'EOF'` + inspect + `--body-file`.
+- After touching secrets/env, public `gh` writes use token env unset where possible: `env -u GITHUB_TOKEN -u GH_TOKEN -u HOMEBREW_GITHUB_API_TOKEN ...`.
 - OpenClaw: not configured. Do not assume OpenClaw, Molty, Clownfish, or Clawsweeper workflows.
 
 ## Data Sources
@@ -80,6 +94,11 @@ Codex CLI output: avoid Markdown tables by default; they render poorly there. Us
 
 ## Git
 
+- If cwd is in a git repo: work there. Do not jump to sibling checkout unless asked.
+- No `git worktree` from CLI sessions unless user asks. If dirty/wrong branch/awkward: ask.
+- Branch switch/checkout ok when task needs it and repo rules allow.
+- `~/Projects` has many intentional same-repo checkouts. Treat as user-managed, not scratch.
+- If cwd is not a git repo: freeform; pick sensible folder, say path before edits. Worktrees ok if useful.
 - Safe by default: `git status/diff/log`.
 - Push only when user asks.
 - End in visible checkout/branch user expects.

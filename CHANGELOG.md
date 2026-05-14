@@ -4,6 +4,38 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-05-14 — Codex Review Finding Detection
+- Updated `codex-review` to capture review output, report elapsed time, fail on reported P0-P3 findings, and treat empty review output as non-clean.
+
+## 2026-05-14 — Codex Review Full Access
+- Added `codex-review --full-access` for nested review runs that need localhost bind/listen tests without sandbox noise.
+
+## 2026-05-14 — GitHub Search Shim Guidance
+- Added AGENTS guidance to prefer shimmed `gh` / `gitcrawl gh` for broad reads and avoid raw Search API POST mistakes.
+
+## 2026-05-14 — Codex Review Base Caveat
+- Documented that `codex review --base` must not include an inline prompt; use a separate follow-up pass for custom instructions.
+- Clarified that committed or PR branch review must use branch/base mode, not `--uncommitted` / local mode.
+
+## 2026-05-14 — Codex Review Loop Guidance
+- Clarified that `codex-review` should iterate until no accepted findings remain and document intentional rejections with useful inline comments when warranted.
+
+## 2026-05-14 — README Skills Overview
+- Rewrote the README around agent instructions, skills, helper scripts, and sync expectations; removed stale copied-origin notes.
+
+## 2026-05-14 — Codex Review Skill
+- Added a `codex-review` skill and helper for closeout reviews, with stdout-only default output and subagent filtering guidance for noisy review output.
+
+## 2026-05-13 — Checkout Discipline
+- Added CLI checkout/worktree guardrails: stay in repo cwd by default, never create worktrees unless asked, and treat sibling checkouts under `~/Projects` as user-managed.
+
+## 2026-05-13 — Skill Metadata Guardrails
+- Added generic skill-description guidance and quieter browser recovery notes to reduce noisy auth prompts and token-heavy skill metadata.
+
+## 2026-05-11 — clawmac GUI Access Note
+- Documented the Peekaboo through Jump Desktop workflow for clawmac GUI prompts and Chrome Safe Storage verification.
+- Documented `crabmac` as Peter's typo/alias for `clawmac`.
+
 ## 2025-12-22 — Remove Custom rm Shim
 - Dropped `bin/rm` and `scripts/trash.ts`; rely on the system `trash` command for recoverable deletes.
 
