@@ -93,13 +93,13 @@ Bundled helper:
 If installed from `agent-scripts`, path is:
 
 ```bash
-/Users/steipete/Projects/agent-scripts/skills/codex-review/scripts/codex-review --help
+/Users/bram/Projects/agent-scripts/skills/codex-review/scripts/codex-review --help
 ```
 
 The helper:
 - chooses dirty `--uncommitted` first
 - otherwise uses current PR base if `gh pr view` works
-- otherwise uses `origin/main` for non-main branches
+- otherwise uses `origin/main` for non-main branches or a local `main` that is ahead of `origin/main`
 - should be left in `--mode auto` or forced to `--mode branch` for committed/PR work; do not force `--mode local` after committing
 - writes only to stdout unless `--output` or `CODEX_REVIEW_OUTPUT` is set
 - supports `--dry-run` and `--parallel-tests`

@@ -86,6 +86,7 @@ dirty=false
 if [[ -n "$(git status --porcelain)" ]]; then
   dirty=true
 fi
+branch_has_commits=false
 
 pr_url=
 if [[ -z "$base_ref" && "$mode" != local ]] && command -v gh >/dev/null 2>&1; then
@@ -102,10 +103,16 @@ if [[ -z "$base_ref" ]]; then
   base_ref=origin/main
 fi
 
+if [[ -n "$current_branch" ]] && git rev-parse --verify "$base_ref" >/dev/null 2>&1; then
+  if [[ -n "$(git log --oneline "$base_ref"..HEAD 2>/dev/null)" ]]; then
+    branch_has_commits=true
+  fi
+fi
+
 review_kind=
 if [[ "$mode" == local || ( "$mode" == auto && "$dirty" == true ) ]]; then
   review_kind=local
-elif [[ "$mode" == branch || ( "$mode" == auto && -n "$current_branch" && "$current_branch" != "main" ) ]]; then
+elif [[ "$mode" == branch || ( "$mode" == auto && -n "$current_branch" && ( "$current_branch" != "main" || "$branch_has_commits" == true ) ) ]]; then
   review_kind=branch
 else
   echo "no review target: clean main checkout and no forced mode" >&2
@@ -113,9 +120,17 @@ else
 fi
 
 if [[ "$review_kind" == local ]]; then
-  review_cmd=("$codex_bin" "${codex_args[@]}" review --uncommitted)
+  review_cmd=("$codex_bin")
+  if [[ "${#codex_args[@]}" -gt 0 ]]; then
+    review_cmd+=("${codex_args[@]}")
+  fi
+  review_cmd+=(review --uncommitted)
 else
-  review_cmd=("$codex_bin" "${codex_args[@]}" review --base "$base_ref")
+  review_cmd=("$codex_bin")
+  if [[ "${#codex_args[@]}" -gt 0 ]]; then
+    review_cmd+=("${codex_args[@]}")
+  fi
+  review_cmd+=(review --base "$base_ref")
 fi
 
 printf 'codex-review target: %s\n' "$review_kind"
