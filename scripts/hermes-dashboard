@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+HOST="${HERMES_VM_HOST:-hermes-vm}"
+PORT="${HERMES_DASHBOARD_PORT:-9119}"
+SESSION="${HERMES_DASHBOARD_TUNNEL_SESSION:-hermes-dashboard-tunnel}"
+
+if ! command -v tmux >/dev/null 2>&1; then
+  echo "tmux not found" >&2
+  exit 1
+fi
+
+if ! command -v ssh >/dev/null 2>&1; then
+  echo "ssh not found" >&2
+  exit 1
+fi
+
+if ! ssh -o BatchMode=yes -o ConnectTimeout=8 "$HOST" \
+  "tmux has-session -t hermes-dashboard 2>/dev/null || tmux new-session -d -s hermes-dashboard 'hash -r; hermes dashboard --host 127.0.0.1 --port $PORT --no-open --tui'" >/dev/null; then
+  echo "failed to start/check Hermes dashboard on $HOST" >&2
+  exit 1
+fi
+
+if ! lsof -nP -iTCP:"$PORT" -sTCP:LISTEN 2>/dev/null | grep -q "127.0.0.1:$PORT"; then
+  tmux has-session -t "$SESSION" 2>/dev/null && tmux kill-session -t "$SESSION"
+  tmux new-session -d -s "$SESSION" \
+    "ssh -N -L 127.0.0.1:$PORT:127.0.0.1:$PORT $HOST"
+  sleep 1
+fi
+
+if ! curl -fsS "http://127.0.0.1:$PORT/api/status" >/dev/null; then
+  echo "dashboard tunnel is not responding on http://localhost:$PORT" >&2
+  echo "debug: tmux attach -t $SESSION" >&2
+  exit 1
+fi
+
+open "http://localhost:$PORT"
+echo "Hermes dashboard: http://localhost:$PORT"
