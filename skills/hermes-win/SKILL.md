@@ -18,7 +18,7 @@ Use when the user says `hermes-win`, `Hermes`, Windows laptop, VirtualBox host, 
 - VMs: `HA` running, `HA NEW` unused, `Hermes` running.
 - Hermes VM: Ubuntu 24.04, SSH/Tailscale alias `hermes-vm`, user `bram`.
 - Hermes VM tooling: Docker, Tailscale, `tmux`, Node 22 via `n`, Hermes Agent installed.
-- Hermes Agent: OpenAI Codex OAuth configured, default model `gpt-5.4`, Discord gateway configured, dashboard on VM localhost `127.0.0.1:9119`.
+- Hermes Agent: OpenAI Codex OAuth configured, default model `gpt-5.5`, Discord gateway configured, dashboard on VM localhost `127.0.0.1:9119`.
 - Windows scheduled task: `Start Hermes VM` starts `Hermes` headless at user logon.
 
 Source of truth:
@@ -106,15 +106,30 @@ Default access:
 
 - Dashboard: Mac SSH tunnel to VM localhost; never expose dashboard with `--host 0.0.0.0 --insecure`.
 - Discord: private Bram Hermes bot, allowed user only; server channels require `@Bram Hermes`, created threads accept normal replies.
-- Model: `openai-codex` provider, `gpt-5.4`.
+- Model: `openai-codex` provider, `gpt-5.5`.
 - Identity: `~/.hermes/SOUL.md`; memory: `~/.hermes/memories/`.
 
 Common commands:
 
 ```bash
-ssh hermes-vm 'hermes -z "Reply exactly: OK" --provider openai-codex --model gpt-5.4'
+ssh hermes-vm 'hermes -z "Reply exactly: OK" --provider openai-codex --model gpt-5.5'
 ssh hermes-vm 'hermes gateway restart && hermes gateway status --deep --full'
 ssh hermes-vm 'curl -fsS http://127.0.0.1:9119/api/status | head -c 500'
+```
+
+## Backups
+
+- Hermes VM offsite backup scaffold: `~/.local/bin/hermes-offsite-backup`.
+- Interactive Google Drive/rclone setup helper: `~/.local/bin/hermes-rclone-drive-setup`.
+- Config: `~/.config/hermes-offsite-backup.env`.
+- User timer installed but disabled until Drive auth/destination configured: `hermes-offsite-backup.timer`.
+- Backup bundle includes `hermes backup` zip plus restore notes, user systemd unit, shell dotfiles, and `authorized_keys`.
+- Destination should be encrypted: use an `rclone crypt` remote or set `HERMES_BACKUP_ALLOW_PLAINTEXT=1` intentionally.
+
+Check:
+
+```bash
+ssh hermes-vm 'bash -n ~/.local/bin/hermes-offsite-backup && systemctl --user list-unit-files "hermes-offsite-backup.*" --no-pager'
 ```
 
 ## Safety
