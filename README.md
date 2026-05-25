@@ -33,6 +33,7 @@ Global Codex skills are installed individually:
 - `~/.codex/skills/video-transcript-downloader -> ~/Projects/agent-scripts/skills/video-transcript-downloader`
 - `~/.codex/skills/gog -> ~/Projects/gogcli/.agents/skills/gog`
 - `~/.codex/skills/codex-review -> ~/Projects/agent-scripts/skills/codex-review`
+- `~/.codex/skills/to-prd -> ~/Projects/agent-scripts/skills/to-prd`
 
 Keep shared skills as real folders in `skills/`. Repo-owned skills stay canonical in their repo and are exposed here with tracked relative symlinks only when that repo exists locally, for example:
 
