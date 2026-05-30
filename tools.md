@@ -17,7 +17,7 @@ bird read <tweet-id-or-url>            # Fetch tweet content
 bird replies <tweet-id-or-url>         # List replies to a tweet
 bird thread <tweet-id-or-url>          # Show full conversation thread
 bird search "<query>" [-n count]       # Search tweets
-bird mentions [-n count]               # Find tweets mentioning @clawdbot
+bird mentions [-n count]               # Find account mentions
 bird whoami                            # Show logged-in account
 bird check                             # Show credential sources
 ```
@@ -64,7 +64,7 @@ Screenshot, screen inspection, and click automation.
 
 **Location**: `/opt/homebrew/bin/peekaboo` (Homebrew: `steipete/tap/peekaboo`)
 
-**Status**: Configured on Bram's machine. Version 3.1.2; Screen Recording + Accessibility granted.
+**Status**: Installed on Bram's machine. Version 3.1.2; Screen Recording + Accessibility currently denied.
 
 **Commands**:
 ```bash
@@ -78,8 +78,6 @@ peekaboo permissions status            # Check TCC permissions
 
 **Requirements**: Screen Recording + Accessibility permissions.
 
-**Docs**: `https://github.com/openclaw/Peekaboo/tree/main/docs/commands`
-
 ---
 
 ## sweetistics 📊
@@ -90,24 +88,6 @@ Twitter/X analytics desktop app (Tauri).
 **Status**: Not configured on Bram's machine.
 
 Use for deeper Twitter data analysis beyond what `bird` provides.
-
----
-
-## clawdis 📡
-WhatsApp/Telegram messaging gateway and agent interface.
-
-**Location**: `~/Projects/clawdis`
-
-**Status**: Not configured on Bram's machine.
-
-**Commands**:
-```bash
-clawdis login                          # Link WhatsApp via QR
-clawdis send --to <number> --message "text"  # Send message
-clawdis agent --message "text"         # Talk to agent directly
-clawdis gateway                        # Run WebSocket gateway
-clawdis status                         # Session health
-```
 
 ---
 
@@ -126,7 +106,7 @@ Apps Script, Contacts, Tasks, People, and Workspace flows.
 
 **Location**: `~/Projects/gogcli/bin/gog`
 
-**Status**: Installed on PATH at `/opt/homebrew/bin/gog`; auth not configured yet.
+**Status**: Installed on PATH at `/opt/homebrew/bin/gog`; OAuth token currently expired (`invalid_grant`), reauth needed.
 
 **Commands**:
 ```bash
@@ -138,6 +118,26 @@ gog schema --json
 
 For agents, prefer `--json`, `--no-input`, explicit `--account`, and
 `--gmail-no-send` unless sending mail was explicitly requested.
+
+---
+
+## wacli
+WhatsApp linked-device CLI for live sync, search, sending, and chat/group state.
+
+**Location**: `~/.local/bin/wacli` -> `~/Projects/oss/wacli/dist/wacli`
+
+**Status**: Installed and built from source. Paired as account `me`; full history backfill may be running in tmux `wacli-full-sync`.
+
+**Commands**:
+```bash
+wacli version --json
+wacli doctor --json
+wacli accounts list --json
+wacli accounts add me
+wacli --account me auth status --read-only --json
+```
+
+Use `--read-only` for inspection. Do not send or mutate chat state unless explicitly asked.
 
 ---
 
@@ -160,8 +160,8 @@ gh run list / gh run view <id>
 ## mcporter
 MCP server launcher for browser automation, web scraping.
 
-**Status**: Available through `npx` if network/package access is available.
+**Status**: Available through `npx`. `chrome-devtools` MCP is registered in `~/.codex/config.toml`; page access still requires Chrome remote debugging to be enabled/accepted.
 
-**Usage**: `npx mcporter --help`
+**Usage**: `npx -y mcporter --help`
 
-Common servers: `iterm`, `firecrawl`, `XcodeBuildMCP`
+Common servers: `chrome-devtools`, `iterm`, `firecrawl`, `XcodeBuildMCP`

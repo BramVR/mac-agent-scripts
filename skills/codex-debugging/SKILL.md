@@ -13,7 +13,7 @@ Prefer local source before web/docs:
 
 ```bash
 cd ~/Projects/codex
-sed -n '1,220p' codex-rs/AGENTS.md
+sed -n '1,220p' AGENTS.md
 ```
 
 Then search targeted areas:

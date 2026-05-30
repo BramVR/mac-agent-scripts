@@ -16,8 +16,8 @@ This is a practical, minimal checklist to get a new macOS (SwiftPM) menubar app 
 - Menubar entry point (MenuBarExtra) plus a thin Sparkle wrapper that enables updates only for signed/bundled builds.
 
 ## 2) Bundle identifiers & feeds
-- Pick bundle id: `com.steipete.<appname>` (no uppercase, no spaces).
-- Appcast URL: `https://raw.githubusercontent.com/steipete/<Repo>/main/appcast.xml`
+- Pick bundle id: `com.bramvr.<appname>` (no uppercase, no spaces).
+- Appcast URL: `https://raw.githubusercontent.com/BramVR/<Repo>/main/appcast.xml`
 - Embed in Info.plist (or generated plist in packaging script):
   - `SUFeedURL` = appcast URL
   - `SUPublicEDKey` = Sparkle ed25519 public key (from your key pair)

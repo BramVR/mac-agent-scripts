@@ -25,7 +25,7 @@ session below first, and send every `op` command through that tmux session. Dire
 Use a persistent tmux session so `op` auth survives across commands.
 
 ```bash
-SOCKET_DIR="${CLAWDBOT_TMUX_SOCKET_DIR:-${TMPDIR:-/tmp}/clawdbot-tmux-sockets}"
+SOCKET_DIR="${CODEX_TMUX_SOCKET_DIR:-${TMPDIR:-/tmp}/codex-tmux-sockets}"
 mkdir -p "$SOCKET_DIR"
 SOCKET="$SOCKET_DIR/op-auth.sock"
 SESSION="op-auth-$(date +%Y%m%d-%H%M%S)"

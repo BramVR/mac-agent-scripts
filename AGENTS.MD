@@ -19,6 +19,7 @@ Codex CLI output: avoid Markdown tables by default; they render poorly there. Us
 - Editing here/skills: token-efficient, relaxed grammar, terse descriptions.
 - Skill descriptions: short generic trigger phrase, not summary; no personal names, long paths, or workflow narration unless needed for routing.
 - Skill frontmatter: quote `description`; after SKILL.md edits, YAML-parse frontmatter before commit.
+- Upstream sync: treat `steipete/agent-scripts` as a source to mine, not a branch to merge. Preserve Bram-local skills/helpers (`hermes-win`, `hermes-dashboard`, `codex-review`, `tdd`, `to-prd`, `to-issues`, `grill-with-docs`). Scrub or skip non-Bram personal/product assumptions; do not adopt broken symlinks unless Bram explicitly configures that repo.
 - Read `~/Projects/agent-scripts/tools.md` when the tool catalog matters.
 
 ## Routing
@@ -77,13 +78,12 @@ Codex CLI output: avoid Markdown tables by default; they render poorly there. Us
 - Remote secret files: stream without printing. If `gh secret set` from stdin stores empty, retry with `--body` from an in-memory shell var after non-secret shape/size checks; verify via workflow evidence that the secret is present.
 - Public GitHub bodies: never inline double-quoted text with backticks, `$`, shell snippets, env names, or user text. Use temp file + `cat <<'EOF'` + inspect + `--body-file`.
 - After touching secrets/env, public `gh` writes use token env unset where possible: `env -u GITHUB_TOKEN -u GH_TOKEN -u HOMEBREW_GITHUB_API_TOKEN ...`.
-- OpenClaw: not configured. Do not assume OpenClaw, Molty, Clownfish, Clawsweeper, or ClickClack workflows.
 
 ## Data Sources
 
-- Local message/archive tools are not configured by default on Bram's machine.
-- Do not assume `discrawl`, `slacrawl`, `whatsapp`/`wacrawl`/`wacli`, `notcrawl`, `imsg`, `beeper`, `birdclaw`, or `xurl` exist. Check the repo/tool first, and ask Bram before setting up new local archives or sending messages.
-- `gog`: Google services CLI at `/opt/homebrew/bin/gog`, source at `~/Projects/gogcli`; auth not configured until Bram provides a Google Desktop OAuth client JSON and completes browser consent.
+- `wacrawl` is configured for WhatsApp Desktop archive reads; check freshness before current questions. `wacli` is installed and paired as account `me` for linked-device WhatsApp live work; use read-only mode unless Bram explicitly asks to send or mutate.
+- Do not assume `discrawl`, `slacrawl`, `notcrawl`, `imsg`, `beeper`, or `xurl` exist. Check the repo/tool first, and ask Bram before setting up new local archives or sending messages.
+- `gog`: Google services CLI at `/opt/homebrew/bin/gog`, source at `~/Projects/gogcli`; OAuth can expire. Reauth with `gog auth add bram.van.rompuy@gmail.com --force-consent` when Bram can complete browser consent.
 - For message/history questions, prefer explicitly configured local archives over web/API when available; state freshness + gaps.
 
 ## Build / Test
@@ -115,9 +115,9 @@ Codex CLI output: avoid Markdown tables by default; they render poorly there. Us
 ## Tools
 
 - Full catalog: `~/Projects/agent-scripts/tools.md` if present.
-- `peekaboo`: screen tools at `~/Projects/Peekaboo`; check path/permissions first, not configured by default.
+- `peekaboo`: installed at `/opt/homebrew/bin/peekaboo`; check TCC permissions before use.
 - `committer`: stage only listed paths; required here.
-- `mcporter`: `npx mcporter <server>`; common: `iterm`, `firecrawl`, `XcodeBuildMCP`.
+- `mcporter`: use `npx -y mcporter <server>`; common: `chrome-devtools`, `iterm`, `firecrawl`, `XcodeBuildMCP`.
 - `imsg`: send only when explicitly asked; not configured by default.
 - `gh`: PRs/CI/releases; given issue/PR URL or `/pull/5`, use `gh`.
 - `tmux`: use only for persistence/interaction; quick refs: `tmux new -d -s codex-shell`, `tmux attach -t codex-shell`, `tmux list-sessions`, `tmux kill-session -t codex-shell`.

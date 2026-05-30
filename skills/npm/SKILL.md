@@ -1,7 +1,6 @@
 ---
 name: npm
 description: "npm registry ops: login, whoami, names, publish; 1Password via one tmux."
-metadata: {"clawdbot":{"emoji":"📦","requires":{"bins":["npm","node","tmux","op","jq"]}}}
 ---
 
 # npm
@@ -12,7 +11,8 @@ Use for npm registry/account tasks: `npm whoami`, package availability, package 
 
 - Use `one-password` first for secret rules.
 - Never run `op` directly in the shell tool.
-- Known npm 1Password item: `npmjs` on `my.1password.com`.
+- Bram npm 1Password item is not configured here yet. Ask for exact vault/item/field before auth work.
+- If Bram confirms item `npmjs` on `my.1password.com`, use only that item.
 - The item may contain username/password/TOTP, not a stored npm token. That is fine.
 - Run npm auth work inside one persistent tmux session. Reuse it on failure.
 - Keep npm auth in a temp npmrc; delete it after the command.
@@ -27,7 +27,7 @@ Use for npm registry/account tasks: `npm whoami`, package availability, package 
 Use `scripts/reserve-packages.sh` from inside the same tmux session:
 
 ```bash
-/Users/steipete/Projects/agent-scripts/skills/npm/scripts/reserve-packages.sh package-one package-two
+/Users/bram/Projects/agent-scripts/skills/npm/scripts/reserve-packages.sh package-one package-two
 ```
 
 What it does:

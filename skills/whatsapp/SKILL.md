@@ -17,7 +17,7 @@ If the user names `wacrawl` or `wacli` repo work specifically, read that tool's 
 - Primary WhatsApp reads/search/history: use `wacrawl`.
 - Read/unread counts from WhatsApp Desktop: use `wacrawl`; it has chat-level unread counts, not per-message read state.
 - Freshness-sensitive primary reads: check `wacrawl status`; run `wacrawl sync` when asked or when current data matters.
-- Alt accounts such as `me`, `molty`, or named stores: use `wacli --account NAME`.
+- Alt accounts such as `me` or named stores: use `wacli --account NAME`.
 - Sending, reactions, presence, archive/pin/mute/mark-read, group/channel mutations: use `wacli` only after explicit user intent.
 - Comparing coverage between sources: treat `wacrawl` as Desktop archive truth for primary history, and `wacli` as linked-device/live coverage with protocol limits.
 
@@ -110,5 +110,5 @@ When comparing `wacrawl` and `wacli`, compare both counts and overlap:
 ## Repo Pointers
 
 - `~/Projects/wacrawl`: Desktop archive importer/search/backup.
-- `~/Projects/wacli`: linked-device client/sync/send.
+- `~/Projects/oss/wacli`: linked-device client/sync/send.
 - Global skill copies: `~/Projects/agent-scripts/skills/wacrawl` and `~/Projects/agent-scripts/skills/wacli`.

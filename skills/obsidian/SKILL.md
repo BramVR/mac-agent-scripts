@@ -41,8 +41,8 @@ Prefer official CLI for Obsidian-aware lookups:
 
 ```bash
 cd ~/obsidian
-obsidian search query="OpenClaw" format=json
-obsidian search:context query="OpenClaw" limit=20 format=json
+obsidian search query="ProjectName" format=json
+obsidian search:context query="ProjectName" limit=20 format=json
 obsidian read path="Folder/Note.md"
 obsidian file path="Folder/Note.md"
 obsidian outline path="Folder/Note.md" format=json

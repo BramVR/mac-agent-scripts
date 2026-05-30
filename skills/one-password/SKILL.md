@@ -1,7 +1,6 @@
 ---
 name: one-password
 description: "1Password/op: sign-in, account choice, targeted secret read/store/inject; tmux only."
-metadata: {"clawdbot":{"emoji":"🔐","requires":{"bins":["op","tmux"]},"install":[{"id":"brew","kind":"brew","formula":"1password-cli","bins":["op"],"label":"Install 1Password CLI (brew)"}]}}
 ---
 
 # 1Password CLI
@@ -52,19 +51,20 @@ The shell tool uses a fresh TTY per command. To avoid repeated 1Password prompts
 Example:
 
 ```bash
-SOCKET_DIR="${CLAWDBOT_TMUX_SOCKET_DIR:-${TMPDIR:-/tmp}/clawdbot-tmux-sockets}"
+SOCKET_DIR="${CODEX_TMUX_SOCKET_DIR:-${TMPDIR:-/tmp}/codex-tmux-sockets}"
 mkdir -p "$SOCKET_DIR"
-SOCKET="$SOCKET_DIR/clawdbot-op.sock"
+SOCKET="$SOCKET_DIR/op.sock"
 SESSION="op-work"
 
 tmux -S "$SOCKET" has-session -t "$SESSION" 2>/dev/null ||
   tmux -S "$SOCKET" new -d -s "$SESSION" -n shell
-tmux -S "$SOCKET" send-keys -t "$SESSION":0.0 -- "op signin --account my.1password.com" Enter
-tmux -S "$SOCKET" send-keys -t "$SESSION":0.0 -- "op whoami" Enter
-tmux -S "$SOCKET" capture-pane -p -J -t "$SESSION":0.0 -S -200
+tmux -S "$SOCKET" send-keys -t "$SESSION:" -- "op signin --account my.1password.com" Enter
+tmux -S "$SOCKET" send-keys -t "$SESSION:" -- "op whoami" Enter
+tmux -S "$SOCKET" capture-pane -p -J -t "$SESSION:" -S -200
 ```
 
 Do not create a new tmux session after a quoting, item-name, or command failure. Send a corrected command into the existing session.
+Target the session as `$SESSION:` instead of assuming window `0`; older sessions may have window indexes starting at `1`.
 
 ## Service-Specific Workflows
 
@@ -78,8 +78,8 @@ Use the persistent tmux session. Write the exact secret task to a temp script, t
 Read the secret from the clipboard without printing it, optionally validate an expected token prefix, and write to the configured 1Password account/vault.
 
 ```bash
-SOCKET_DIR="${CLAWDBOT_TMUX_SOCKET_DIR:-${TMPDIR:-/tmp}/clawdbot-tmux-sockets}"
-SOCKET="$SOCKET_DIR/clawdbot-op.sock"
+SOCKET_DIR="${CODEX_TMUX_SOCKET_DIR:-${TMPDIR:-/tmp}/codex-tmux-sockets}"
+SOCKET="$SOCKET_DIR/op.sock"
 SESSION="op-work"
 tmux -S "$SOCKET" has-session -t "$SESSION" 2>/dev/null ||
   tmux -S "$SOCKET" new -d -s "$SESSION" -n shell
@@ -104,7 +104,7 @@ op item get "$ITEM_TITLE" "${ACCOUNT_ARGS[@]}" --fields "label=$FIELD_NAME" >/de
 echo "stored and verified secret field without printing it"
 SCRIPT
 chmod 700 /tmp/op-store-secret.sh
-tmux -S "$SOCKET" send-keys -t "$SESSION" -- "bash /tmp/op-store-secret.sh; rm -f /tmp/op-store-secret.sh" C-m
+tmux -S "$SOCKET" send-keys -t "$SESSION:" -- "bash /tmp/op-store-secret.sh; rm -f /tmp/op-store-secret.sh" C-m
 ```
 
 For a second secret on the same item:
@@ -129,10 +129,36 @@ op item get "$ITEM_TITLE" "${ACCOUNT_ARGS[@]}" --fields "label=$FIELD_NAME" >/de
 echo "stored and verified secret field without printing it"
 SCRIPT
 chmod 700 /tmp/op-edit-secret.sh
-tmux -S "$SOCKET" send-keys -t "$SESSION" -- "bash /tmp/op-edit-secret.sh; rm -f /tmp/op-edit-secret.sh" C-m
+tmux -S "$SOCKET" send-keys -t "$SESSION:" -- "bash /tmp/op-edit-secret.sh; rm -f /tmp/op-edit-secret.sh" C-m
 ```
 
 The `op` category string is human-readable and case-sensitive in this CLI build; use `"API Credential"`, not `api_credential`.
+
+## Exact field reads
+
+For a known item, verify the field shape before using it live: length, expected prefix, newline count, never value. `op --field NAME` and `--fields label=NAME` can return the wrong concealed field when an item has duplicate or legacy credential fields. If shape is wrong, read the known item as JSON and extract the exact label.
+
+```bash
+cat > /tmp/op-read-field.sh <<'SCRIPT'
+#!/usr/bin/env bash
+set -euo pipefail
+set +x
+ACCOUNT="my.1password.com"
+ITEM_TITLE="Known API Credential Item"
+FIELD_LABEL="api_token"
+value="$(
+  op item get "$ITEM_TITLE" --account "$ACCOUNT" --format json |
+    FIELD_LABEL="$FIELD_LABEL" node -e 'let s=""; process.stdin.on("data",d=>s+=d); process.stdin.on("end",()=>{const item=JSON.parse(s); const f=(item.fields||[]).find(x=>x.label===process.env.FIELD_LABEL); if(!f?.value) process.exit(2); process.stdout.write(f.value);})'
+)"
+echo "field_len:${#value}"
+case "$value" in sk-*) echo "field_prefix:sk" ;; *) echo "field_prefix:other" ;; esac
+echo "field_has_newline:$(printf %s "$value" | wc -l | tr -d ' ')"
+SCRIPT
+chmod 700 /tmp/op-read-field.sh
+tmux -S "$SOCKET" send-keys -t "$SESSION:" -- "bash /tmp/op-read-field.sh; rm -f /tmp/op-read-field.sh" C-m
+```
+
+Keep JSON extraction scoped to the known item and account. Do not enumerate vaults/items to discover candidates.
 
 ## Redacted debugging
 
@@ -148,7 +174,7 @@ echo "signin output bytes: ${#SIGNIN_OUTPUT}"
 op account list 2>&1 | sed -E "s/(xox[baprs]-)[A-Za-z0-9-]+/\\1REDACTED/g; s/(xapp-)[A-Za-z0-9-]+/\\1REDACTED/g"
 SCRIPT
 chmod 700 /tmp/op-debug.sh
-tmux -S "$SOCKET" send-keys -t "$SESSION" -- "bash /tmp/op-debug.sh; rm -f /tmp/op-debug.sh" C-m
+tmux -S "$SOCKET" send-keys -t "$SESSION:" -- "bash /tmp/op-debug.sh; rm -f /tmp/op-debug.sh" C-m
 ```
 
 ## Guardrails

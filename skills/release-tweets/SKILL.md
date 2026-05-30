@@ -58,7 +58,7 @@ Use when the user asks for a release tweet, launch tweet, X announcement, releas
 
 - Draft by default. Do not post to X/Twitter unless the user explicitly asks.
 - If asked to copy, use `pbcopy` on macOS and report that it is copied.
-- If asked to post from Peter's setup, prefer the local `bird`/`xurl` workflow if available, then verify the posted URL.
+- If asked to post, prefer the local `bird`/`xurl` workflow if available, then verify the posted URL.
 - Never invent media. If the user wants media, use an existing release screenshot/asset or ask for/generate one separately.
 
 ## Quality Pass
@@ -70,12 +70,12 @@ Before final:
 - Release URL included when requested or expected.
 - No unverified claims.
 - No more than 3-4 emoji-led bullets in the launch tweet.
-- Peter-style concise language; trim filler before trimming facts.
+- Concise language; trim filler before trimming facts.
 
 ## Examples
 
 ```text
-OpenClaw 2026.4.20 beta 1
+SampleApp 2026.4.20 beta 1
 
 🐳 Docker install/update smoke
 🖥️ Parallels upgrade checks

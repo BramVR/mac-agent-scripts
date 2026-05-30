@@ -4,6 +4,10 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-05-30 — Bram Agent Setup Refresh
+- Added Bram-focused setup docs, smoke CI, active skill links, Chrome network capture, safer 1Password guidance, and paired `wacli` routing for WhatsApp linked-device work.
+- Removed unused Claw/OpenClaw/Peter-specific skills and broken local symlinks from the Bram setup.
+
 ## 2026-05-25 — To PRD Skill
 - Added `to-prd` as a Codex-linked skill for turning current context into a GitHub issue-ready PRD.
 
@@ -34,10 +38,6 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 ## 2026-05-13 — Skill Metadata Guardrails
 - Added generic skill-description guidance and quieter browser recovery notes to reduce noisy auth prompts and token-heavy skill metadata.
-
-## 2026-05-11 — clawmac GUI Access Note
-- Documented the Peekaboo through Jump Desktop workflow for clawmac GUI prompts and Chrome Safe Storage verification.
-- Documented `crabmac` as Peter's typo/alias for `clawmac`.
 
 ## 2025-12-22 — Remove Custom rm Shim
 - Dropped `bin/rm` and `scripts/trash.ts`; rely on the system `trash` command for recoverable deletes.

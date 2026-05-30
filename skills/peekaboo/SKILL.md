@@ -9,9 +9,9 @@ Use for macOS screen capture, UI inspection, and GUI automation.
 
 ## Binary
 
-- Prefer `~/bin/peekaboo` when present; it is Peter's local release copy.
-- Else use `peekaboo`.
-- Check first: `~/bin/peekaboo --version || peekaboo --version`.
+- Prefer `peekaboo` on PATH.
+- Use `~/bin/peekaboo` only when Bram has installed a local build there.
+- Check first: `peekaboo --version || ~/bin/peekaboo --version`.
 
 ## Safety
 
@@ -23,8 +23,9 @@ Use for macOS screen capture, UI inspection, and GUI automation.
 ## Common Commands
 
 ```bash
-PB="${PEEKABOO_BIN:-$HOME/bin/peekaboo}"
-[ -x "$PB" ] || PB="$(command -v peekaboo)"
+PB="${PEEKABOO_BIN:-$(command -v peekaboo || true)}"
+[ -n "$PB" ] || PB="$HOME/bin/peekaboo"
+[ -x "$PB" ] || { echo "peekaboo missing"; exit 1; }
 
 "$PB" permissions status --json
 "$PB" list screens --json

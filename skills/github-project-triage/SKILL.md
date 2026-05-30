@@ -1,11 +1,11 @@
 ---
 name: "github-project-triage"
-description: "RepoBar GitHub queue triage: current GitHub project by default; open issues/PRs across Peter profiles, orgs, local projects when broad triage is requested."
+description: "RepoBar GitHub queue triage: current GitHub project by default; broad issue/PR queues when requested."
 ---
 
 # GitHub Project Triage
 
-Use the current GitHub project by default when the user says "triage" from inside a repo. Use RepoBar as the first pass only for broad queue discovery across profiles/orgs. RepoBar is faster and more profile-aware than hand-rolling `gh repo list` loops, and it already understands Peter's repo activity, issue counts, PR counts, local projects, auth, cache, and filters.
+Use the current GitHub project by default when the user says "triage" from inside a repo. Use RepoBar as the first pass only for broad queue discovery across profiles/orgs. RepoBar is faster than hand-rolling `gh repo list` loops and can summarize repo activity, issue counts, PR counts, local projects, auth, cache, and filters.
 
 ## Setup
 
@@ -17,15 +17,18 @@ repobar_cmd() {
     repobar "$@"
   elif [ -x "$HOME/Projects/RepoBar/.build/debug/repobarcli" ]; then
     "$HOME/Projects/RepoBar/.build/debug/repobarcli" "$@"
-  else
+  elif [ -d "$HOME/Projects/RepoBar" ]; then
     swift run --package-path "$HOME/Projects/RepoBar" repobarcli "$@"
+  else
+    echo "RepoBar unavailable; use current-project gh triage or a narrow gh repo list fallback" >&2
+    return 127
   fi
 }
 
 repobar_cmd status --json
 ```
 
-Default owners for "my profiles": `steipete`, `amantus-ai`, `openclaw`. Add or remove owners based on the user's wording, local repo remotes, or the authenticated GitHub account. For an exact owner-specific task, do not broaden beyond the named owner.
+Default owner for Bram work: `BramVR`. Add or remove owners based on the user's wording, local repo remotes, or the authenticated GitHub account. For an exact owner-specific task, do not broaden beyond the named owner.
 
 ## Local Repo Gate
 
@@ -38,11 +41,11 @@ git pull --ff-only
 git status --short --branch
 ```
 
-Proceed only when the branch is `main`, the pull succeeds, and the worktree is clean. If the branch is not `main`, the pull fails, or `git status --short` shows changes, stop and ask Peter what to do. Do not switch branches, stash, commit, reset, restore, or clean without explicit direction.
+Proceed only when the branch is `main`, the pull succeeds, and the worktree is clean. If the branch is not `main`, the pull fails, or `git status --short` shows changes, stop and ask Bram what to do. Do not switch branches, stash, commit, reset, restore, or clean without explicit direction.
 
 ## Scope Rule
 
-If the user says `triage` and the current working directory is a Git repo with a GitHub remote, triage only that project. Do not broaden to all Peter/org queues unless the user says `broad`, `all`, `everything`, names multiple owners/orgs, or asks for cross-repo triage.
+If the user says `triage` and the current working directory is a Git repo with a GitHub remote, triage only that project. Do not broaden to all owner/org queues unless the user says `broad`, `all`, `everything`, names multiple owners/orgs, or asks for cross-repo triage.
 
 Find the current project:
 
@@ -69,15 +72,13 @@ Then inspect selected items with `gh issue view`, `gh pr view`, `gh pr diff`, ch
 
 ## Fast Queue Map
 
-Use this only when the scope is broad. Start with the repo-level queue map. This finds repos with open issues and/or PRs and gives counts.
+Use this only when the scope is broad. Start with the repo-level queue map. This finds repos with open issues and/or PRs and gives counts. If RepoBar is unavailable, use a narrow `gh repo list BramVR --json nameWithOwner,updatedAt,isFork,isArchived --limit 100` pass and inspect selected repos with `gh issue list` / `gh pr list`; do not run broad unbounded loops.
 
 ```bash
 repobar_cmd repos \
   --scope all \
   --only-with work \
-  --owner steipete \
-  --owner amantus-ai \
-  --owner openclaw \
+  --owner BramVR \
   --sort activity \
   --json
 ```
@@ -87,13 +88,13 @@ Use `--forks` and `--archived` only when the user says "all", "everything", or a
 For a compact terminal view:
 
 ```bash
-repobar_cmd repos --scope all --only-with work --owner steipete --owner amantus-ai --owner openclaw --plain
+repobar_cmd repos --scope all --only-with work --owner BramVR --plain
 ```
 
 Useful `jq` summary:
 
 ```bash
-repobar_cmd repos --scope all --only-with work --owner steipete --owner amantus-ai --owner openclaw --json |
+repobar_cmd repos --scope all --only-with work --owner BramVR --json |
   jq -r '.[] | [.fullName, .openIssues, .openPulls, .activityTitle, .activityActor] | @tsv'
 ```
 
@@ -141,7 +142,7 @@ Prioritize:
 Deprioritize:
 
 - Archived repos unless the user asked for them.
-- Fork-only queues unless the fork is actively maintained by Peter.
+- Fork-only queues unless the fork is actively maintained by Bram.
 - Old broad feature requests with no reproduction or owner signal.
 - Repos with missing/removable remotes until local state is clarified.
 
@@ -150,7 +151,7 @@ Deprioritize:
 For a broad scan, answer with:
 
 ```text
-Owners scanned: steipete, amantus-ai, openclaw
+Owners scanned: BramVR
 Source: RepoBar <command summary>, plus gh for selected PRs/issues
 
 Top queues:

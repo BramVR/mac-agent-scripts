@@ -2,7 +2,7 @@
 
 This folder collects Bram's shared agent instructions, local skills, and small guardrail helpers for reuse across projects.
 
-This repo is a BramVR-maintained fork of the original `steipete/agent-scripts` setup. Some skills and docs still preserve upstream provenance or optional Peter/OpenClaw-specific workflows; active shared defaults live in `AGENTS.MD`.
+This repo is a BramVR-maintained fork of the original `steipete/agent-scripts` setup. Active shared defaults live in `AGENTS.MD`.
 
 Canonical contents:
 - `AGENTS.MD`: shared hard rules for Codex/Claude-style agents
@@ -30,10 +30,29 @@ Rules:
 
 Global Codex skills are installed individually:
 - `~/.codex/skills/oracle -> ~/Projects/agent-scripts/skills/oracle`
-- `~/.codex/skills/video-transcript-downloader -> ~/Projects/agent-scripts/skills/video-transcript-downloader`
+- `~/.codex/skills/wacrawl -> ~/Projects/oss/wacrawl/.agents/skills/wacrawl`
+- `~/.codex/skills/codex-debugging -> ~/Projects/agent-scripts/skills/codex-debugging`
+- `~/.codex/skills/github-deep-review -> ~/Projects/agent-scripts/skills/github-deep-review`
+- `~/.codex/skills/github-author-context -> ~/Projects/agent-scripts/skills/github-author-context`
+- `~/.codex/skills/github-cache-hygiene -> ~/Projects/agent-scripts/skills/github-cache-hygiene`
+- `~/.codex/skills/github-project-triage -> ~/Projects/agent-scripts/skills/github-project-triage`
 - `~/.codex/skills/gog -> ~/Projects/gogcli/.agents/skills/gog`
-- `~/.codex/skills/codex-review -> ~/Projects/agent-scripts/skills/codex-review`
+- `~/.codex/skills/hermes-win -> ~/Projects/agent-scripts/skills/hermes-win`
+- `~/.codex/skills/browser-use -> ~/Projects/agent-scripts/skills/browser-use`
+- `~/.codex/skills/to-issues -> ~/Projects/agent-scripts/skills/to-issues`
+- `~/.codex/skills/grill-with-docs -> ~/Projects/agent-scripts/skills/grill-with-docs`
+- `~/.codex/skills/one-password -> ~/Projects/agent-scripts/skills/one-password`
+- `~/.codex/skills/obsidian -> ~/Projects/agent-scripts/skills/obsidian`
+- `~/.codex/skills/peekaboo -> ~/Projects/agent-scripts/skills/peekaboo`
+- `~/.codex/skills/npm -> ~/Projects/agent-scripts/skills/npm`
+- `~/.codex/skills/tdd -> ~/Projects/agent-scripts/skills/tdd`
 - `~/.codex/skills/to-prd -> ~/Projects/agent-scripts/skills/to-prd`
+- `~/.codex/skills/codex-review -> ~/Projects/agent-scripts/skills/codex-review`
+- `~/.codex/skills/video-transcript-downloader -> ~/Projects/agent-scripts/skills/video-transcript-downloader`
+- `~/.codex/skills/whatsapp -> ~/Projects/agent-scripts/skills/whatsapp`
+- `~/.codex/skills/wacli -> ~/Projects/agent-scripts/skills/wacli`
+
+Do not replace this with a broad `~/.codex/skills -> ~/Projects/agent-scripts/skills` symlink unless intentionally changing Bram's setup.
 
 Keep shared skills as real folders in `skills/`. Repo-owned skills stay canonical in their repo and are exposed here with tracked relative symlinks only when that repo exists locally, for example:
 
@@ -85,6 +104,13 @@ Repo-specific rules go below that pointer. Do not copy shared blocks into downst
 ## Syncing
 
 Treat this repo as Bram's canonical shared agent setup and portable helper mirror.
+
+Upstream intake from `steipete/agent-scripts`:
+- Mine selectively; do not merge wholesale.
+- Preserve Bram-local skills/helpers: `hermes-win`, `hermes-dashboard`, `codex-review`, `tdd`, `to-prd`, `to-issues`, `grill-with-docs`.
+- Skip or scrub non-Bram personal/product defaults before adopting docs or skills.
+- Do not adopt symlinks to missing repos unless Bram explicitly configures them.
+- Prefer generic helper/script fixes, CI smoke checks, and non-personal skill improvements.
 
 When syncing downstream repos:
 - Pull latest here first.

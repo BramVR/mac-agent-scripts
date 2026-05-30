@@ -1,31 +1,6 @@
 ---
 name: xurl
 description: "xurl X API CLI: install, auth, app choice, shortcuts, raw endpoints."
-metadata:
-  {
-    "openclaw":
-      {
-        "emoji": "X",
-        "requires": { "bins": ["xurl"] },
-        "install":
-          [
-            {
-              "id": "brew",
-              "kind": "brew",
-              "formula": "xdevplatform/tap/xurl",
-              "bins": ["xurl"],
-              "label": "Install xurl (brew)",
-            },
-            {
-              "id": "npm",
-              "kind": "npm",
-              "package": "@xdevplatform/xurl",
-              "bins": ["xurl"],
-              "label": "Install xurl (npm)",
-            },
-          ],
-      },
-  }
 ---
 
 # xurl
