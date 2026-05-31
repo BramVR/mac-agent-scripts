@@ -4,6 +4,8 @@ set -euo pipefail
 root=${1:-"$HOME/Projects"}
 limit=${GITHUB_OFFLINE_PREWARM_LIMIT:-80}
 mode=${GITHUB_OFFLINE_PREWARM_MODE:-open}
+skip=${GITHUB_OFFLINE_PREWARM_SKIP:-openai/codex}
+include=${GITHUB_OFFLINE_PREWARM_INCLUDE:-}
 
 case "$limit" in
   ''|*[!0-9]*)
@@ -37,6 +39,17 @@ repo_from_remote() {
   printf '%s\n' "$url"
 }
 
+match_repo_list() {
+  local repo=$1
+  local list=$2
+  local entry
+  for entry in ${list//,/ }; do
+    [[ -n "$entry" ]] || continue
+    [[ "$repo" == $entry ]] && return 0
+  done
+  return 1
+}
+
 repos=$(mktemp "${TMPDIR:-/tmp}/github-offline-prewarm.XXXXXX")
 trap 'rm -f "$repos"' EXIT
 
@@ -46,6 +59,8 @@ find "$root" -maxdepth 3 -name .git -type d -prune 2>/dev/null |
     remote=$(git -C "$repo_dir" remote get-url origin 2>/dev/null || true)
     repo=$(repo_from_remote "$remote" || true)
     [[ -n "${repo:-}" ]] || continue
+    [[ -z "$include" ]] || match_repo_list "$repo" "$include" || continue
+    match_repo_list "$repo" "$skip" && continue
     printf '%s\n' "$repo"
   done |
   sort -u |

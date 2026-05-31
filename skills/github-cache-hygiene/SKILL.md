@@ -58,6 +58,8 @@ Run `/Users/bram/Projects/agent-scripts/scripts/github-offline-prewarm` while Gi
 ```bash
 GITHUB_OFFLINE_PREWARM_LIMIT=25 /Users/bram/Projects/agent-scripts/scripts/github-offline-prewarm ~/Projects
 GITHUB_OFFLINE_PREWARM_MODE=all /Users/bram/Projects/agent-scripts/scripts/github-offline-prewarm ~/Projects/oss
+GITHUB_OFFLINE_PREWARM_SKIP=openai/codex,owner/large-repo /Users/bram/Projects/agent-scripts/scripts/github-offline-prewarm ~/Projects
+GITHUB_OFFLINE_PREWARM_INCLUDE='BramVR/*,openclaw/*' /Users/bram/Projects/agent-scripts/scripts/github-offline-prewarm ~/Projects
 ```
 
 After a write, do one targeted readback, not a broad rescan.
