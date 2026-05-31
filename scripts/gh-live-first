@@ -1,0 +1,364 @@
+#!/usr/bin/env bash
+set -u
+
+real_gh=${GH_REAL_GH:-/opt/homebrew/bin/gh}
+gitcrawl_bin=${GITCRAWL_BIN:-gitcrawl}
+
+if [[ ! -x "$real_gh" ]]; then
+  real_gh=/opt/homebrew/opt/gh/bin/gh
+fi
+
+if [[ ! -x "$real_gh" ]]; then
+  echo "gh-wrapper: real gh not found; set GH_REAL_GH" >&2
+  exit 127
+fi
+
+offline_requested=false
+if [[ "${GH_OFFLINE:-}" == "1" || "${GITHUB_OFFLINE:-}" == "1" ]]; then
+  offline_requested=true
+fi
+
+strip_live=false
+args=()
+for arg in "$@"; do
+  case "$arg" in
+    --live)
+      strip_live=true
+      ;;
+    *)
+      args+=("$arg")
+      ;;
+  esac
+done
+
+has_any_flag() {
+  local flag arg
+  for arg in "${args[@]}"; do
+    for flag in "$@"; do
+      [[ "$arg" == "$flag" || "$arg" == "$flag="* ]] && return 0
+    done
+  done
+  return 1
+}
+
+first_command() {
+  local skip_next=false
+  for arg in "${args[@]}"; do
+    if [[ "$skip_next" == true ]]; then
+      skip_next=false
+      continue
+    fi
+    case "$arg" in
+      --)
+        continue
+        ;;
+      -*)
+        option_takes_value "$arg" && skip_next=true
+        ;;
+      *)
+        printf '%s\n' "$arg"
+        return 0
+        ;;
+    esac
+  done
+}
+
+second_command() {
+  local skip_next=false
+  local seen=false
+  for arg in "${args[@]}"; do
+    if [[ "$skip_next" == true ]]; then
+      skip_next=false
+      continue
+    fi
+    case "$arg" in
+      --)
+        continue
+        ;;
+      -*)
+        option_takes_value "$arg" && skip_next=true
+        ;;
+      *)
+        if [[ "$seen" == true ]]; then
+          printf '%s\n' "$arg"
+          return 0
+        fi
+        seen=true
+        ;;
+    esac
+  done
+}
+
+option_takes_value() {
+  local arg=$1
+  case "$arg" in
+    *=*)
+      return 1
+      ;;
+    -R|-H|-F|-f|-X|-q|-t|-p)
+      return 0
+      ;;
+    --repo|--hostname|--header|--field|--raw-field|--method|--jq|--template|--preview|--cache|--input|--json|--limit|--search|--state|--author|--assignee|--label|--base|--head|--branch|--commit|--workflow|--ref|--event|--owner|--app|--env|--body|--body-file|--title)
+      return 0
+      ;;
+  esac
+  return 1
+}
+
+api_body_arg_present() {
+  local arg
+  for arg in "${args[@]}"; do
+    case "$arg" in
+      -f|-F|--field|--raw-field|--input|-f*|-F*|--field=*|--raw-field=*|--input=*)
+        return 0
+        ;;
+    esac
+  done
+  return 1
+}
+
+api_field_arg_present() {
+  local arg
+  for arg in "${args[@]}"; do
+    case "$arg" in
+      -f|-F|--field|--raw-field|-f*|-F*|--field=*|--raw-field=*)
+        return 0
+        ;;
+    esac
+  done
+  return 1
+}
+
+method_arg() {
+  local next=false
+  for arg in "${args[@]}"; do
+    if [[ "$next" == true ]]; then
+      printf '%s\n' "$arg"
+      return 0
+    fi
+    case "$arg" in
+      -X|--method)
+        next=true
+        ;;
+      -X*)
+        printf '%s\n' "${arg#-X}"
+        return 0
+        ;;
+      --method=*)
+        printf '%s\n' "${arg#*=}"
+        return 0
+        ;;
+    esac
+  done
+}
+
+api_has_explicit_method() {
+  [[ -n "$(method_arg)" ]]
+}
+
+api_path_arg() {
+  local saw_api=false
+  local skip_next=false
+  local arg
+  for arg in "${args[@]}"; do
+    if [[ "$skip_next" == true ]]; then
+      skip_next=false
+      continue
+    fi
+    case "$arg" in
+      --)
+        continue
+        ;;
+      -*)
+        option_takes_value "$arg" && skip_next=true
+        continue
+        ;;
+    esac
+    if [[ "$saw_api" == false ]]; then
+      [[ "$arg" == "api" ]] && saw_api=true
+      continue
+    fi
+    printf '%s\n' "$arg"
+    return 0
+  done
+}
+
+api_search_endpoint() {
+  local path=$1
+  path=${path#https://api.github.com/}
+  path=${path#http://api.github.com/}
+  path=${path#/}
+  path=${path%%\?*}
+  [[ "$path" == "search" || "$path" == search/* ]]
+}
+
+sanitize_search_api_args() {
+  [[ "$(first_command)" == "api" ]] || return 0
+  api_has_explicit_method && return 0
+  api_field_arg_present || return 0
+  api_search_endpoint "$(api_path_arg)" || return 0
+
+  local out=()
+  local inserted=false
+  local skip_next=false
+  local arg
+  for arg in "${args[@]}"; do
+    out+=("$arg")
+    if [[ "$skip_next" == true ]]; then
+      skip_next=false
+      continue
+    fi
+    case "$arg" in
+      --)
+        continue
+        ;;
+      -*)
+        option_takes_value "$arg" && skip_next=true
+        continue
+        ;;
+    esac
+    if [[ "$inserted" == false && "$arg" == "api" ]]; then
+      out+=(--method GET)
+      inserted=true
+    fi
+  done
+  args=("${out[@]}")
+}
+
+is_live_only() {
+  local cmd sub method
+  cmd=$(first_command)
+  sub=$(second_command)
+
+  case "$cmd" in
+    auth|alias|config|extension|gpg-key|ssh-key|secret|variable|release|run|workflow|cache|co)
+      return 0
+      ;;
+  esac
+
+  case "$cmd:$sub" in
+    gist:create|gist:delete|gist:edit)
+      return 0
+      ;;
+    issue:close|issue:comment|issue:create|issue:delete|issue:develop|issue:edit|issue:lock|issue:pin|issue:reopen|issue:transfer|issue:unlock|issue:unpin)
+      return 0
+      ;;
+    label:clone|label:create|label:delete|label:edit)
+      return 0
+      ;;
+    pr:checkout|pr:checks|pr:close|pr:comment|pr:create|pr:edit|pr:lock|pr:merge|pr:ready|pr:reopen|pr:review|pr:revert|pr:unlock|pr:update-branch)
+      return 0
+      ;;
+    project:close|project:copy|project:create|project:delete|project:edit|project:field-create|project:field-delete|project:item-add|project:item-archive|project:item-create|project:item-delete|project:item-edit|project:link|project:mark-template|project:unlink)
+      return 0
+      ;;
+    release:create|release:delete|release:delete-asset|release:edit|release:upload)
+      return 0
+      ;;
+    repo:archive|repo:create|repo:delete|repo:edit|repo:fork|repo:rename|repo:sync|repo:unarchive)
+      return 0
+      ;;
+    ruleset:delete)
+      return 0
+      ;;
+  esac
+
+  if [[ "$cmd" == "api" ]]; then
+    method=$(method_arg)
+    method=$(printf '%s' "$method" | tr '[:lower:]' '[:upper:]')
+    if [[ "$method" =~ ^(POST|PATCH|PUT|DELETE)$ ]]; then
+      return 0
+    fi
+    if [[ -z "$method" ]] && api_body_arg_present; then
+      return 0
+    fi
+  fi
+
+  return 1
+}
+
+looks_offline_or_limited() {
+  local err=$1
+  grep -Eqi \
+    'could not resolve host|failed to connect|connection refused|connection reset|network is unreachable|operation timed out|timeout|tls handshake timeout|failed to verify certificate|certificate.*not trusted|x509|i/o timeout|temporary failure|server error|stream error|unexpected eof|bad gateway|service unavailable|gateway timeout|api rate limit exceeded|secondary rate limit|rate limit' \
+    "$err"
+}
+
+is_cacheable_read() {
+  has_any_flag --web --browser --interactive --help -h -w && return 1
+
+  local cmd sub
+  cmd=$(first_command)
+  sub=$(second_command)
+
+  case "$cmd:$sub" in
+    search:issues|search:prs|issue:list|issue:view|pr:list|pr:view|pr:status|pr:diff|repo:view|api:*)
+      return 0
+      ;;
+  esac
+
+  return 1
+}
+
+should_warm_cache() {
+  [[ "${GH_WARM:-1}" == "0" ]] && return 1
+  is_cacheable_read
+}
+
+warm_cache() {
+  should_warm_cache || return 0
+  if [[ "${GH_WARM_SYNC:-}" == "1" ]]; then
+    GITCRAWL_GH_PATH="$real_gh" "$gitcrawl_bin" gh "${args[@]}" >/dev/null 2>&1 || true
+  else
+    ( GITCRAWL_GH_PATH="$real_gh" "$gitcrawl_bin" gh "${args[@]}" >/dev/null 2>&1 || true ) &
+  fi
+}
+
+sanitize_search_api_args
+
+if [[ "$strip_live" == true || "${GH_LIVE:-}" == "1" ]]; then
+  exec "$real_gh" "${args[@]}"
+fi
+
+if [[ "$offline_requested" == true ]]; then
+  if is_live_only; then
+    echo "gh-wrapper: refusing live-only gh command while GH_OFFLINE=1" >&2
+    exit 2
+  fi
+  if ! is_cacheable_read; then
+    echo "gh-wrapper: refusing unsupported cache-only gh command while GH_OFFLINE=1" >&2
+    exit 2
+  fi
+  exec env GITCRAWL_GH_PATH="$real_gh" "$gitcrawl_bin" gh --cached "${args[@]}"
+fi
+
+if is_live_only; then
+  exec "$real_gh" "${args[@]}"
+fi
+
+if ! is_cacheable_read; then
+  exec "$real_gh" "${args[@]}"
+fi
+
+out=$(mktemp "${TMPDIR:-/tmp}/gh-live-first.out.XXXXXX")
+err=$(mktemp "${TMPDIR:-/tmp}/gh-live-first.err.XXXXXX")
+trap 'rm -f "$out" "$err"' EXIT
+
+"$real_gh" "${args[@]}" >"$out" 2>"$err"
+gh_status=$?
+if [[ "$gh_status" -eq 0 ]]; then
+  cat "$out"
+  cat "$err" >&2
+  warm_cache
+  exit 0
+fi
+
+if looks_offline_or_limited "$err" && is_cacheable_read; then
+  echo "gh-wrapper: real gh failed; falling back to gitcrawl gh" >&2
+  GITCRAWL_GH_PATH="$real_gh" "$gitcrawl_bin" gh "${args[@]}"
+  exit $?
+fi
+
+cat "$out"
+cat "$err" >&2
+exit "$gh_status"

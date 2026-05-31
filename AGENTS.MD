@@ -44,7 +44,7 @@ Codex CLI output: avoid Markdown tables by default; they render poorly there. Us
 
 ## PR / CI
 
-- GitHub broad reads: prefer shimmed `gh` / `gitcrawl gh` first. Raw `gh api search/* -f ...` needs `--method GET`; gitcrawl shim sanitizes this.
+- GitHub broad reads: `gh` is a live-first wrapper. It tries real GitHub first, falls back to `gitcrawl gh` only on outage/rate-limit for read commands, and keeps writes/CI/release live-only. Use `GH_OFFLINE=1 gh ...` for explicit cache-only reads. Raw `gh api search/* -f ...` needs `--method GET`; gitcrawl shim sanitizes this.
 - PR refs: use `gh pr view/diff`, not web search.
 - PRs: prefer rewriting/fixing the PR, then merging it, over closing and committing equivalent files directly.
 - Landing own draft PR after explicit land request: ignore draft status; mark ready if needed and continue.

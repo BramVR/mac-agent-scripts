@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+root=${1:-"$HOME/Projects"}
+limit=${GITHUB_OFFLINE_PREWARM_LIMIT:-80}
+mode=${GITHUB_OFFLINE_PREWARM_MODE:-open}
+
+case "$limit" in
+  ''|*[!0-9]*)
+    echo "invalid GITHUB_OFFLINE_PREWARM_LIMIT: $limit" >&2
+    exit 2
+    ;;
+esac
+
+if (( limit == 0 )); then
+  exit 0
+fi
+
+repo_from_remote() {
+  local url=$1
+  case "$url" in
+    git@github.com:*)
+      url=${url#git@github.com:}
+      ;;
+    https://github.com/*)
+      url=${url#https://github.com/}
+      ;;
+    http://github.com/*)
+      url=${url#http://github.com/}
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+  url=${url%.git}
+  [[ "$url" == */* ]] || return 1
+  printf '%s\n' "$url"
+}
+
+repos=$(mktemp "${TMPDIR:-/tmp}/github-offline-prewarm.XXXXXX")
+trap 'rm -f "$repos"' EXIT
+
+find "$root" -maxdepth 3 -name .git -type d -prune 2>/dev/null |
+  while IFS= read -r gitdir; do
+    repo_dir=${gitdir%/.git}
+    remote=$(git -C "$repo_dir" remote get-url origin 2>/dev/null || true)
+    repo=$(repo_from_remote "$remote" || true)
+    [[ -n "${repo:-}" ]] || continue
+    printf '%s\n' "$repo"
+  done |
+  sort -u |
+  sed -n "1,${limit}p" >"$repos"
+
+failed=0
+while IFS= read -r repo; do
+  printf 'prewarm: %s\n' "$repo" >&2
+  gitcrawl sync "$repo" --state "$mode" --with pr-details || {
+    printf 'prewarm failed: %s\n' "$repo" >&2
+    failed=1
+  }
+done <"$repos"
+
+exit "$failed"

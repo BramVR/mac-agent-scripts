@@ -96,6 +96,15 @@ Repo-specific rules go below that pointer. Do not copy shared blocks into downst
 - Enforces `summary` and `read_when` front matter.
 - Prints onboarding summaries for repos that wire it in.
 
+`scripts/gh-live-first`
+- `gh` wrapper for Bram's PATH.
+- Calls real Homebrew `gh` first, best-effort warms gitcrawl for cacheable reads, and falls back to `gitcrawl gh` only on outage/rate-limit for read commands.
+- Use `GH_OFFLINE=1 gh ...` for explicit cache-only reads.
+
+`scripts/github-offline-prewarm`
+- Syncs local GitHub remotes into gitcrawl while GitHub is healthy.
+- Keeps later `GH_OFFLINE=1 gh ...` reads useful during outages.
+
 `scripts/browser-tools.ts`
 - Standalone Chrome DevTools helper.
 - Common commands: `start --profile`, `nav <url>`, `eval '<js>'`, `screenshot`, `search --content "<query>"`, `content <url>`, `inspect`, `kill --all --force`.

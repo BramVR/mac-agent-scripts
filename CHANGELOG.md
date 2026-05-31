@@ -4,6 +4,9 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-05-31 — GitHub Offline Fallback
+- Added a live-first `gh` wrapper plus GitHub offline prewarm helper so normal reads warm gitcrawl and fall back to cached data only during outages, rate limits, or explicit offline requests.
+
 ## 2026-05-30 — Bram Agent Setup Refresh
 - Added Bram-focused setup docs, smoke CI, active skill links, Chrome network capture, safer 1Password guidance, and paired `wacli` routing for WhatsApp linked-device work.
 - Removed unused Claw/OpenClaw/Peter-specific skills and broken local symlinks from the Bram setup.
