@@ -1,15 +1,51 @@
 ---
 name: browser-use
-description: "Chrome DevTools MCP automation for the existing Chrome tabs; no AppleScript."
+description: "Browser automation in cmux or Chrome DevTools; no AppleScript."
 ---
 
 # Browser Use
 
-Use this for browser tasks against the existing Chrome session.
+Use this for browser tasks in cmux or against an existing Chrome session.
 
-Hard rule: use `mcporter` `chrome-devtools` only. Do not fall back to AppleScript, `osascript`, GUI scripting, or macOS `open` for browser control.
+Hard rule: use `cmux browser` in cmux; otherwise use `mcporter` `chrome-devtools`. Do not fall back to AppleScript, `osascript`, GUI scripting, or macOS `open` for browser control.
+
+## cmux Browser
+
+Prefer this path when `cmux browser status` prints `enabled`.
+
+```bash
+cmux browser status
+cmux --json browser open https://example.com --focus false
+```
+
+Use the returned `surface_ref` for the task:
+
+```bash
+cmux browser surface:25 get url
+cmux browser surface:25 wait --load-state complete --timeout-ms 15000
+cmux browser surface:25 snapshot --interactive
+cmux browser surface:25 click e2 --snapshot-after
+cmux browser surface:25 fill e1 --text "text" --snapshot-after
+cmux browser surface:25 type e1 --text "more text" --snapshot-after
+cmux browser surface:25 select e3 --value ship --snapshot-after
+cmux browser surface:25 eval 'document.title'
+cmux browser surface:25 screenshot --out /tmp/cmux-browser.png
+```
+
+Use explicit `--text` / `--value` when a mutating command also has flags; otherwise trailing flags can be parsed as input text. Run actions sequentially and re-snapshot after DOM changes; refs from older snapshots can go stale.
+
+Use `cmux identify --json` when you need caller workspace/window/surface context. If a snapshot or eval returns `js_error`, fall back to:
+
+```bash
+cmux browser surface:25 get text body
+cmux browser surface:25 get html body
+```
+
+cmux uses WKWebView. Known gaps: viewport emulation, offline emulation, tracing/screencast, network interception, and low-level raw input.
 
 ## Check MCP
+
+Use this path when cmux browser is unavailable and Chrome DevTools MCP is the target.
 
 ```bash
 npx -y mcporter list chrome-devtools --schema
