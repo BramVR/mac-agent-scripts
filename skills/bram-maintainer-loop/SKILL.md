@@ -212,9 +212,12 @@ Before any push, public PR update, merge, or release involving secrets, model id
 
 - Audit the exact candidate diff, tests, fixtures, snapshots, generated metadata, workflows, CI/test logs, packaged artifacts, and public PR/issue proof.
 - Do not expose non-public organizational information, credentials, URLs, datasets, personnel details, internal model names, or proprietary context.
-- Public model identifiers may remain only when they are documented or offered in official public provider sources.
-- Never echo questionable secret-like or internal strings in reports; describe them generically.
-- Return explicit `PASS` or `BLOCKED` for public artifacts when the change touches these surfaces.
+- For model-bearing code or artifacts, audit specifically for model identifiers.
+- Public model identifiers may remain only when they are currently documented or offered in an official public provider source. Record the source URL in the worker's audit report.
+- Never expose internal, employee-only, preview-only, alias-only, inferred, synthetic provider-shaped, or otherwise undisclosed identifiers. Genericize questionable test and fixture values because assertion failures can print them in CI logs.
+- Do not repeat questionable secret-like, internal, or unverified model identifier strings in worker messages, audit reports, public comments, or the loop log. Describe them generically.
+- Binary/archive scans must classify candidate strings as verified public identifiers, unrelated false positives, or blocking unknowns without echoing blocking unknowns.
+- Return an explicit `PASS` or `BLOCKED` report covering every audited surface. Any new candidate diff, generated artifact, log/proof text, or model-bearing change invalidates the pass and requires re-audit.
 
 No push, public mutation, merge, or release may proceed while this gate is blocked.
 

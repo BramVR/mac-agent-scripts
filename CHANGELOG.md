@@ -14,6 +14,7 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 - Matched upstream empty-queue release behavior so idle maintained repos become patch/minor release candidates after release gates pass.
 - Added upstream-style dependency freshness handling for idle repositories, including package health, prerelease avoidance, compatibility tests, live proof, autoreview, public artifact audit, and CI.
 - Added upstream-style heartbeat automation guidance for continuous loop monitoring.
+- Added upstream-style public model identifier audit detail to the broader public artifact confidentiality gate.
 
 ## 2026-05-31 — GitHub Offline Fallback
 - Added a live-first `gh` wrapper plus GitHub offline prewarm helper so normal reads warm gitcrawl and fall back to cached data only during outages, rate limits, or explicit offline requests.
