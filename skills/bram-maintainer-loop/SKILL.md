@@ -134,7 +134,7 @@ An idle or completed repository thread must not remain a polling-only lane. Afte
 1. Assign the next autonomous issue or PR to the same repository thread.
 2. Prepare each remaining non-autonomous item to the decision-ready boundary, then ask Bram a concise concrete question.
 3. When the effective issue and PR queues are empty, execute the authorized patch or minor release after all release gates pass.
-4. If no queue or authorized release work remains, audit dependencies and docs for current stable maintenance, then prepare or land the update within granted permissions.
+4. If no queue, CI, or authorized release work remains, treat dependency freshness as the next candidate backstop. When implementation is authorized, or when delegation is separately authorized, audit and update dependencies to compatible current stable releases unless Bram authorizes breaking-major upgrades. Delegate this as normal repository work: inspect upstream changes and package health, honor repository-specific stabilization policies, avoid prerelease-only upgrades unless already adopted, preserve the repository's package manager, add compatibility fixes/tests when needed, run exact built/live proof, `autoreview`, the Public Artifact Confidentiality Gate, and required CI, then prepare or land the update within granted permissions. Without implementation/delegation authorization, report dependency freshness as the next candidate work and stop.
 
 Do not keep completed threads merely to satisfy a lane count. A monitored repository should have active autonomous work, a pending Bram question, an active release, or a documented no-release/needs-authorization reason.
 
