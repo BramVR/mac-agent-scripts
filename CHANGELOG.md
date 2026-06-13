@@ -4,6 +4,10 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-06-13 — Auto Review Skill
+- Added Bram-owned `autoreview` skill from upstream structured review workflow, keeping Codex as default and preserving local CLI model defaults unless explicitly overridden.
+- Removed legacy `codex-review` skill so review routing uses `autoreview`.
+
 ## 2026-05-31 — GitHub Offline Fallback
 - Added a live-first `gh` wrapper plus GitHub offline prewarm helper so normal reads warm gitcrawl and fall back to cached data only during outages, rate limits, or explicit offline requests.
 - Skipped `openai/codex` by default in GitHub offline prewarm and added include/skip filters to avoid spending cache budget on repos Bram does not maintain.

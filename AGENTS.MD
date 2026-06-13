@@ -19,7 +19,7 @@ Codex CLI output: avoid Markdown tables by default; they render poorly there. Us
 - Editing here/skills: token-efficient, relaxed grammar, terse descriptions.
 - Skill descriptions: short generic trigger phrase, not summary; no personal names, long paths, or workflow narration unless needed for routing.
 - Skill frontmatter: quote `description`; after SKILL.md edits, YAML-parse frontmatter before commit.
-- Upstream sync: treat `steipete/agent-scripts` as a source to mine, not a branch to merge. Preserve Bram-local skills/helpers (`hermes-win`, `hermes-dashboard`, `codex-review`, `tdd`, `to-prd`, `to-issues`, `grill-with-docs`). Scrub or skip non-Bram personal/product assumptions; do not adopt broken symlinks unless Bram explicitly configures that repo.
+- Upstream sync: treat `steipete/agent-scripts` as a source to mine, not a branch to merge. Preserve Bram-local skills/helpers (`hermes-win`, `hermes-dashboard`, `autoreview`, `tdd`, `to-prd`, `to-issues`, `grill-with-docs`). Scrub or skip non-Bram personal/product assumptions; do not adopt broken symlinks unless Bram explicitly configures that repo.
 - Read `~/Projects/agent-scripts/tools.md` when the tool catalog matters.
 
 ## Routing
@@ -51,6 +51,7 @@ Codex CLI output: avoid Markdown tables by default; they render poorly there. Us
 - `fix ci`: consent to pull, commit, push; fix/rerun/watch until CI green.
 - CI: `gh run list/view`; rerun/fix until green when asked.
 - `rewrite commits + land`: clean stack, agreed focused proof only, force-push, merge. No Codex review, PR-body proof polish, or CI babysitting unless asked.
+- Pre-land/pre-commit code changes: use `$autoreview` until no accepted/actionable findings remain, unless equivalent manual review already done, trivial/docs-only, or user opts out.
 - Replies: cite fix + file/line; resolve threads only after fix lands.
 - Issue fixed on `main` with proof: comment proof + commit/PR, then close.
 - User-facing fixes/landed PRs: changelog unless pure test/internal.

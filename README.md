@@ -47,7 +47,7 @@ Global Codex skills are installed individually:
 - `~/.codex/skills/npm -> ~/Projects/agent-scripts/skills/npm`
 - `~/.codex/skills/tdd -> ~/Projects/agent-scripts/skills/tdd`
 - `~/.codex/skills/to-prd -> ~/Projects/agent-scripts/skills/to-prd`
-- `~/.codex/skills/codex-review -> ~/Projects/agent-scripts/skills/codex-review`
+- `~/.codex/skills/autoreview -> ~/Projects/agent-scripts/skills/autoreview`
 - `~/.codex/skills/video-transcript-downloader -> ~/Projects/agent-scripts/skills/video-transcript-downloader`
 - `~/.codex/skills/whatsapp -> ~/Projects/agent-scripts/skills/whatsapp`
 - `~/.codex/skills/wacli -> ~/Projects/agent-scripts/skills/wacli`
@@ -116,7 +116,7 @@ Treat this repo as Bram's canonical shared agent setup and portable helper mirro
 
 Upstream intake from `steipete/agent-scripts`:
 - Mine selectively; do not merge wholesale.
-- Preserve Bram-local skills/helpers: `hermes-win`, `hermes-dashboard`, `codex-review`, `tdd`, `to-prd`, `to-issues`, `grill-with-docs`.
+- Preserve Bram-local skills/helpers: `hermes-win`, `hermes-dashboard`, `autoreview`, `tdd`, `to-prd`, `to-issues`, `grill-with-docs`.
 - Skip or scrub non-Bram personal/product defaults before adopting docs or skills.
 - Do not adopt symlinks to missing repos unless Bram explicitly configures them.
 - Prefer generic helper/script fixes, CI smoke checks, and non-personal skill improvements.
