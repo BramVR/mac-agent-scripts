@@ -61,12 +61,12 @@ When Bram asks to add or remove loop repos, edit that config and keep the change
 
 Do not ask Bram to decide from an unprepared issue or rough contributor branch.
 
-- Existing PR: inspect, reproduce, rewrite/fix as needed, add tests/docs/changelog when appropriate, run live proof and `autoreview`, push the final candidate only when authorized, and get required CI green when CI work is authorized. Ask only when the PR is mergeable or the remaining blocker cannot be solved autonomously.
-- Issue without PR: investigate root cause and product constraints, use `tdd` for implementation when code behavior changes, create a PR only when authorized, and drive it to the same mergeable proof state.
+- Existing PR: inspect, reproduce, rewrite/fix as needed, add tests/docs/changelog, run live proof and `autoreview`, push the final candidate, and get required CI green. Ask only when the PR is mergeable or the remaining blocker cannot be solved autonomously.
+- Issue without PR: investigate root cause and product constraints, use `tdd` for implementation when code behavior changes, implement the best bounded candidate on a branch, create a PR, and drive it to the same mergeable proof state.
 - Vague feature/product idea: use `to-prd` or `to-issues` before implementation when the request is too broad for one autonomous slice.
-- Product decision: choose a reversible default when technically safe and expose the decision clearly in the PR or report. Prepare alternatives when useful.
+- Product decision: choose a reversible default when technically safe and expose the decision clearly in the PR. Prepare alternatives in the PR description when useful.
 - Access or live-proof blocker: finish code, tests, docs, review, and CI first. Ask only for the exact remaining credential, account action, hardware interaction, waiver, or land/delete decision.
-- Rejection candidate: produce concrete research and proof. When a code candidate would clarify the tradeoff, prepare the PR anyway; otherwise update the issue/report with the evidence needed for a Bram close/keep decision.
+- Rejection candidate: produce concrete research and proof. When a code candidate would clarify the tradeoff, prepare the PR anyway; otherwise update the issue with the evidence needed for a Bram close/keep decision.
 
 The normal Bram interaction should be one of: land the prepared PR, delete/close it, provide one exact access step, grant one explicit waiver, or choose between clearly documented alternatives.
 
@@ -144,11 +144,17 @@ Dependency freshness is a backstop, not higher priority than real queue, CI, or 
 
 Treat triage, monitoring, implementation, public mutation, and release as separate permissions.
 
+When Bram explicitly asks this loop to handle a specific issue or PR in a Bram-owned repository, and does not say read-only, dry-run, no-edits, plan-only, audit-only, or similar, that request authorizes: resolving or cloning that repo if missing, creating or checking out a focused branch in the repo checkout when clean enough to do so, implementing the bounded candidate, committing, pushing the branch, creating or updating the PR, rerunning/watching required CI, and making repair commits until CI is green. It does not authorize merge, close, release, destructive local cleanup, unrelated workflow/secret changes, or broad work outside the named item.
+
+Read-only, no-edits, dry-run, plan-only, or audit-only overrides all mutation permission: no local edits, branch checkout, commits, pushes, PR/issue comments or creation, CI reruns, worker thread creation/renames, or loop log writes. Report findings, proposed branch/PR plan, and the exact next permission needed.
+
+If the target checkout is dirty, detached, on an unexpected branch, or otherwise cannot safely switch/create the issue branch, stop and ask Bram for the exact checkout action. Do not create a worktree to bypass this unless Bram asks.
+
 - Queue analysis or monitoring does not authorize edits.
 - Delegation or parallel-worker creation requires explicit Bram authorization.
-- Implementation permission authorizes local changes and verification only unless Bram also authorizes push/PR updates.
+- Implementation permission authorizes local changes and verification only unless Bram also authorizes push/PR updates or gives the specific issue/PR handle grant above.
 - Push permission does not imply merge or close permission.
-- CI rerun and CI-fix permission must be explicit; a push alone does not authorize additional repair commits or workflow mutations.
+- CI rerun and CI-fix permission must be explicit unless Bram gives the specific issue/PR handle grant above; a push alone does not authorize workflow mutations.
 - Merge/close permission must be explicit for the affected work.
 - Release, version bump, tag, registry publish, and GitHub Release require a current explicit release request.
 - Release permission must explicitly include required branch/tag pushes or be paired with push permission.
@@ -176,6 +182,7 @@ Keep credential discovery and use inside the worker that needs the secret. Repor
 Every delegated implementation thread, within its explicit authorization, must:
 
 - read the full issue/PR discussion, repo instructions, docs, and relevant code;
+- when an issue has no PR, create one after implementing the best bounded candidate;
 - when work is broad or vague, use `to-prd` or `to-issues` before implementation;
 - when changing code behavior, use `tdd` unless the change is too trivial or docs-only;
 - reproduce or establish root cause before accepting an existing patch;
@@ -189,8 +196,8 @@ Every delegated implementation thread, within its explicit authorization, must:
 - when merge/close is authorized, merge or close the queue item with an exact proof comment;
 - after authorized landing, return to updated, clean `main`.
 
-Prefer repairing contributor PRs when writable. Preserve contributor credit and follow workspace PR rules.
-When landing is not yet authorized, stop only after the branch is pushed if push is authorized, the PR is mergeable, required CI is green, live proof is recorded, and the exact Bram decision is stated.
+Prefer repairing the contributor PR. Preserve contributor credit and follow workspace PR rules.
+When landing is not yet authorized, stop only after the branch is pushed, the PR is mergeable, required CI is green, live proof is recorded, and the exact Bram decision is stated.
 
 ## Live Proof Gate
 
