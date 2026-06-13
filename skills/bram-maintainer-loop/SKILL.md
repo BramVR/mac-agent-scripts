@@ -32,7 +32,7 @@ This skill is adapted from upstream `maintainer-orchestrator`. Keep the proven l
 3. When delegation is explicitly authorized, this root loop session delegates independent repositories to separate Codex threads. Whenever assigning or materially changing work, rename the worker thread to `<Project>: <short current task>`. Keep work for one repository in its existing thread. Do not set or request a custom model; omit model selection and inherit the platform default.
 4. Keep this coordinator thread lightweight. Do not perform extensive repository work here. Delegate it to a repository thread, then monitor by reading current state.
 5. Monitor workers every five minutes when Bram requests continuous orchestration. Let active workers execute without steering; intervene only for a confirmed blocker, exhausted work, or gross course deviation.
-6. Continue until each autonomous item is merged/closed with proof, each decision item has a mergeable PR ready for Bram's land/delete/access choice, an effective queue is empty, or an otherwise idle repository has current dependencies/docs.
+6. Continue until each autonomous item is merged/closed with proof, each decision item has a mergeable PR ready for Bram's land/delete/access choice, an empty effective queue has either an explicitly authorized gated release completed or a documented no-release/needs-authorization reason, or an otherwise idle repository has current dependencies/docs.
 
 Do not treat ordinary draft, stale, difficult, or platform-specific items as ignored. Only an explicit Bram instruction can create an ignored-item exception. Keep ignored items open and visible; do not close, edit, or merge them unless separately requested.
 
@@ -133,10 +133,10 @@ An idle or completed repository thread must not remain a polling-only lane. Afte
 
 1. Assign the next autonomous issue or PR to the same repository thread.
 2. Prepare each remaining non-autonomous item to the decision-ready boundary, then ask Bram a concise concrete question.
-3. When the effective issue and PR queues are empty, execute an authorized patch/release only if Bram explicitly requested release work.
+3. When the effective issue and PR queues are empty, execute the authorized patch or minor release after all release gates pass.
 4. If no queue or authorized release work remains, audit dependencies and docs for current stable maintenance, then prepare or land the update within granted permissions.
 
-Do not keep completed threads merely to satisfy a lane count. A monitored repository should have active autonomous work, a pending Bram question, an active release, or a documented reason no work is warranted.
+Do not keep completed threads merely to satisfy a lane count. A monitored repository should have active autonomous work, a pending Bram question, an active release, or a documented no-release/needs-authorization reason.
 
 Dependency freshness is a backstop, not higher priority than real queue, CI, or release work.
 
@@ -279,7 +279,7 @@ Keep one compact cross-repo ledger:
 - `Needs Bram`: exact decision/access required; no vague "needs review".
 - `Ignored`: exact item and Bram-granted exception.
 - `Released`: version, tag/registry verification, closeout commit.
-- `Ready next`: effective queue empty, CI green, recommended next maintenance action and rationale.
+- `Ready next`: effective queue empty; if release lane/proof are known and CI is green, recommend patch/minor version and rationale; otherwise report exact missing release gate or permission.
 
 Omit archived and Bram-suppressed repositories entirely. Do not list them as ignored, blocked, stale, or available work.
 
