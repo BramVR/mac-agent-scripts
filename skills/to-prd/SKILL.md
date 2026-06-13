@@ -9,6 +9,8 @@ Source: https://github.com/mattpocock/skills/blob/main/skills/engineering/to-prd
 
 Turn the current conversation context and codebase understanding into a PRD. Do not interview the user from scratch; synthesize what is already known. Ask only for missing tracker/label details or a decision that materially changes scope.
 
+Loop mode: in `bram-maintainer-loop`, draft the PRD to clarify broad work before implementation. Publish to GitHub only when issue creation is authorized.
+
 ## Process
 
 1. Explore the repo enough to understand current state. Use project glossary terms. Respect relevant ADRs/docs.

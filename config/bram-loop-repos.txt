@@ -1,0 +1,4 @@
+# Bram maintainer loop flagged repos.
+# One repo slug per line; blank lines and comments ignored.
+gohealthcli
+gobankcli

@@ -55,6 +55,8 @@ Before writing any code:
 - [ ] List the behaviors to test (not implementation steps)
 - [ ] Get user approval on the plan
 
+Loop mode: if `bram-maintainer-loop` classified the item as `Autonomous` and implementation permission exists, treat that as approval for one tracer-bullet cycle. Ask Bram only for product/API/security decisions, test scope changes, or missing live-proof access.
+
 Ask: "What should the public interface look like? Which behaviors are most important to test?"
 
 **You can't test everything.** Confirm with the user exactly which behaviors matter most. Focus testing effort on critical paths and complex logic, not every possible edge case.
