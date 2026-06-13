@@ -284,3 +284,5 @@ Keep one compact cross-repo ledger:
 Omit archived and Bram-suppressed repositories entirely. Do not list them as ignored, blocked, stale, or available work.
 
 Whenever mentioning an issue or PR in any report, decision question, worker message, or status update, print its full canonical clickable URL. Never use only a repository-local number such as `#123`; include `https://github.com/OWNER/REPO/issues/123` or `https://github.com/OWNER/REPO/pull/123`.
+
+Report meaningful changes, not routine polling. Maintain a heartbeat automation when Bram asks to keep monitoring.

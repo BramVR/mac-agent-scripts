@@ -13,6 +13,7 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 - Upgraded GitHub triage with upstream URL-first queue cards, autonomous-candidate classification, owner-comment authority, and factual contributor activity helper.
 - Matched upstream empty-queue release behavior so idle maintained repos become patch/minor release candidates after release gates pass.
 - Added upstream-style dependency freshness handling for idle repositories, including package health, prerelease avoidance, compatibility tests, live proof, autoreview, public artifact audit, and CI.
+- Added upstream-style heartbeat automation guidance for continuous loop monitoring.
 
 ## 2026-05-31 — GitHub Offline Fallback
 - Added a live-first `gh` wrapper plus GitHub offline prewarm helper so normal reads warm gitcrawl and fall back to cached data only during outages, rate limits, or explicit offline requests.
