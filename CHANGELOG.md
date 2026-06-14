@@ -16,6 +16,7 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 - Added upstream-style heartbeat automation guidance for continuous loop monitoring.
 - Added upstream-style public model identifier audit detail to the broader public artifact confidentiality gate.
 - Matched upstream decision-ready PR assumptions: implement issues on branches, create PRs, push final candidates, and ask Bram only after mergeable proof is ready.
+- Switched maintainer-loop state guidance from one global markdown file to one dated markdown ledger per loop.
 
 ## 2026-05-31 — GitHub Offline Fallback
 - Added a live-first `gh` wrapper plus GitHub offline prewarm helper so normal reads warm gitcrawl and fall back to cached data only during outages, rate limits, or explicit offline requests.

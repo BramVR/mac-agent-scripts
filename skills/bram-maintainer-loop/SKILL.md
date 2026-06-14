@@ -121,7 +121,9 @@ Never interrupt, archive, rename, duplicate, or replace a worker without first r
 
 ## Persistent Log
 
-- This root loop owns `~/.codex/state/bram-maintainer-loop.md`; workers do not edit it.
+- This root loop owns one markdown ledger under `~/.codex/state/bram-maintainer-loop/`; workers do not edit it.
+- Use one file per loop, not one global append-only file. Name it `YYYY-MM-DD-<short-loop-slug>.md`, for example `2026-06-14-gobankcli-site.md`.
+- At loop start, create or announce the ledger path. If continuing an existing loop, reuse that loop's ledger rather than starting a new file.
 - Append dated, high-level entries for meaningful actions and decisions: policy/skill changes, worker creation or reassignment, queue decisions, lands, closes, releases, and exact blockers.
 - Include full canonical issue/PR URLs when relevant.
 - Never record secrets or routine polling.
