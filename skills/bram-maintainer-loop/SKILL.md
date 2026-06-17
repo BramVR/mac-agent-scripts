@@ -14,7 +14,7 @@ This skill is adapted from upstream `maintainer-orchestrator`. Keep the proven l
 - Default scope is the current GitHub repository when the request starts inside a repo.
 - Broad scope is the flagged repo list at `~/Projects/agent-scripts/config/bram-loop-repos.txt`.
 - During worktree tests, an explicit config path supplied by Bram may stand in for the canonical flagged repo list.
-- Initial flagged repos: `gohealthcli`, `gobankcli`.
+- Initial flagged repos: `gohealthcli`, `gobankcli`, `goggquote`.
 - Resolve flagged repo names under `~/Projects/<repo>` first; missing Bram repos may be cloned from `https://github.com/BramVR/<repo>.git` only when the user asks to work on them.
 - After resolving a local repo, derive the canonical GitHub `owner/name` from its `origin` remote. Local folder/config casing may differ from GitHub repo casing, for example `gobankcli` -> `BramVR/goBankCli`.
 - Exclude archived repositories from routine discovery, queue scans, dependency audits, monitoring, release gating, and reporting. Re-enter only when Bram explicitly names the repository.
@@ -29,7 +29,7 @@ This skill is adapted from upstream `maintainer-orchestrator`. Keep the proven l
    - `Autonomous`: clear fit, reproducible, bounded implementation, and usable verification path.
    - `Needs Bram`: product choice, security/privacy decision, unavailable credential/access, unavailable live proof, or destructive/irreversible choice.
    - `Ignored by Bram`: an explicitly named item Bram says must not affect current work or release gating.
-3. When delegation is explicitly authorized, this root loop session delegates independent repositories to separate Codex threads. Whenever assigning or materially changing work, rename the worker thread to `<Project>: <short current task>`. Keep work for one repository in its existing thread. Do not set or request a custom model; omit model selection and inherit the platform default.
+3. When delegation is explicitly authorized, this root loop session delegates repository triage/backstop lanes to Codex threads. Whenever assigning or materially changing work, rename the worker thread to `<Project>: <short current task>`. For a newly selected GitHub issue, always create a fresh dedicated issue worker thread; reuse a worker only for the exact same issue already in progress. Do not set or request a custom model; omit model selection and inherit the platform default.
 4. Keep this coordinator thread lightweight. Do not perform extensive repository work here. Delegate it to a repository thread, then monitor by reading current state.
 5. Monitor workers every five minutes when Bram requests continuous orchestration. Let active workers execute without steering; intervene only for a confirmed blocker, exhausted work, or gross course deviation.
 6. Continue until each autonomous item is merged/closed with proof, each decision item has a mergeable PR ready for Bram's land/delete/access choice, an empty effective queue has either an explicitly authorized gated release completed or a documented no-release/needs-authorization reason, or an otherwise idle repository has current dependencies/docs.
@@ -45,6 +45,7 @@ Recommended initial loop:
 ```text
 gohealthcli
 gobankcli
+goggquote
 ```
 
 When Bram asks to add or remove loop repos, edit that config and keep the change terse.
@@ -52,6 +53,7 @@ When Bram asks to add or remove loop repos, edit that config and keep the change
 ## Control-Plane Ownership
 
 - Only this root loop session may create, reuse, fork, assign, rename, archive, or steer worker threads.
+- New GitHub issue implementation work gets a fresh dedicated worker thread, even when the repository already has an idle or completed worker. Reuse only the worker already assigned to that exact issue.
 - Repository workers perform only their assigned repository work and report results to this loop. They must not create subworkers, delegate work, or manage other chats.
 - Put the no-subdelegation rule in every worker prompt.
 - Do not delegate portfolio triage, thread creation, or worker management to another worker.
@@ -133,7 +135,7 @@ Never interrupt, archive, rename, duplicate, or replace a worker without first r
 
 An idle or completed repository thread must not remain a polling-only lane. After reading its latest state, inspect that repository's current queue, CI, latest release, package metadata, docs/changelog state, and flagged repo priority. Then do exactly one:
 
-1. Assign the next autonomous issue or PR to the same repository thread.
+1. Assign the next autonomous PR to the same repository thread, or assign the next autonomous issue to a fresh issue-specific worker thread.
 2. Prepare each remaining non-autonomous item to the decision-ready boundary, then ask Bram a concise concrete question.
 3. When the effective issue and PR queues are empty, execute the authorized patch or minor release after all release gates pass.
 4. If no queue, CI, or authorized release work remains, treat dependency freshness as the next candidate backstop. When implementation is authorized, or when delegation is separately authorized, audit and update dependencies to compatible current stable releases unless Bram authorizes breaking-major upgrades. Delegate this as normal repository work: inspect upstream changes and package health, honor repository-specific stabilization policies, avoid prerelease-only upgrades unless already adopted, preserve the repository's package manager, add compatibility fixes/tests when needed, run exact built/live proof, `autoreview`, the Public Artifact Confidentiality Gate, and required CI, then prepare or land the update within granted permissions. Without implementation/delegation authorization, report dependency freshness as the next candidate work and stop.
