@@ -8,14 +8,31 @@ read_when:
 
 Use $bram-maintainer-loop for <repo-or-owner/repo>.
 
-Goal: triage the current queue, pick autonomous issues/PRs, and prepare decision-ready PRs. Use $github-project-triage as the worker skill for queue mapping and issue/PR execution.
+Objective: run one project maintainer loop until autonomous queue work is exhausted or a Bram decision is required.
 
-Authorized: triage, create/rename worker threads, implement autonomous items, create focused branches, commit, push branches, create/update PRs, rerun/watch CI, and make CI repair commits until green.
+Scope: only <repo-or-owner/repo>. Use the skill's repository resolution, worker, proof, and reporting rules.
 
-Not authorized: merge, close, release, destructive cleanup, unrelated workflow/secret changes, or broad work outside this repository.
+Permissions granted:
+- triage and monitor
+- create/rename worker threads
+- implement autonomous issues/PRs
+- create focused branches
+- commit and push branches
+- create/update PRs
+- rerun/watch CI and make CI repair commits until green
 
-Rules: one issue per fresh worker; reuse only the worker already assigned to the exact same issue. Workers must not subdelegate. Use TDD for behavior changes unless trivial/docs-only. Run tests, live proof when applicable, autoreview, CI, and public-artifact audit before asking Bram.
+Permissions not granted:
+- merge
+- close
+- release
+- destructive cleanup
+- unrelated workflow/secret changes
+- work outside this repository
 
-Architecture: do not run improve-codebase-architecture automatically. If repeated issue work exposes hard-to-test modules, shallow modules, unclear seams, or cross-cutting refactor pressure, report it as Ready next for a separate architecture pass.
+Stop and ask Bram when:
+- required permission is missing
+- access, live proof, or a waiver is needed
+- the next action is land, delete, merge, close, or release
+- the repository checkout is unsafe for branch work
 
-Report: Active, Needs Bram, Ready next. Use full GitHub URLs. Ask only for exact land/delete/access/waiver decisions after autonomous work is exhausted.
+Output: start with the ledger path, resolved GitHub repository, permissions accepted, and first selected item URL. Status reports use Active, Needs Bram, and Ready next.
