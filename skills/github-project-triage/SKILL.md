@@ -41,11 +41,16 @@ Before starting implementation inside any local project, verify the checkout is 
 ```bash
 git status --short --branch
 git branch --show-current
-git pull --ff-only
+git fetch origin main
 git status --short --branch
 ```
 
-Proceed with implementation only when the branch is `main`, the pull succeeds, and the worktree is clean. If the branch is not `main`, the pull fails, or `git status --short` shows changes, stop and ask Bram what to do. Do not switch branches, stash, commit, reset, restore, or clean without explicit direction.
+Proceed with implementation when the worktree is clean and either:
+
+- the checkout is `main`, `git pull --ff-only` succeeds, and `main` is current; or
+- the checkout is a clean Codex-managed worktree with detached `HEAD`, `origin/main` resolves, and a focused implementation branch can be created from current `origin/main`.
+
+If the branch is not `main` in a user checkout, fetch/pull fails, `origin/main` cannot be resolved, or `git status --short` shows changes, stop and ask Bram what to do. Do not switch branches, stash, commit, reset, restore, or clean without explicit direction.
 
 Read-only triage may inspect a dirty or non-main checkout, but must report that state as a blocker before recommending implementation.
 

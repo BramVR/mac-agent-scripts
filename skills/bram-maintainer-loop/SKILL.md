@@ -154,7 +154,7 @@ When Bram explicitly asks this loop to handle a specific issue or PR in a Bram-o
 
 Read-only, no-edits, dry-run, plan-only, or audit-only overrides all mutation permission: no local edits, branch checkout, commits, pushes, PR/issue comments or creation, CI reruns, worker thread creation/renames, or loop log writes. Report findings, proposed branch/PR plan, and the exact next permission needed.
 
-If the target checkout is dirty, detached, on an unexpected branch, or otherwise cannot safely switch/create the issue branch, stop and ask Bram for the exact checkout action. Do not create a worktree to bypass this unless Bram asks.
+If the target checkout is dirty, on an unexpected user branch, or otherwise cannot safely switch/create the issue branch, stop and ask Bram for the exact checkout action. A clean Codex-managed worktree with detached `HEAD` is acceptable when `origin/main` resolves; create the focused issue branch from current `origin/main`. Do not create a new worktree to bypass a blocker unless Bram asks.
 
 - Queue analysis or monitoring does not authorize edits.
 - Delegation or parallel-worker creation requires explicit Bram authorization.

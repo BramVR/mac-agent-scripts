@@ -33,6 +33,6 @@ Stop and ask Bram when:
 - required permission is missing
 - access, live proof, or a waiver is needed
 - the next action is land, delete, merge, close, or release
-- the repository checkout is unsafe for branch work
+- the repository checkout is unsafe for branch work; clean Codex worktree detached HEAD is acceptable if `origin/main` resolves and a focused branch can be created from it
 
 Output: start with the ledger path, resolved GitHub repository, permissions accepted, and first selected item URL. Status reports use Active, Needs Bram, and Ready next.
