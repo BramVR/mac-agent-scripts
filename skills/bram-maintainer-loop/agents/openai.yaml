@@ -1,4 +1,4 @@
 interface:
   display_name: "Bram Maintainer Loop"
   short_description: "Coordinate flagged repo maintenance loops"
-  default_prompt: "Use $bram-maintainer-loop to triage Bram's flagged repos, delegate authorized workers, monitor loop progress, and prepare decision-ready PRs with tests, live proof, and autoreview."
+  default_prompt: "Use $bram-maintainer-loop to triage Bram's flagged repos, delegate authorized workers that use $github-project-triage as the issue/PR workhorse, monitor loop progress, and prepare decision-ready PRs with TDD/tests, live proof, and autoreview."

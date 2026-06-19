@@ -1,11 +1,11 @@
 ---
 name: "github-project-triage"
-description: "Use whenever the user types triage or asks to triage GitHub issues, PRs, queues, CI, blockers, risk, proof, autonomous candidates, or next actions."
+description: "Use whenever the user types triage or asks to triage or autonomously work GitHub issues, PRs, queues, CI, blockers, risk, proof, autonomous candidates, or next actions."
 ---
 
 # GitHub Project Triage
 
-Always use this skill when the user types `triage`, unless the request explicitly targets a non-GitHub domain. From inside a repo, use the current GitHub project by default. Triage means maintainer-facing item cards: URL, what each issue/PR is about, why it matters, author trust, fit, risk, proof/test state, blockers, and next action. Never return only queue numbers or opaque refs.
+Always use this skill when the user types `triage`, unless the request explicitly targets a non-GitHub domain. From inside a repo, use the current GitHub project by default. Triage means maintainer-facing item cards: URL, what each issue/PR is about, why it matters, author trust, fit, risk, proof/test state, blockers, and next action. In autonomous mode, this skill is also the implementation workhorse for one issue/PR at a time. Never return only queue numbers or opaque refs.
 
 Output is URL-first: every surfaced issue/PR/repo item must include its GitHub URL in the first line or first sentence for that item. If giving a shortlist, print one URL per item.
 
@@ -106,6 +106,8 @@ For every plausible autonomous candidate, do a feasibility self-check before pre
 
 When the user says `do work autonomously`, `work you can do autonomously`, `keep going`, starts a `bram-maintainer-loop`, or similar, do not stop after a queue summary or one local patch. Process eligible items sequentially until no safe autonomous item remains, each item is landed/closed/deferred with proof within granted permissions, or a blocker requires Bram.
 
+This mode owns the full issue/PR execution loop. Do not defer to a separate workhorse skill; combine triage judgment with implementation, TDD, verification, review, and PR preparation here.
+
 Never work multiple tickets at once in one worker. For each item:
 
 1. Read the issue/PR, related code, docs, CI, and `VISION.md` if present; browse official docs when facts may be stale or unclear.
@@ -113,7 +115,7 @@ Never work multiple tickets at once in one worker. For each item:
    - Go: performance improvements unless complexity rises too much; bugfixes with repro/root cause and verification path; small UI/UX tweaks; docs fixes; narrow test/internal fixes; low-risk dependency/CI cleanup with green proof.
    - Ask first: new features, product/vision choices, broad behavior changes, risky dependencies, security-sensitive changes without strong proof, live-provider work without usable credentials, anything that cannot be end-to-end tested.
    - Refactor preference: choose a clean bounded refactor when it is the better fix for an autonomous item; do not use "small patch" as the default if it leaves worse design.
-3. Implement or fix the PR in the best maintainable way. Use `tdd` for behavior changes unless trivial/docs-only. Use `to-prd` or `to-issues` when the item is too vague or too large.
+3. Implement or fix the PR in the best maintainable way. Use `tdd` for behavior changes unless trivial/docs-only: start with a failing regression or characterization test when feasible, make it pass, then refactor within scope. Use `to-prd` or `to-issues` when the item is too vague or too large.
 4. Verify locally and live end-to-end when possible. For UI behavior, use the repo's expected live UI proof path. For API/provider behavior, use a real usable key/account through the expected secret workflow when available. If access is missing, stop before pretending the item is done and ask Bram for the exact access or waiver.
 5. Run `autoreview` before commit/land unless trivial/docs-only or explicitly skipped; address accepted/actionable findings.
 6. Ensure CI is green when CI work is authorized. Do not push, merge, close, rerun, or mutate public state without matching permission.

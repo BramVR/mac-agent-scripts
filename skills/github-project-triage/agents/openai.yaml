@@ -1,4 +1,4 @@
 interface:
   display_name: "GitHub Project Triage"
-  short_description: "URL-first GitHub issue and PR triage"
-  default_prompt: "Use $github-project-triage to triage the current GitHub repo: scan open issues and PRs, read comments, classify autonomous candidates versus Bram decisions, include trust and proof state, and only mutate public state when authorized."
+  short_description: "Triage and work GitHub issues/PRs"
+  default_prompt: "Use $github-project-triage to triage or autonomously work GitHub issues and PRs: scan queues, read comments/reviews, classify autonomous candidates versus Bram decisions, include trust and proof state, use TDD for behavior changes, run verification/autoreview, and only mutate public state when authorized."

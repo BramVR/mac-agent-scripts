@@ -29,7 +29,7 @@ This skill is adapted from upstream `maintainer-orchestrator`. Keep the proven l
    - `Autonomous`: clear fit, reproducible, bounded implementation, and usable verification path.
    - `Needs Bram`: product choice, security/privacy decision, unavailable credential/access, unavailable live proof, or destructive/irreversible choice.
    - `Ignored by Bram`: an explicitly named item Bram says must not affect current work or release gating.
-3. When delegation is explicitly authorized, this root loop session delegates repository triage/backstop lanes to Codex threads. Whenever assigning or materially changing work, rename the worker thread to `<Project>: <short current task>`. For a newly selected GitHub issue, always create a fresh dedicated issue worker thread; reuse a worker only for the exact same issue already in progress. Do not set or request a custom model; omit model selection and inherit the platform default.
+3. When delegation is explicitly authorized, this root loop session delegates repository triage/backstop lanes to Codex threads. Workers use `github-project-triage` as both the queue mapper and the issue/PR workhorse; do not create a separate workhorse skill. Whenever assigning or materially changing work, rename the worker thread to `<Project>: <short current task>`. For a newly selected GitHub issue, always create a fresh dedicated issue worker thread; reuse a worker only for the exact same issue already in progress. Do not set or request a custom model; omit model selection and inherit the platform default.
 4. Keep this coordinator thread lightweight. Do not perform extensive repository work here. Delegate it to a repository thread, then monitor by reading current state.
 5. Monitor workers every five minutes when Bram requests continuous orchestration. Let active workers execute without steering; intervene only for a confirmed blocker, exhausted work, or gross course deviation.
 6. Continue until each autonomous item is merged/closed with proof, each decision item has a mergeable PR ready for Bram's land/delete/access choice, an empty effective queue has either an explicitly authorized gated release completed or a documented no-release/needs-authorization reason, or an otherwise idle repository has current dependencies/docs.
@@ -144,6 +144,8 @@ Do not keep completed threads merely to satisfy a lane count. A monitored reposi
 
 Dependency freshness is a backstop, not higher priority than real queue, CI, or release work.
 
+Architecture review is a backstop and recommendation lane, not an automatic worker step. When repeated workers report hard-to-test modules, shallow modules, unclear seams, or cross-cutting refactor pressure, report `improve-codebase-architecture` as `Ready next` for Bram to invoke separately. Do not run it inside the loop unless Bram explicitly asks for an architecture pass.
+
 ## Authorization
 
 Treat triage, monitoring, implementation, public mutation, and release as separate permissions.
@@ -185,6 +187,7 @@ Keep credential discovery and use inside the worker that needs the secret. Repor
 
 Every delegated implementation thread, within its explicit authorization, must:
 
+- use `github-project-triage` Autonomous Work Mode for the assigned item;
 - read the full issue/PR discussion, repo instructions, docs, and relevant code;
 - when an issue has no PR, create one after implementing the best bounded candidate;
 - when work is broad or vague, use `to-prd` or `to-issues` before implementation;
