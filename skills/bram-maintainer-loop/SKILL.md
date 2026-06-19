@@ -31,7 +31,7 @@ This skill is adapted from upstream `maintainer-orchestrator`. Keep the proven l
    - `Ignored by Bram`: an explicitly named item Bram says must not affect current work or release gating.
 3. When delegation is explicitly authorized, this root loop session delegates repository triage/backstop lanes to Codex threads. Workers use `github-project-triage` as both the queue mapper and the issue/PR workhorse; do not create a separate workhorse skill. Whenever assigning or materially changing work, rename the worker thread to `<Project>: <short current task>`. For a newly selected GitHub issue, always create a fresh dedicated issue worker thread; reuse a worker only for the exact same issue already in progress. Do not set or request a custom model; omit model selection and inherit the platform default.
 4. Keep this coordinator thread lightweight. Do not perform extensive repository work here. Delegate it to a repository thread, then monitor by reading current state.
-5. Monitor workers every five minutes when Bram requests continuous orchestration. Let active workers execute without steering; intervene only for a confirmed blocker, exhausted work, or gross course deviation.
+5. Monitor workers without Bram nudges once continuous orchestration or an e2e loop is started. Use real timed waits between polls; do not stop merely because workers or CI are still active.
 6. Continue until each autonomous item is merged/closed with proof, each decision item has a mergeable PR ready for Bram's land/delete/access choice, an empty effective queue has either an explicitly authorized gated release completed or a documented no-release/needs-authorization reason, or an otherwise idle repository has current dependencies/docs.
 
 Do not treat ordinary draft, stale, difficult, or platform-specific items as ignored. Only an explicit Bram instruction can create an ignored-item exception. Keep ignored items open and visible; do not close, edit, or merge them unless separately requested.
@@ -93,6 +93,16 @@ When several decisions are grouped, give each item its own brief. Keep the recom
 ## Monitoring Protocol
 
 Assume another person or agent may have steered every worker since the last poll.
+
+Default cadence:
+
+- newly created worker or active TDD/review/PR setup: poll every 60-120 seconds;
+- queued/pending worktree setup: poll every 30-60 seconds until the worker exists or a concrete setup blocker appears;
+- CI watch after PR creation: poll every 60-180 seconds until green, red, or cancelled;
+- long-running but healthy worker: poll every 5 minutes after at least two coherent progress checks;
+- after any worker becomes idle/completed: refresh its final answer, PR/CI state, and the repository queue before reporting.
+
+The coordinator owns this cadence. Do not wait for Bram to type "check", "status", or "done?" before the next poll. Do not send a final answer while any delegated worker, required CI, or authorized repair loop is still active unless a precise blocker or permission boundary has been reached.
 
 Before sending any worker message:
 

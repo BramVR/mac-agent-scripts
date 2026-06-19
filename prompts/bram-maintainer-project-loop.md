@@ -12,6 +12,8 @@ Objective: run one project maintainer loop until autonomous queue work is exhaus
 
 Scope: only <repo-or-owner/repo>. Use the skill's repository resolution, worker, proof, and reporting rules.
 
+Automation expectation: treat this coordinator as a self-monitoring automation once started. Keep timed poll cycles running until all active workers and required CI checks are completed, blocked, or at an explicit permission boundary. Do not rely on Bram to ask for status, done, or check-in prompts.
+
 Permissions granted:
 - triage and monitor
 - create/rename worker threads
