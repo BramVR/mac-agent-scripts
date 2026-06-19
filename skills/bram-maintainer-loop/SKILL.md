@@ -31,8 +31,8 @@ This skill is adapted from upstream `maintainer-orchestrator`. Keep the proven l
    - `Ignored by Bram`: an explicitly named item Bram says must not affect current work or release gating.
 3. When delegation is explicitly authorized, this root loop session delegates repository triage/backstop lanes to Codex threads. Workers use `github-project-triage` as both the queue mapper and the issue/PR workhorse; do not create a separate workhorse skill. Whenever assigning or materially changing work, rename the worker thread to `<Project>: <short current task>`. For a newly selected GitHub issue, always create a fresh dedicated issue worker thread; reuse a worker only for the exact same issue already in progress. Do not set or request a custom model; omit model selection and inherit the platform default.
 4. Keep this coordinator thread lightweight. Do not perform extensive repository work here. Delegate it to a repository thread, then monitor by reading current state.
-5. Monitor workers without Bram nudges once continuous orchestration or an e2e loop is started. Use real timed waits between polls; do not stop merely because workers or CI are still active.
-6. Continue until each autonomous item is merged/closed with proof, each decision item has a mergeable PR ready for Bram's land/delete/access choice, an empty effective queue has either an explicitly authorized gated release completed or a documented no-release/needs-authorization reason, or an otherwise idle repository has current dependencies/docs.
+5. On continuous orchestration or e2e loops, create or update a Codex heartbeat automation for this coordinator when the platform automation tool is available. The heartbeat is the wakeup clock; the prompt cadence is only the in-turn behavior. Monitor workers without Bram nudges; do not stop merely because workers or CI are still active.
+6. Continue until each autonomous item is merged with proof when merge permission is granted, each decision item is prepared to the last authorized boundary, an empty effective queue has either an explicitly authorized gated release completed or a documented no-release/needs-authorization reason, or an otherwise idle repository has current dependencies/docs.
 
 Do not treat ordinary draft, stale, difficult, or platform-specific items as ignored. Only an explicit Bram instruction can create an ignored-item exception. Keep ignored items open and visible; do not close, edit, or merge them unless separately requested.
 
@@ -63,14 +63,14 @@ When Bram asks to add or remove loop repos, edit that config and keep the change
 
 Do not ask Bram to decide from an unprepared issue or rough contributor branch.
 
-- Existing PR: inspect, reproduce, rewrite/fix as needed, add tests/docs/changelog, run live proof and `autoreview`, push the final candidate, and get required CI green. Ask only when the PR is mergeable or the remaining blocker cannot be solved autonomously.
-- Issue without PR: investigate root cause and product constraints, use `tdd` for implementation when code behavior changes, implement the best bounded candidate on a branch, create a PR, and drive it to the same mergeable proof state.
+- Existing PR: inspect, reproduce, rewrite/fix as needed, add tests/docs/changelog, run live proof and `autoreview`, push the final candidate, and get required CI green. When merge is authorized and all gates pass, merge it; otherwise ask only when the PR is mergeable or the remaining blocker cannot be solved autonomously.
+- Issue without PR: investigate root cause and product constraints, use `tdd` for implementation when code behavior changes, implement the best bounded candidate on a branch, create a PR with a closing keyword for the assigned issue when correct, and drive it to the same mergeable proof state. When merge is authorized and all gates pass, merge it.
 - Vague feature/product idea: use `to-prd` or `to-issues` before implementation when the request is too broad for one autonomous slice.
 - Product decision: choose a reversible default when technically safe and expose the decision clearly in the PR. Prepare alternatives in the PR description when useful.
 - Access or live-proof blocker: finish code, tests, docs, review, and CI first. Ask only for the exact remaining credential, account action, hardware interaction, waiver, or land/delete decision.
 - Rejection candidate: produce concrete research and proof. When a code candidate would clarify the tradeoff, prepare the PR anyway; otherwise update the issue with the evidence needed for a Bram close/keep decision.
 
-The normal Bram interaction should be one of: land the prepared PR, delete/close it, provide one exact access step, grant one explicit waiver, or choose between clearly documented alternatives.
+The normal Bram interaction should be one of: delete/close a prepared PR, provide one exact access step, grant one explicit waiver, choose between clearly documented alternatives, or land the prepared PR only when merge permission is absent or blocked by protection.
 
 ## Owner Decision Briefs
 
@@ -93,6 +93,14 @@ When several decisions are grouped, give each item its own brief. Keep the recom
 ## Monitoring Protocol
 
 Assume another person or agent may have steered every worker since the last poll.
+
+Heartbeat wakeup:
+
+- At loop start, use the Codex app automation tool to create or update one heartbeat automation attached to this coordinator thread.
+- Default schedule: every 5 minutes.
+- Heartbeat task: refresh coordinator, worker, PR, and CI state; continue the loop; send worker messages only for the intervention cases below; close out only at a blocker, permission boundary, no safe work remains, or stable decision-ready state for work that cannot be merged under current permissions. Do not stop at a green mergeable loop PR when merge permission is granted.
+- Prefer updating an existing matching maintainer-loop heartbeat over creating duplicates.
+- If the automation tool is unavailable, say so in the first status and continue with in-turn timed polling.
 
 Default cadence:
 
@@ -160,6 +168,8 @@ Architecture review is a backstop and recommendation lane, not an automatic work
 
 Treat triage, monitoring, implementation, public mutation, and release as separate permissions.
 
+Starting a continuous maintainer loop or e2e loop authorizes creating or updating the coordinator heartbeat automation unless Bram says read-only, dry-run, no-edits, no-automation, or similar. The heartbeat must only monitor and continue this loop; it does not authorize extra repository mutations beyond the loop's granted permissions.
+
 When Bram explicitly asks this loop to handle a specific issue or PR in a Bram-owned repository, and does not say read-only, dry-run, no-edits, plan-only, audit-only, or similar, that request authorizes: resolving or cloning that repo if missing, creating or checking out a focused branch in the repo checkout when clean enough to do so, implementing the bounded candidate, committing, pushing the branch, creating or updating the PR, rerunning/watching required CI, and making repair commits until CI is green. It does not authorize merge, close, release, destructive local cleanup, unrelated workflow/secret changes, or broad work outside the named item.
 
 Read-only, no-edits, dry-run, plan-only, or audit-only overrides all mutation permission: no local edits, branch checkout, commits, pushes, PR/issue comments or creation, CI reruns, worker thread creation/renames, or loop log writes. Report findings, proposed branch/PR plan, and the exact next permission needed.
@@ -171,7 +181,8 @@ If the target checkout is dirty, on an unexpected user branch, or otherwise cann
 - Implementation permission authorizes local changes and verification only unless Bram also authorizes push/PR updates or gives the specific issue/PR handle grant above.
 - Push permission does not imply merge or close permission.
 - CI rerun and CI-fix permission must be explicit unless Bram gives the specific issue/PR handle grant above; a push alone does not authorize workflow mutations.
-- Merge/close permission must be explicit for the affected work.
+- Merge/close permission must be explicit for the affected work. When merge is granted for a maintainer loop, merge only loop-prepared or loop-repaired PRs after all required proof is complete: focused tests, full gate, live proof or explicit waiver, `autoreview`, Public Artifact Confidentiality Gate, non-draft PR, required CI green, no unresolved requested-changes review, and no fresh Bram instruction blocking the change. If branch protection, stale base, conflicts, red checks, or review requirements block merge, repair autonomously when authorized; otherwise ask with the exact blocker.
+- Merge permission does not imply manual issue close, release, destructive cleanup, or unrelated PR merges. Prefer PR closing keywords for assigned issues; do not manually close issues unless close permission is also granted.
 - Release, version bump, tag, registry publish, and GitHub Release require a current explicit release request.
 - Release permission must explicitly include required branch/tag pushes or be paired with push permission.
 - `ship` uses repo `AGENTS.MD` meaning: changelog, commit in groups, push, pull.
@@ -210,7 +221,8 @@ Every delegated implementation thread, within its explicit authorization, must:
 - when push is authorized, push the authorized changes;
 - when CI rerun/fix is authorized, rerun required checks and repair failures until green;
 - when CI rerun/fix is not authorized and checks fail, stop with the exact failure and requested permission;
-- when merge/close is authorized, merge or close the queue item with an exact proof comment;
+- when merge is authorized, merge the prepared PR only after all merge gates pass, then fetch/pull `main --ff-only`, verify clean status, refresh the queue, and continue to the next autonomous item;
+- when close is authorized, close the queue item with exact proof;
 - after authorized landing, return to updated, clean `main`.
 
 Prefer repairing the contributor PR. Preserve contributor credit and follow workspace PR rules.
