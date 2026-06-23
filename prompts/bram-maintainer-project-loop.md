@@ -23,7 +23,7 @@ Permissions granted:
 - commit and push branches
 - create/update PRs
 - rerun/watch CI and make CI repair commits until green
-- merge loop-prepared PRs after required proof, autoreview, confidentiality gate, and green CI
+- merge loop-prepared PRs after required proof, default `autoreview`, `autoreview --preset claude-opus`, confidentiality gate, and green CI
 
 Permissions not granted:
 - close
