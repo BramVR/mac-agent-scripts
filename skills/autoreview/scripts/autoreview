@@ -21,6 +21,10 @@ from typing import Any, Callable
 ENGINES = ("codex", "claude", "droid", "copilot", "pi", "opencode")
 DEFAULT_MODEL_BY_ENGINE = {
 }
+CLAUDE_OPUS_MODEL = "claude-opus-4-8"
+REVIEW_PRESETS: dict[str, tuple[tuple[str, str | None, str | None], ...]] = {
+    "claude-opus": (("claude", CLAUDE_OPUS_MODEL, None),),
+}
 BUNDLE_LIMIT_BYTES = 180_000
 THINKING_LEVELS_BY_ENGINE = {
     "codex": {"none", "minimal", "low", "medium", "high", "xhigh"},
@@ -1902,6 +1906,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--reviewers", help="Comma-separated review panel, e.g. codex,claude,pi or codex:<model>:high.")
     parser.add_argument("--panel", action="store_true", help="Run a Codex/Claude review panel unless --engine changes the first reviewer.")
     parser.add_argument(
+        "--preset",
+        choices=sorted(REVIEW_PRESETS),
+        default=os.environ.get("AUTOREVIEW_PRESET"),
+        help="Reviewer preset, e.g. claude-opus.",
+    )
+    parser.add_argument(
         "--model",
         action="append",
         help="Model for all reviewers or engine=model. Repeatable. Defaults to each reviewer CLI's configured model.",
@@ -1961,6 +1971,9 @@ def parse_args() -> argparse.Namespace:
     args = parser.parse_args()
     if args.engine not in ENGINES:
         raise SystemExit(f"invalid --engine/AUTOREVIEW_ENGINE: {args.engine}")
+    if args.preset and args.preset not in REVIEW_PRESETS:
+        valid = ", ".join(sorted(REVIEW_PRESETS))
+        raise SystemExit(f"invalid --preset/AUTOREVIEW_PRESET: {args.preset} (valid: {valid})")
     return args
 
 
@@ -2041,11 +2054,16 @@ def reviewer_args(args: argparse.Namespace) -> list[argparse.Namespace]:
     env_global_thinking, env_thinking_by_engine = env_defaults_for("thinking")
     env_global_fallback, env_fallback_by_engine = env_defaults_for("fallback-model")
     reviewers: list[tuple[str, str | None, str | None]] = []
+    selector_count = sum(bool(value) for value in (args.reviewers, args.panel, args.preset))
+    if selector_count > 1:
+        raise SystemExit("--reviewers, --panel, and --preset are mutually exclusive")
     if args.reviewers:
         tokens = [token.strip() for token in args.reviewers.split(",") if token.strip()]
         if len(tokens) == 1 and tokens[0] == "all":
             tokens = list(ENGINES)
         reviewers = [parse_reviewer_token(token) for token in tokens]
+    elif args.preset:
+        reviewers = list(REVIEW_PRESETS[args.preset])
     elif args.panel:
         engines = [args.engine]
         for engine in ("codex", "claude"):
@@ -2189,6 +2207,7 @@ def reviewer_test_args(**overrides: Any) -> argparse.Namespace:
     defaults = {
         "reviewers": None,
         "panel": False,
+        "preset": None,
         "engine": "codex",
         "model": None,
         "thinking": None,
@@ -2261,6 +2280,15 @@ def self_test_config_defaults() -> None:
         )[0]
         if inline.model != "inline-model" or inline.thinking != "minimal":
             raise SystemExit("self-test config defaults failed: inline reviewer values should override CLI/env")
+        preset = reviewer_args(reviewer_test_args(preset="claude-opus"))
+        if len(preset) != 1 or preset[0].engine != "claude" or preset[0].model != CLAUDE_OPUS_MODEL:
+            raise SystemExit("self-test config defaults failed: claude-opus preset model incorrect")
+        try:
+            reviewer_args(reviewer_test_args(reviewers="codex", preset="claude-opus"))
+            raise SystemExit("self-test config defaults failed: preset should reject other selectors")
+        except SystemExit as exc:
+            if "mutually exclusive" not in str(exc):
+                raise
     print("self-test config defaults: ok")
 
 

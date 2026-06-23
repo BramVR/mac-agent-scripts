@@ -4,6 +4,9 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-06-23 — Auto Review Loop Gate
+- Added a `claude-opus` autoreview preset for standalone Claude Opus 4.8 review and updated the maintainer loop to run default Codex review plus the Claude Opus review as separate closeout gates.
+
 ## 2026-06-13 — Auto Review Skill
 - Added Bram-owned `autoreview` skill from upstream structured review workflow, keeping Codex as default and preserving local CLI model defaults unless explicitly overridden.
 - Removed legacy `codex-review` skill so review routing uses `autoreview`.

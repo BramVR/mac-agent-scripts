@@ -101,6 +101,19 @@ Optional review context is first-class:
 "$AUTOREVIEW" --mode branch --base origin/main --prompt-file /tmp/review-notes.md --dataset /tmp/evidence.json
 ```
 
+Loop closeout can run the default Codex review, then a separate Claude Opus review:
+
+```bash
+"$AUTOREVIEW" --mode branch --base origin/main
+"$AUTOREVIEW" --preset claude-opus --mode branch --base origin/main
+```
+
+Claude Opus only:
+
+```bash
+"$AUTOREVIEW" --preset claude-opus --mode branch --base origin/main
+```
+
 If an open PR exists, use its actual base:
 
 ```bash
@@ -140,6 +153,14 @@ Run multiple reviewers against one frozen bundle:
 ```bash
 "$AUTOREVIEW" --reviewers codex,claude,pi,opencode
 ```
+
+Named presets are available for common closeout shapes:
+
+```bash
+"$AUTOREVIEW" --preset claude-opus
+```
+
+`claude-opus` runs the Claude reviewer pinned to `claude-opus-4-8`. Normal standalone `autoreview` still defaults to Codex. Run both commands when a loop requires double review. If Claude Opus is unavailable after the normal same-command retries, treat the second review as blocked rather than accepting a Codex-only result.
 
 `--panel` is shorthand for Codex plus Claude unless `--engine` changes the first reviewer:
 
@@ -221,6 +242,7 @@ CLI flags take precedence over environment variables.
 | `AUTOREVIEW_<ENGINE>_MODEL` | Per-engine model override |
 | `AUTOREVIEW_<ENGINE>_THINKING` | Per-engine thinking override |
 | `AUTOREVIEW_CLAUDE_FALLBACK_MODEL` | Claude-only fallback chain |
+| `AUTOREVIEW_PRESET` | Reviewer preset such as `claude-opus` |
 
 Codex maps thinking to `model_reasoning_effort`. Claude maps thinking to `--effort`. Pi maps thinking to `--thinking`. OpenCode maps thinking to `--variant`. Copilot rejects `--thinking`. Only Claude accepts `--fallback-model`; global CLI/env fallback requires at least one Claude reviewer, and engine-specific fallback overrides require that reviewer to be selected. Non-Claude fallback overrides, including `AUTOREVIEW_<NONCLAUDE>_FALLBACK_MODEL`, fail closed instead of being silently ignored.
 
@@ -282,6 +304,7 @@ The helper:
 - fails closed when reviewed diffs or included untracked files exceed the bundle cap; narrow the review target instead of accepting a truncated clean result
 - supports `--stream-engine-output` or `AUTOREVIEW_STREAM_ENGINE_OUTPUT=1` for live engine text while preserving structured validation; Codex and Claude hide tool/file event details, emit compact activity summaries, and report usage at turn completion
 - supports opt-in review panels with `--panel` / `--reviewers`, plus per-engine `--model`, `--thinking`, and Claude `--fallback-model`
+- supports `--preset claude-opus`; run the default command separately when both Codex and Claude reviews are required
 - uses each reviewer CLI's configured model by default; honors `AUTOREVIEW_MODEL`, `AUTOREVIEW_THINKING`, `AUTOREVIEW_FALLBACK_MODEL`, and per-engine `AUTOREVIEW_<ENGINE>_MODEL` / `AUTOREVIEW_<ENGINE>_THINKING` environment overrides when CLI flags are omitted
 - allows read-only tools and web search by default where the selected CLI supports them; forbids nested review in the prompt; Codex is run through `codex exec` with read-only sandbox, reviewed-repo instruction/config/rule isolation flags, and structured output
 - runs Claude with `--safe-mode` (`v2.1.169+`), `--setting-sources user`, MCP disabled, explicit allowed tools, and `--fallback-model` when set, so reviewed-repo hooks/skills/MCP do not affect the review run while normal auth still works; managed settings policy can still apply
