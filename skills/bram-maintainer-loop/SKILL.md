@@ -72,6 +72,8 @@ Do not ask Bram to decide from an unprepared issue or rough contributor branch.
 
 The normal Bram interaction should be one of: delete/close a prepared PR, provide one exact access step, grant one explicit waiver, choose between clearly documented alternatives, or land the prepared PR only when merge permission is absent or blocked by protection.
 
+When Bram asks to manually test a PR, treat that as an explicit stop-before-merge boundary. Prepare a non-draft PR with gates, live proof, confidentiality pass, and exact manual test commands, then stop without merging until Bram gives new merge authority.
+
 ## Review Gate
 
 Run one basic review per stable candidate. Do not run a full pre-PR review and then repeat the same review before merge when the reviewed commit is still the merge candidate.
@@ -131,12 +133,15 @@ Before sending any worker message:
 Intervene only when evidence shows one of:
 
 - the worker explicitly requests coordination or reports a blocker;
+- Bram reports live/manual behavior that contradicts the worker's scripted proof, such as stuck UI, wrong output, missing action, or proof that does not show the real surface;
 - the worker has completed or run out of autonomous work and needs a next queue item;
 - repeated failures show no progress and a concrete correction is available;
 - wrong repository/item, unauthorized mutation, destructive action, security risk, release-gate violation, or direct conflict with Bram's latest instruction;
 - implementation has grossly diverged from the accepted task, not merely chosen a different reasonable design.
 
 Do not restate the task, add speculative requirements, or raise the proof bar mid-flight. Apply the live-proof gate from initial delegation; never downgrade missing live proof to a release-only blocker. Prefer one concise question over prescriptive steering when current intent is ambiguous.
+
+When Bram materially changes behavior, scope, wording, or proof expectations mid-flight, update the GitHub issue/PR or worker prompt so the latest source of truth is durable. Do not leave future workers to infer the correction from chat history.
 
 Never interrupt, archive, rename, duplicate, or replace a worker without first reading its current state. For a suspected duplicate, read both threads; if either has unique progress, edits, or an active turn, leave it alone and ask Bram before changing thread state.
 
@@ -221,6 +226,7 @@ Every delegated implementation thread, within its explicit authorization, must:
 - read the full issue/PR discussion, repo instructions, docs, and relevant code;
 - when an issue has no PR, create one after implementing the best bounded candidate;
 - when work is broad or vague, use `to-prd` or `to-issues` before implementation;
+- when Bram names a comparable repo or implementation pattern, inspect that source before designing; copy the proven pattern where it fits, and invent only after explaining why reuse is blocked or wrong;
 - when changing code behavior, use `tdd` unless the change is too trivial or docs-only;
 - reproduce or establish root cause before accepting an existing patch;
 - rewrite when a cleaner bounded design is available;
@@ -248,6 +254,8 @@ Live proof is a pre-land requirement for runtime behavior, not optional polish.
 - Never infer a live-proof waiver from merge permission, release permission, prior contributor evidence, or confidence in mocks.
 - Re-run live proof after any fix that changes the relevant runtime path.
 - Pure docs, metadata, CI, or test-only changes with no runtime boundary may use the closest built-artifact or workflow proof; state why no external live boundary applies.
+- When UI screenshot proof is requested, capture the actual running UI surface being changed (app window, native menu, status item, browser viewport, etc.). Do not substitute generated artifacts, SVG renders, diagrams, fixture cards, or model-only proof unless Bram explicitly accepts that waiver.
+- Public UI proof must render where reviewers will read it. Prefer GitHub `user-attachments`/`gh image` or another verified inline-rendering path; do not call raw branch links, local paths, private raw URLs, or unrendered generated files sufficient proof.
 
 Record live evidence or Bram's explicit waiver in the landing proof comment.
 
