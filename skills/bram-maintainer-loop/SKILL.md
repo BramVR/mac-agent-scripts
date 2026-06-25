@@ -29,7 +29,7 @@ This skill is adapted from upstream `maintainer-orchestrator`. Keep the proven l
    - `Autonomous`: clear fit, reproducible, bounded implementation, and usable verification path.
    - `Needs Bram`: product choice, security/privacy decision, unavailable credential/access, unavailable live proof, or destructive/irreversible choice.
    - `Ignored by Bram`: an explicitly named item Bram says must not affect current work or release gating.
-3. When delegation is explicitly authorized, this root loop session delegates repository triage/backstop lanes to Codex threads. Workers use `github-project-triage` as both the queue mapper and the issue/PR workhorse; do not create a separate workhorse skill. Whenever assigning or materially changing work, rename the worker thread to `<Project>: <short current task>`. For a newly selected GitHub issue, always create a fresh dedicated issue worker thread; reuse a worker only for the exact same issue already in progress. Do not set or request a custom model; omit model selection and inherit the platform default.
+3. When delegation is explicitly authorized, this root loop session delegates repository triage/backstop lanes to Codex threads. Workers use `github-project-triage` as both the queue mapper and the issue/PR workhorse; do not create a separate workhorse skill. Whenever assigning or materially changing work, rename the worker thread to `<Project>: <short current task>`. For a newly selected GitHub issue, always create a fresh dedicated issue worker thread; reuse a worker only for the exact same issue already in progress. Create worker threads with `gpt-5.5` and `high` reasoning unless Bram explicitly overrides for that lane.
 4. Keep this coordinator thread lightweight. Do not perform extensive repository work here. Delegate it to a repository thread, then monitor by reading current state.
 5. On continuous orchestration or e2e loops, create or update a Codex heartbeat automation for this coordinator when the platform automation tool is available. The heartbeat is the wakeup clock; the prompt cadence is only the in-turn behavior. Monitor workers without Bram nudges; do not stop merely because workers or CI are still active.
 6. Continue until each autonomous item is merged with proof when merge permission is granted, each decision item is prepared to the last authorized boundary, an empty effective queue has either an explicitly authorized gated release completed or a documented no-release/needs-authorization reason, or an otherwise idle repository has current dependencies/docs.
@@ -63,14 +63,23 @@ When Bram asks to add or remove loop repos, edit that config and keep the change
 
 Do not ask Bram to decide from an unprepared issue or rough contributor branch.
 
-- Existing PR: inspect, reproduce, rewrite/fix as needed, add tests/docs/changelog, run live proof, run default `autoreview` until clean, then run `autoreview --preset claude-opus` until clean, push the final candidate, and get required CI green. When merge is authorized and all gates pass, merge it; otherwise ask only when the PR is mergeable or the remaining blocker cannot be solved autonomously.
+- Existing PR: inspect, reproduce, rewrite/fix as needed, add tests/docs/changelog, run live proof, pass the Review Gate below on the final candidate, push the final candidate, and get required CI green. When merge is authorized and all gates pass, merge it; otherwise ask only when the PR is mergeable or the remaining blocker cannot be solved autonomously.
 - Issue without PR: investigate root cause and product constraints, use `tdd` for implementation when code behavior changes, implement the best bounded candidate on a branch, create a PR with a closing keyword for the assigned issue when correct, and drive it to the same mergeable proof state. When merge is authorized and all gates pass, merge it.
 - Vague feature/product idea: use `to-prd` or `to-issues` before implementation when the request is too broad for one autonomous slice.
 - Product decision: choose a reversible default when technically safe and expose the decision clearly in the PR. Prepare alternatives in the PR description when useful.
-- Access or live-proof blocker: finish code, tests, docs, review, and CI first. Ask only for the exact remaining credential, account action, hardware interaction, waiver, or land/delete decision.
+- Access or live-proof blocker: finish code, tests, docs, required review, and CI first. Ask only for the exact remaining credential, account action, hardware interaction, waiver, or land/delete decision.
 - Rejection candidate: produce concrete research and proof. When a code candidate would clarify the tradeoff, prepare the PR anyway; otherwise update the issue with the evidence needed for a Bram close/keep decision.
 
 The normal Bram interaction should be one of: delete/close a prepared PR, provide one exact access step, grant one explicit waiver, choose between clearly documented alternatives, or land the prepared PR only when merge permission is absent or blocked by protection.
+
+## Review Gate
+
+Run one basic review per stable candidate. Do not run a full pre-PR review and then repeat the same review before merge when the reviewed commit is still the merge candidate.
+
+- `Basic`: every candidate, including docs, metadata, formatting, and test-only changes. Run relevant tests/checks, then default `autoreview` until no accepted/actionable findings remain.
+- `Extra`: auth, secrets, privacy, external integrations, public artifact/log/screenshot/model-bearing changes, broad refactor, contributor PR rewrite, release candidate, breaking dependency, unclear behavior, or anything that failed basic review for non-trivial reasons. Add `autoreview --preset claude-opus` until clean when the extra risk justifies it or Bram asks for it. If Claude Opus is unavailable, report that the extra review is unavailable instead of treating it as routine failure.
+
+Before merge, refresh the PR diff, CI, review state, and mergeability. Re-run the Review Gate only when candidate code, generated artifacts, public proof, or risk level changed after the last clean review. PR body edits, CI reruns, rebases with no effective diff change, or test/proof output updates do not require another review.
 
 ## Owner Decision Briefs
 
@@ -83,7 +92,7 @@ Every decision request must include:
 - full canonical clickable URL and title when the item exists on GitHub;
 - plain-language explanation of what changes and who benefits;
 - why the decision is needed now;
-- completed proof: reproduction, live test, tests, clean default `autoreview`, clean `autoreview --preset claude-opus`, CI, and mergeability as applicable;
+- completed proof: reproduction, live test, tests, Review Gate result, CI, and mergeability as applicable;
 - material tradeoffs, residual risks, scope concerns, or missing evidence;
 - the loop's recommendation and concise rationale;
 - the exact choices available and what each choice does.
@@ -156,7 +165,7 @@ An idle or completed repository thread must not remain a polling-only lane. Afte
 1. Assign the next autonomous PR to the same repository thread, or assign the next autonomous issue to a fresh issue-specific worker thread.
 2. Prepare each remaining non-autonomous item to the decision-ready boundary, then ask Bram a concise concrete question.
 3. When the effective issue and PR queues are empty, execute the authorized patch or minor release after all release gates pass.
-4. If no queue, CI, or authorized release work remains, treat dependency freshness as the next candidate backstop. When implementation is authorized, or when delegation is separately authorized, audit and update dependencies to compatible current stable releases unless Bram authorizes breaking-major upgrades. Delegate this as normal repository work: inspect upstream changes and package health, honor repository-specific stabilization policies, avoid prerelease-only upgrades unless already adopted, preserve the repository's package manager, add compatibility fixes/tests when needed, run exact built/live proof, clean default `autoreview`, clean `autoreview --preset claude-opus`, the Public Artifact Confidentiality Gate, and required CI, then prepare or land the update within granted permissions. Without implementation/delegation authorization, report dependency freshness as the next candidate work and stop.
+4. If no queue, CI, or authorized release work remains, treat dependency freshness as the next candidate backstop. When implementation is authorized, or when delegation is separately authorized, audit and update dependencies to compatible current stable releases unless Bram authorizes breaking-major upgrades. Delegate this as normal repository work: inspect upstream changes and package health, honor repository-specific stabilization policies, avoid prerelease-only upgrades unless already adopted, preserve the repository's package manager, add compatibility fixes/tests when needed, run exact built/live proof, pass the Review Gate, pass the Public Artifact Confidentiality Gate, and required CI, then prepare or land the update within granted permissions. Without implementation/delegation authorization, report dependency freshness as the next candidate work and stop.
 
 Do not keep completed threads merely to satisfy a lane count. A monitored repository should have active autonomous work, a pending Bram question, an active release, or a documented no-release/needs-authorization reason.
 
@@ -181,7 +190,7 @@ If the target checkout is dirty, on an unexpected user branch, or otherwise cann
 - Implementation permission authorizes local changes and verification only unless Bram also authorizes push/PR updates or gives the specific issue/PR handle grant above.
 - Push permission does not imply merge or close permission.
 - CI rerun and CI-fix permission must be explicit unless Bram gives the specific issue/PR handle grant above; a push alone does not authorize workflow mutations.
-- Merge/close permission must be explicit for the affected work. When merge is granted for a maintainer loop, merge only loop-prepared or loop-repaired PRs after all required proof is complete: focused tests, full gate, live proof or explicit waiver, clean default `autoreview`, clean `autoreview --preset claude-opus`, Public Artifact Confidentiality Gate, non-draft PR, required CI green, no unresolved requested-changes review, and no fresh Bram instruction blocking the change. If branch protection, stale base, conflicts, red checks, or review requirements block merge, repair autonomously when authorized; otherwise ask with the exact blocker.
+- Merge/close permission must be explicit for the affected work. When merge is granted for a maintainer loop, merge only loop-prepared or loop-repaired PRs after all required proof is complete: focused tests, full gate, live proof or explicit waiver, Review Gate pass for the current candidate, Public Artifact Confidentiality Gate, non-draft PR, required CI green, no unresolved requested-changes review, and no fresh Bram instruction blocking the change. If branch protection, stale base, conflicts, red checks, or review requirements block merge, repair autonomously when authorized; otherwise ask with the exact blocker.
 - Merge permission does not imply manual issue close, release, destructive cleanup, or unrelated PR merges. Prefer PR closing keywords for assigned issues; do not manually close issues unless close permission is also granted.
 - Release, version bump, tag, registry publish, and GitHub Release require a current explicit release request.
 - Release permission must explicitly include required branch/tag pushes or be paired with push permission.
@@ -217,7 +226,7 @@ Every delegated implementation thread, within its explicit authorization, must:
 - rewrite when a cleaner bounded design is available;
 - add regression coverage when appropriate;
 - run focused and full tests, then live/end-to-end proof against the real affected boundary before landing;
-- run default `autoreview` until no accepted/actionable findings remain, then run `autoreview --preset claude-opus` until no accepted/actionable findings remain; if Claude Opus is unavailable after normal retries, report the second-review blocker rather than silently treating Codex-only review as complete;
+- pass the Review Gate for the final candidate; do not repeat the same review before merge unless the candidate or risk changed;
 - when push is authorized, push the authorized changes;
 - when CI rerun/fix is authorized, rerun required checks and repair failures until green;
 - when CI rerun/fix is not authorized and checks fail, stop with the exact failure and requested permission;
@@ -235,7 +244,7 @@ Live proof is a pre-land requirement for runtime behavior, not optional polish.
 - Test the exact final candidate commit through the changed user path using the real built/installed artifact and real service, account, device, OS, or external provider as applicable.
 - For external integrations, authenticated live calls are required when credentials are available. Docs, mocks, fixtures, protocol captures, route-existence checks, and CI supplement live proof; they do not replace it.
 - Redact secrets and private user data while retaining concrete evidence such as command, behavior, response class, artifact hash, or observed state transition.
-- If credentials, account state, hardware, platform access, or a safe live target are unavailable, finish all autonomous code, tests, review, and CI work, then stop before merge/close. Ask for the exact access, an explicit item-specific waiver, or a reject/close decision.
+- If credentials, account state, hardware, platform access, or a safe live target are unavailable, finish all autonomous code, tests, required review, and CI work, then stop before merge/close. Ask for the exact access, an explicit item-specific waiver, or a reject/close decision.
 - Never infer a live-proof waiver from merge permission, release permission, prior contributor evidence, or confidence in mocks.
 - Re-run live proof after any fix that changes the relevant runtime path.
 - Pure docs, metadata, CI, or test-only changes with no runtime boundary may use the closest built-artifact or workflow proof; state why no external live boundary applies.
@@ -297,7 +306,7 @@ Before release:
 - default to patch for compatible fixes, maintenance, refactors, docs, CI, and small behavior improvements;
 - select minor only for substantial additive functionality, a meaningful new feature set, or a new backward-compatible public API;
 - never use minor merely because several fixes accumulated; major requires explicit approval;
-- run full release checks, run default `autoreview` until clean, then run `autoreview --preset claude-opus` until clean on release-only edits. If Claude Opus is unavailable after normal retries, stop and report the release-candidate second-review blocker instead of treating Codex-only review as complete.
+- run full release checks, pass the basic Review Gate on release-only edits, and add Claude Opus extra review when release risk justifies it or Bram asks for it.
 
 After publishing, verify the actual release:
 
