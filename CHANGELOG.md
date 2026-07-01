@@ -4,6 +4,9 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-07-01 — Current-Repo Maintainer Loop
+- Reworked `bram-maintainer-loop` from latest upstream orchestration mechanics for one root loop and heartbeat per canonical repository, fresh issue/PR workers, autonomous supported land/close, TDD/PRD routing, Claude Opus extra review, public artifact confidentiality, dependency freshness, and release-specific blockers.
+
 ## 2026-06-23 — Auto Review Loop Gate
 - Added a `claude-opus` autoreview preset for standalone Claude Opus 4.8 review and updated the maintainer loop to run default Codex review plus the Claude Opus review as separate closeout gates.
 
