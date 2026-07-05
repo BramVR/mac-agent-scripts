@@ -33,6 +33,21 @@ Loop mode: in `bram-maintainer-loop`, draft the slices and AFK/HITL labels as th
 - Prefer many thin slices over few thick ones
 </vertical-slice-rules>
 
+### 3b. Require real proof when reality is the product
+
+If the slice changes behavior that only matters against a real dependency, the issue must require an automatic real proof gate. Fake/default tests are still required for machinery, but they are not enough to close or merge real behavior.
+
+Examples of real dependencies: live hosts, browsers, devices, external CLIs, OAuth-backed services, payment providers, review systems, deployment targets, hardware, licensed desktop apps, or consuming repos.
+
+<real-proof-rules>
+- Acceptance criteria must name the real proof command, workflow, smoke, or CI job.
+- The real proof must be automatic once configured; no manual Bram step may be required during merge.
+- A skipped, missing, or fake-only real proof fails the issue.
+- Mark the slice HITL unless the required live credentials/host/config already exist in automation and the agent can verify them without asking.
+- If real proof is impossible, split first: one HITL slice to create the automated proof gate, then AFK implementation slices blocked by it.
+- If the product promise changes because real proof shows a feature is unsupported, include docs/ADR/PRD cleanup in the same vertical slice.
+</real-proof-rules>
+
 ### 4. Quiz the user
 
 Present the proposed breakdown as a numbered list. For each slice, show:
@@ -41,6 +56,7 @@ Present the proposed breakdown as a numbered list. For each slice, show:
 - **Type**: HITL / AFK
 - **Blocked by**: which other slices (if any) must complete first
 - **User stories covered**: which user stories this addresses (if the source material has them)
+- **Real proof**: automatic live gate required, or "not needed" with a reason
 
 Ask the user:
 
@@ -48,6 +64,7 @@ Ask the user:
 - Are the dependency relationships correct?
 - Should any slices be merged or split further?
 - Are the correct slices marked as HITL and AFK?
+- Does every real-product slice have a non-skippable automatic proof gate?
 
 Iterate until the user approves the breakdown.
 
@@ -73,6 +90,12 @@ Avoid specific file paths or code snippets — they go stale fast. Exception: if
 - [ ] Criterion 1
 - [ ] Criterion 2
 - [ ] Criterion 3
+
+## Required proof
+
+- Fake/local gate: exact command(s) that must pass.
+- Real gate: exact automatic live command, workflow, smoke, or CI job that must pass; or "Not required" with the reason.
+- Merge rule: if a required real gate is skipped, missing, or replaced by fake-only proof, this issue is not complete.
 
 ## Blocked by
 
