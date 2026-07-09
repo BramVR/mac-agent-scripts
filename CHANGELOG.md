@@ -4,6 +4,9 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-07-09 — Skill Cleaner Intake
+- Vendored `skill-cleaner` from upstream verbatim (SKILL.md, Codex agent, analyzer, tests) and linked it into both `~/.codex/skills` and `~/.claude/skills` so both agents can invoke it. The analyzer currently audits only the live Codex/OpenClaw inventory; a Claude Code port (`~/.claude/skills`, `~/.claude/projects` session logs, Claude context window) is tracked as follow-up.
+
 ## 2026-07-01 — Current-Repo Maintainer Loop
 - Reworked `bram-maintainer-loop` from latest upstream orchestration mechanics for one root loop and heartbeat per canonical repository, fresh issue/PR workers, autonomous supported land/close, TDD/PRD routing, Claude Opus extra review, public artifact confidentiality, dependency freshness, and release-specific blockers.
 

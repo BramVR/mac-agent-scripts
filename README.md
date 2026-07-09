@@ -52,6 +52,9 @@ Global Codex skills are installed individually:
 - `~/.codex/skills/video-transcript-downloader -> ~/Projects/agent-scripts/skills/video-transcript-downloader`
 - `~/.codex/skills/whatsapp -> ~/Projects/agent-scripts/skills/whatsapp`
 - `~/.codex/skills/wacli -> ~/Projects/agent-scripts/skills/wacli`
+- `~/.codex/skills/skill-cleaner -> ~/Projects/agent-scripts/skills/skill-cleaner`
+
+The same per-skill symlinks are mirrored under `~/.claude/skills/<name>` so both Codex and Claude load the shared skills.
 
 Do not replace this with a broad `~/.codex/skills -> ~/Projects/agent-scripts/skills` symlink unless intentionally changing Bram's setup.
 
