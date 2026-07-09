@@ -16,8 +16,10 @@ Run real Maya plugin proof without rediscovering the same traps. Prefer determin
 3. Verify `pluginArtifacts` are declared by the scenario/project and the host config has a trusted plugin artifact root.
 4. Start from a clean run workspace; do not reuse stale screenshots, recordings, or Scenario Results.
 5. Run the real gate through `maya-stall run`, not manual Maya unless explicitly debugging.
-6. Inspect Scenario Result JSON first, then screenshots/recordings, logs, and saved scene.
-7. Close only with exact-head proof: commit, CI artifact job/id/hash/size, run id, screenshot/recording paths/sizes, Scenario Result fields, confidentiality pass.
+6. As soon as Maya is expected to load the `.mll`, capture/inspect a screenshot or equivalent UI state before waiting for long scenario completion.
+7. If that early checkpoint shows `Untrusted Plugin Loading`, stop the wait and classify trusted staging/host baseline as failed.
+8. Inspect Scenario Result JSON first, then screenshots/recordings, logs, and saved scene.
+9. Close only with exact-head proof: commit, CI artifact job/id/hash/size, run id, screenshot/recording paths/sizes, Scenario Result fields, confidentiality pass.
 
 ## Preflight
 
@@ -74,6 +76,8 @@ During a live run:
 
 - Do not start a second live run against a shared host.
 - Watch for timeout text, Scenario Result path, run id, artifact bundle root, screenshot path, and recording path.
+- Immediately after plugin load, or after the first log/event that means Maya should load the `.mll`, inspect a screenshot or equivalent UI state.
+- If the early screenshot shows `Untrusted Plugin Loading`, stop waiting for scenario completion and fix trusted staging or host baseline before rerun.
 - If the command times out, immediately inspect the captured failure screenshot before editing code.
 - If the screenshot shows a Maya modal, identify the modal; do not assume the scenario is slow.
 - If the screenshot shows no modal and Maya is active, inspect script logs and outputs for waiting loops, expensive meshes, missing file writes, or stuck UI callbacks.
@@ -102,6 +106,7 @@ Common KLV Push/Dynamics expectations:
 Capture or verify evidence at these points:
 
 - Startup failure: immediate failure screenshot, useful for modals/popups.
+- Immediately after plugin load or expected `.mll` load: no `Untrusted Plugin Loading` modal before any long wait.
 - After plugin load: UI windows visible, no security modal.
 - After control edits: changed controls visible where possible.
 - After deformation: viewport shows changed target.
@@ -113,7 +118,7 @@ Before publishing evidence paths or attaching media, inspect for private desktop
 
 Treat recurring popups as setup failures first:
 
-- `Untrusted Plugin Loading`: verify `pluginArtifacts` and `trustedPluginArtifactsRoot`; rerun from trusted staging. Do not close issue by clicking `Allow`.
+- `Untrusted Plugin Loading`: stop the scenario wait immediately, verify `pluginArtifacts` and `trustedPluginArtifactsRoot`, then rerun from trusted staging. Clicking `Allow` is allowed only to diagnose, teach, or clear the host baseline; accepted proof must come from a fresh command rerun.
 - Missing plugin/load failure: verify downloaded artifact commit/job, extracted plugin extension, `MAYA_PLUG_IN_PATH`, and Scenario Result logs.
 - License/update/welcome dialogs: close only if they are host baseline noise; then rerun from a clean state and record the action.
 - File overwrite/save dialogs: make scenario write to a unique run path or remove the prompt condition in code.
