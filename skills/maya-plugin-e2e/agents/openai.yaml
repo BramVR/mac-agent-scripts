@@ -1,0 +1,4 @@
+interface:
+  display_name: "Maya Plugin E2E"
+  short_description: "Reliable Maya plugin UI proof runs"
+  default_prompt: "Use $maya-plugin-e2e to run a Maya plugin UI e2e gate with trusted plugin staging and screenshot/recording proof."
