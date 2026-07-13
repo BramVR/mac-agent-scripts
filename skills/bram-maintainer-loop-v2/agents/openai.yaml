@@ -1,0 +1,4 @@
+interface:
+  display_name: "Bram Maintainer Loop v2"
+  short_description: "Coordinate one Codex app task per repository"
+  default_prompt: "Use $bram-maintainer-loop-v2 to coordinate one Codex app task per Bram repository, protect forgotten work, autonomously update dependencies, serialize exact-head landing, capture durable decisions, and propose verified releases."

@@ -4,6 +4,9 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-07-13 — Bram Maintainer Loop v2
+- Added a Peter-style cross-repository maintainer loop for `BramVR`, with one persistent Codex app task per repository, a 30-repository concurrency target, autonomous dependency upgrades, serialized public mutations, live proof, autoreview, and verified release proposals.
+
 ## 2026-07-01 — Current-Repo Maintainer Loop
 - Reworked `bram-maintainer-loop` from latest upstream orchestration mechanics for one root loop and heartbeat per canonical repository, fresh issue/PR workers, autonomous supported land/close, TDD/PRD routing, Claude Opus extra review, public artifact confidentiality, dependency freshness, and release-specific blockers.
 
