@@ -117,6 +117,123 @@ ssh hermes-vm 'hermes gateway restart && hermes gateway status --deep --full'
 ssh hermes-vm 'curl -fsS http://127.0.0.1:9119/api/status | head -c 500'
 ```
 
+## GoHealth CLI
+
+- `gohealthcli` is installed on Hermes VM at `~/.local/bin/gohealthcli`; `hermes-gateway` PATH includes it.
+- VM config: `~/.config/gohealthcli/config.toml`.
+- VM archive: `~/.local/share/gohealthcli/gohealthcli.sqlite` plus `.attachments/`.
+- VM secrets: `~/.config/gohealthcli/tokens.json` and OAuth client JSON; owner-only, never print.
+- Build source used on 2026-06-28: `BramVR/gohealthcli` `origin/main` schema 24, commit `9f807009cbcf6044d4b4e5c07b47c1c09ea2118d`.
+- Daily Discord script: `~/.hermes/scripts/gohealth_daily.sh`; syncs steps from newest archived timestamp minus 30 minutes to now, avoiding whole-day replays after the archive is warm.
+
+Verify:
+
+```bash
+ssh hermes-vm '$HOME/.local/bin/gohealthcli doctor --plain'
+ssh hermes-vm '$HOME/.local/bin/gohealthcli doctor --online --plain'
+ssh hermes-vm '$HOME/.local/bin/gohealthcli status --plain | sed -n "1,12p"'
+```
+
+Auth behavior:
+
+- Normal access-token expiry should auto-refresh.
+- Broken/revoked refresh auth reports `connection_unhealthy` with `token_status: refresh_failed` or `token_missing`; sync should not open a browser from Discord/cron.
+- Reauth is explicit: run `gohealthcli connect --plain`, then `doctor --online --plain`.
+- Headless VM reauth may need SSH tunnel/browser handling; fallback is reauth on Mac and copy refreshed `tokens.json` to VM without printing it.
+- HTTP 400 is not always auth. On 2026-06-28, failed runs 269/271 used an invalid range (`from` 2026-06-29 after `to` 2026-06-28T16:24Z); bounded run 270 completed.
+
+Reauth check:
+
+```bash
+ssh hermes-vm '$HOME/.local/bin/gohealthcli doctor --online --plain'
+ssh hermes-vm '$HOME/.local/bin/gohealthcli connect --plain'
+ssh hermes-vm '$HOME/.local/bin/gohealthcli doctor --online --plain'
+```
+
+Refresh the VM archive from Mac only when no Mac sync is active. Snapshot the database and its attachment sidecar into owner-only temporary storage, stage both remotely, stop VM writers, validate, then rename the pair into place. The timestamped remote backup is the rollback source:
+
+```bash
+set -euo pipefail
+umask 077
+archive=$HOME/.local/share/gohealthcli/gohealthcli.sqlite
+snapshot_dir=$(mktemp -d "${TMPDIR:-/tmp}/gohealthcli.XXXXXX")
+remote_stage=$(ssh hermes-vm 'umask 077; mktemp -d "$HOME/.local/share/gohealthcli/.restore.XXXXXX"')
+cleanup() {
+  rm -rf -- "$snapshot_dir"
+  ssh hermes-vm rm -rf -- "$remote_stage"
+}
+trap cleanup EXIT
+
+sqlite3 -cmd '.timeout 30000' "$archive" ".backup '$snapshot_dir/gohealthcli.sqlite'"
+chmod 600 "$snapshot_dir/gohealthcli.sqlite"
+cp -a "$archive.attachments" "$snapshot_dir/gohealthcli.sqlite.attachments"
+find "$snapshot_dir/gohealthcli.sqlite.attachments" -type d -exec chmod 700 {} +
+find "$snapshot_dir/gohealthcli.sqlite.attachments" -type f -exec chmod 600 {} +
+scp -pr "$snapshot_dir/." "hermes-vm:$remote_stage/"
+
+ssh hermes-vm sh -s -- "$remote_stage" <<'REMOTE'
+set -eu
+stage=$1
+archive=$HOME/.local/share/gohealthcli/gohealthcli.sqlite
+attachments=$archive.attachments
+backup=$HOME/.local/share/gohealthcli/backup-$(date -u +%Y%m%dT%H%M%SZ)
+
+installed=0
+archive_backed_up=0
+attachments_backed_up=0
+attachments_installed=0
+gateway_restart_needed=0
+finish() {
+  result=$?
+  trap - EXIT
+  set +e
+  if [ "$gateway_restart_needed" -eq 1 ]; then hermes gateway stop >/dev/null 2>&1; fi
+  if [ "$installed" -ne 1 ]; then
+    if [ "$archive_backed_up" -eq 1 ]; then
+      if [ -f "$archive" ]; then mv "$archive" "$stage/failed-gohealthcli.sqlite"; fi
+      mv "$backup/gohealthcli.sqlite" "$archive"
+    fi
+    if [ "$attachments_installed" -eq 1 ]; then
+      mv "$attachments" "$stage/failed-gohealthcli.sqlite.attachments"
+    fi
+    if [ "$attachments_backed_up" -eq 1 ]; then
+      mv "$backup/gohealthcli.sqlite.attachments" "$attachments"
+    fi
+  fi
+  if [ "$gateway_restart_needed" -eq 1 ]; then hermes gateway start; fi
+  exit "$result"
+}
+trap finish EXIT
+test "$(sqlite3 "$stage/gohealthcli.sqlite" 'PRAGMA quick_check;')" = ok
+chmod 600 "$stage/gohealthcli.sqlite"
+find "$stage/gohealthcli.sqlite.attachments" -type d -exec chmod 700 {} +
+find "$stage/gohealthcli.sqlite.attachments" -type f -exec chmod 600 {} +
+gateway_restart_needed=1
+hermes gateway stop
+mkdir -m 700 "$backup"
+mv "$archive" "$backup/"
+archive_backed_up=1
+if [ -d "$attachments" ]; then
+  mv "$attachments" "$backup/"
+  attachments_backed_up=1
+fi
+mv "$stage/gohealthcli.sqlite" "$archive"
+mv "$stage/gohealthcli.sqlite.attachments" "$attachments"
+attachments_installed=1
+doctor_json=$($HOME/.local/bin/gohealthcli doctor --json)
+printf '%s' "$doctor_json" | python3 -c 'import json, sys
+a = json.load(sys.stdin).get("attachments")
+if not isinstance(a, dict):
+    raise SystemExit("doctor did not report attachment integrity")
+if a.get("orphan_files") or a.get("orphan_rows"):
+    raise SystemExit("restored archive has attachment orphans")'
+hermes gateway start
+installed=1
+gateway_restart_needed=0
+trap - EXIT
+REMOTE
+```
+
 ## Backups
 
 - Hermes VM offsite backup scaffold: `~/.local/bin/hermes-offsite-backup`.
