@@ -11,9 +11,9 @@ Use this for local Obsidian vault work. An Obsidian vault is a normal folder of 
 
 - App config: `~/Library/Application Support/obsidian/obsidian.json`
 - Default vault name: `obsidian`
-- Usual local vault path: `~/obsidian`
+- Usual local vault path: `/Users/bram/obsidian`
 - Official CLI: `obsidian`
-- Vault commands resolve the vault from cwd; run them from `~/obsidian`.
+- Vault commands resolve the vault from cwd; run them from `/Users/bram/obsidian`.
 
 ## First Checks
 
@@ -21,13 +21,16 @@ Use this for local Obsidian vault work. An Obsidian vault is a normal folder of 
 command -v obsidian
 obsidian version
 obsidian vaults
-cd ~/obsidian
+cd /Users/bram/obsidian
 obsidian commands filter=search:
 ```
 
 Global commands like `version` and `vaults` work outside a vault. Vault-content
-commands may print `Vault not found.` outside `~/obsidian`. Use `obsidian
+commands may print `Vault not found.` outside `/Users/bram/obsidian`. Use `obsidian
 commands`, not `obsidian help`, for CLI discovery.
+
+If `obsidian` says it cannot find Obsidian, the app is not running. Start Obsidian
+and retry, or use direct Markdown reads/edits when app-aware link updates are not needed.
 
 If `obsidian` says CLI is disabled:
 
@@ -40,7 +43,7 @@ If `obsidian` says CLI is disabled:
 Prefer official CLI for Obsidian-aware lookups:
 
 ```bash
-cd ~/obsidian
+cd /Users/bram/obsidian
 obsidian search query="ProjectName" format=json
 obsidian search:context query="ProjectName" limit=20 format=json
 obsidian read path="Folder/Note.md"
@@ -54,8 +57,8 @@ obsidian properties path="Folder/Note.md" format=json
 Use direct filesystem reads when you already know the path and need exact bytes:
 
 ```bash
-sed -n '1,220p' "$HOME/obsidian/Folder/Note.md"
-rg -n "term" "$HOME/obsidian"
+sed -n '1,220p' "/Users/bram/obsidian/Folder/Note.md"
+rg -n "term" "/Users/bram/obsidian"
 ```
 
 Report which source you used when freshness or vault choice matters.
@@ -73,7 +76,7 @@ Choose the narrowest write path:
 Common commands:
 
 ```bash
-cd ~/obsidian
+cd /Users/bram/obsidian
 obsidian create path="Notes/New.md" content="# New\n\nBody"
 obsidian append path="Notes/New.md" content="More text"
 obsidian move path="Notes/New.md" to="Archive/New.md"
@@ -89,7 +92,7 @@ For multi-line content, prefer editing the `.md` file with `apply_patch` once th
 Use CLI discovery first:
 
 ```bash
-cd ~/obsidian
+cd /Users/bram/obsidian
 obsidian bases
 obsidian base:views path="Projects.base"
 obsidian base:query path="Projects.base" view="Active" format=json

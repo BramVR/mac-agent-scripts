@@ -4,6 +4,11 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-07-22 — Skill Mirror Sync
+- Added `scripts/sync-skills`, adapted from upstream, so Claude Code and Codex share one canonical per-skill mirror across agent-scripts, optional manager skills, and codex-local extras.
+- Kept Bram's documented flat per-skill layout for both roots instead of upstream's whole-root Codex symlink, added `--dry-run`/`--no-instructions` and path overrides, and canonicalized targets so repo-owned skills resolve to their own repo.
+- First run pruned nine broken links from a removed skill experiment and published ~20 skills that were present in `skills/` but missing from `~/.claude/skills`.
+
 ## 2026-07-13 — Bram Maintainer Loop v2
 - Added a Peter-style cross-repository maintainer loop for `BramVR`, with one persistent Codex app task per repository, a 30-repository concurrency target, autonomous dependency upgrades, serialized public mutations, live proof, autoreview, and verified release proposals.
 

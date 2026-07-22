@@ -17,11 +17,11 @@ Follow the official CLI get-started steps. Don't guess install commands.
 
 1. Check OS + shell.
 2. Verify CLI present inside tmux: `op --version`.
-3. Confirm desktop app integration is enabled (per get-started) and the app is unlocked.
-4. REQUIRED: create exactly one persistent named tmux session for the whole secret task.
-5. Sign in / authorize once inside that same session: `op signin` (expect one app prompt).
-6. Verify access inside that same session: `op whoami` (must succeed before any secret read).
-7. If multiple accounts: use `--account` or `OP_ACCOUNT`.
+3. REQUIRED: create exactly one persistent named tmux session for the whole secret task.
+4. Known `Codex Automation` item: use the service-account path directly; no desktop authorization.
+5. Unknown/out-of-vault item: stop, name the exact item/field/reason, ask Bram before desktop fallback.
+6. Consented desktop fallback: confirm app integration + unlock, then `op signin` and `op whoami` once in the same tmux session.
+7. If multiple interactive accounts: use `--account` or `OP_ACCOUNT`.
 8. If a command fails, reuse the same tmux session with `tmux send-keys`; do not start a second session just to retry.
 
 ## Bram account defaults
@@ -29,16 +29,17 @@ Follow the official CLI get-started steps. Don't guess install commands.
 - Bram's 1Password account domain is `my.1password.com`.
 - Do not silently use `my.1password.eu` / Titan unless explicitly asked.
 - Do not guess a vault or item name. If routing is unclear, ask Bram for the exact vault/item/field.
-- Pass `--account my.1password.com` on every `op` command for Bram's secrets. Do not rely on ambient account selection.
+- Interactive path only: pass `--account my.1password.com` on every `op` command. Never combine `--account` with the service-account token.
 - `op account list` is metadata-only, but still must run inside tmux. Use it only when Bram asks to identify accounts.
 - `op signin --account <account>` can return status 0 with no useful output and still not make a later shell signed in. Prefer doing sign-in, create/edit/get, and verification in the same tmux shell.
 
 ## Service account tokens
 
 - 1Password service accounts are non-interactive tokens for a specific vault/scope, useful for automation without unlocking the desktop app.
-- No 1Password service account is configured by default.
-- Check `~/.profile` first for service-account tokens before asking the user to unlock the 1Password desktop app.
-- If Bram provides one, export it only for the single command that needs it: `OP_SERVICE_ACCOUNT_TOKEN="$ENV_VAR_VALUE" op item get "<known item>" --vault "<known vault>" ...`.
+- Bram service account: `Bram Codex`; env `BRAM_OP_SERVICE_ACCOUNT_TOKEN` loaded by `~/.profile` from macOS Keychain.
+- Scope: vault `Codex Automation`, `read_items` + `write_items`; no vault creation. Recovery: `Private/Bram Codex Service Account`, field `token`.
+- Export only for the single command: `OP_SERVICE_ACCOUNT_TOKEN="$BRAM_OP_SERVICE_ACCOUNT_TOKEN" op item get "<known item>" --vault "Codex Automation" ...`.
+- Never use `op signin` or `--account` on the service path. Missing/expired/inaccessible: report exact error and ask; no automatic desktop fallback.
 - Service-account `op` reads require an explicit vault query.
 - Keep the tmux rule: every `op` command, including service-account reads, still runs inside one named tmux session.
 - Do not enumerate vaults/items with service accounts. If the known item or field is not accessible, stop and ask the user instead of probing.
@@ -58,10 +59,11 @@ SESSION="op-work"
 
 tmux -S "$SOCKET" has-session -t "$SESSION" 2>/dev/null ||
   tmux -S "$SOCKET" new -d -s "$SESSION" -n shell
-tmux -S "$SOCKET" send-keys -t "$SESSION:" -- "op signin --account my.1password.com" Enter
-tmux -S "$SOCKET" send-keys -t "$SESSION:" -- "op whoami" Enter
+tmux -S "$SOCKET" send-keys -t "$SESSION:" -- '. "$HOME/.profile"; OP_SERVICE_ACCOUNT_TOKEN="$BRAM_OP_SERVICE_ACCOUNT_TOKEN" op user get --me' Enter
 tmux -S "$SOCKET" capture-pane -p -J -t "$SESSION:" -S -200
 ```
+
+No `op signin` in service bootstrap. Sign-in belongs only to a consented desktop fallback.
 
 Do not create a new tmux session after a quoting, item-name, or command failure. Send a corrected command into the existing session.
 Target the session as `$SESSION:` instead of assuming window `0`; older sessions may have window indexes starting at `1`.

@@ -65,6 +65,8 @@ Do not treat ordinary draft, stale, difficult, or platform-specific items as ign
 
 - Only this root loop may create, reuse, archive, or steer worker threads. Root sets the initial `<Project>: <current status>` title. Each worker self-renames after creation so the title follows freshest issue/PR state.
 - New GitHub issue implementation work gets a fresh dedicated worker thread, even when the repository already has an idle or completed worker. Reuse only the worker already assigned to that exact issue or PR.
+- Create repository workers under the repository's saved Codex project with a local or Codex-managed worktree environment. Never create repository work as a projectless task. Projectless adoption wrappers may finish unique existing work, but replace them with project-scoped workers at the first clean pushed handoff boundary.
+- Create every new worker with model `gpt-5.6-sol` and reasoning effort `high`; pass both explicitly at creation and never inherit or substitute the medium default.
 - When creating a Codex worktree worker for a new branch, start the worktree from an existing ref such as `main` or `origin/main`. Put the desired new branch name in the worker prompt and have the worker create/switch it after startup. Do not pass a non-existent new branch as the worktree starting ref; it fails with `invalid reference`.
 - Workers perform only their assigned issue/PR work and report results to this loop. They must not create subworkers, delegate work, or manage other chats.
 - Put the no-subdelegation rule in every worker prompt.
@@ -166,6 +168,14 @@ Do not restate the task, add speculative requirements, or raise the proof bar mi
 When Bram materially changes behavior, scope, wording, or proof expectations mid-flight, update the GitHub issue/PR or worker prompt so the latest source of truth is durable. Do not leave future workers to infer the correction from chat history.
 
 Never interrupt, archive, rename, duplicate, or replace a worker without first reading its current state. For a suspected duplicate, read both threads; if either has unique progress, edits, or an active turn, leave it alone and ask Bram before changing thread state.
+
+### Worker Permission Integrity
+
+- Treat the worker's configured access as part of its contract. Repository workers configured for full access must run with `approval_policy=never` and a disabled/full-access permission profile.
+- Context compaction, background continuation, handoff, or task-setting changes can drift a running turn back to managed `workspace-write/on-request` even while the UI still says Full access. When an ordinary edit or repository command unexpectedly requests approval, inspect the latest worker turn/rollout permission context before calling it a Bram blocker.
+- For verified permission drift, root restores Full access in the existing worker task and approves the already-scoped pending action itself. Prefer the durable task/path option when the prompt offers one. Never ask Bram to approve ordinary edits, tests, commits, pushes, or CI operations already covered by loop authority.
+- Auto-restoration applies only to the assigned repository/worktree and already-authorized GitHub workflow. Never auto-approve secrets, destructive unique-work handling, releases, external-system mutations, or a broader path than the worker owns.
+- After restoration, confirm the worker emitted a new execution step and recheck permission integrity after its next compaction. If the platform repeatedly resets the same active turn, preserve the worker's unique state, finish the current safe operation through root-controlled approval, and move the task to a proper project-scoped worktree at its next clean pushed handoff boundary.
 
 ### Active Waits
 
