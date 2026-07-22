@@ -4,6 +4,9 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-07-22 — Remove Legacy Maintainer Loop
+- Removed the legacy current-repository `bram-maintainer-loop` skill and project-loop prompt; maintainer orchestration now routes only through `bram-maintainer-loop-v2`.
+
 ## 2026-07-22 — Codex First Refresh
 - Refreshed `codex-first` from ten upstream commits: hard gate with autoreview exception, widened routing (diagnose-then-fix, exploratory subagents, git mechanics/PR landing), `gpt-5.6-sol` + high effort pinning, ChatGPT-app PATH recipe, harness-tracked background launches, and the liveness watchdog with explicit-id resume.
 - Bram-local deviations: never fast mode (flag dropped from every invocation), maintainer pointer stays `$bram-maintainer-loop-v2`, loopback-only proxy gate without upstream's personal router host, and the huge-context preflight points at the flat skill mirror.

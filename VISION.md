@@ -7,7 +7,7 @@ agent-scripts is Bram's shared agent instruction, skill, and helper-tool base. I
 - Small skill, script, prompt, and docs fixes that preserve Bram-local rules.
 - New or updated skills with short quoted descriptions, valid front matter, and operational wording.
 - Helper improvements that stay dependency-light, generic, and reusable across repos.
-- GitHub, review, release, and maintainer-loop guardrail improvements with validation.
+- GitHub, review, release, and maintainer-loop-v2 guardrail improvements with validation.
 - Sync cleanup that mines upstream ideas while preserving Bram-specific behavior.
 
 ## Needs Sign-Off

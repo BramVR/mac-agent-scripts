@@ -25,7 +25,7 @@ Break the plan into **tracer bullet** issues. Each issue is a thin vertical slic
 
 Slices may be 'HITL' or 'AFK'. HITL slices require human interaction, such as an architectural decision or a design review. AFK slices can be implemented and merged without human interaction. Prefer AFK over HITL where possible.
 
-Loop mode: in `bram-maintainer-loop`, draft the slices and AFK/HITL labels as the decision boundary. Publish issues only when issue creation is authorized.
+Loop mode: in `bram-maintainer-loop-v2`, draft the slices and AFK/HITL labels as the decision boundary. Publish issues only when issue creation is authorized.
 
 <vertical-slice-rules>
 - Each slice delivers a narrow but COMPLETE path through every layer (schema, API, UI, tests)

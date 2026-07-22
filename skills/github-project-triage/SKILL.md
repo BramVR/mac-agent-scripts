@@ -109,7 +109,7 @@ For every plausible autonomous candidate, do a feasibility self-check before pre
 
 ## Autonomous Work Mode
 
-When the user says `do work autonomously`, `work you can do autonomously`, `keep going`, starts a `bram-maintainer-loop`, or similar, do not stop after a queue summary or one local patch. Process eligible items sequentially until no safe autonomous item remains, each item is landed/closed/deferred with proof within granted permissions, or a blocker requires Bram.
+When the user says `do work autonomously`, `work you can do autonomously`, `keep going`, starts a `bram-maintainer-loop-v2`, or similar, do not stop after a queue summary or one local patch. Process eligible items sequentially until no safe autonomous item remains, each item is landed/closed/deferred with proof within granted permissions, or a blocker requires Bram.
 
 This mode owns the full issue/PR execution loop. Do not defer to a separate workhorse skill; combine triage judgment with implementation, TDD, verification, review, and PR preparation here.
 
