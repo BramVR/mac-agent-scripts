@@ -7,6 +7,7 @@ This repo is a BramVR-maintained fork of the original `steipete/agent-scripts` s
 Canonical contents:
 - `AGENTS.MD`: shared hard rules for Codex/Claude-style agents
 - `skills/`: reusable workflow skills, including repo-owned skills exposed by symlink
+- `prompts/`: canonical sources for deprecated Codex slash-prompt compatibility wrappers
 - `scripts/`: dependency-light helpers used across projects
 - `hooks/`: local guardrails such as skill validation
 
