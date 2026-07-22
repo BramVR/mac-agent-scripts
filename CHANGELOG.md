@@ -8,6 +8,7 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 - Adopted upstream `codex-huge-context` skill for the Codex 1M-token direct OpenAI Responses API route: safe 922k input window, 820k total-scope compaction, Keychain-only credential delivery, and the secret-safe `preflight.rb` check.
 - Scrubbed upstream personal assumptions: no hardcoded `/Users/steipete` paths, no named 1Password vault item, no Mac-fleet rollout section; credential handling routes through `$one-password`.
 - Preflight path targets the flat skill mirror (`~/.codex/skills/codex-huge-context/...`), not upstream's whole-root `~/.codex/skills/agent-scripts/` symlink layout.
+- Added a Bram-local hard rule: never fast mode on the huge-context route, overriding the `$codex-first` house default.
 
 ## 2026-07-22 — Skill Mirror Sync
 - Added `scripts/sync-skills`, adapted from upstream, so Claude Code and Codex share one canonical per-skill mirror across agent-scripts, optional manager skills, and codex-local extras.

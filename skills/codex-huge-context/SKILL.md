@@ -14,6 +14,8 @@ Codex connectors -> normal ChatGPT login in auth.json
 
 Not an HTTP proxy. The API stays authoritative for access, actual model limits, and billing.
 
+Never fast mode on this route: no `--enable fast_mode` flag, no `fast_mode` default in config, on fresh or resumed sessions. Overrides the `$codex-first` house default.
+
 ## Safe input window
 
 GPT-5.6 Sol exposes a 1,050,000-token total context window and can produce up to 128,000 output tokens. Codex does not set a smaller output budget on normal Responses API turns, so the catalogue must describe the safe input allowance, not the raw total:
