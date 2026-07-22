@@ -4,6 +4,9 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-07-22 — Validator UTF-8 Fix
+- `scripts/validate-skills` reads `SKILL.md` as UTF-8 instead of inheriting the process locale, so validation and the pre-commit hook stop failing with `invalid byte sequence in US-ASCII` in shells without `LANG` set.
+
 ## 2026-07-22 — Remove Legacy Maintainer Loop
 - Removed the legacy current-repository `bram-maintainer-loop` skill and project-loop prompt; maintainer orchestration now routes only through `bram-maintainer-loop-v2`.
 
