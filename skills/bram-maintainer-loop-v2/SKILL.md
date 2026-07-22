@@ -251,6 +251,7 @@ Every delegated implementation Codex app thread, under standing authority and an
 - add regression coverage when appropriate;
 - run focused and full tests, then live/end-to-end proof against the real affected boundary before landing;
 - run `autoreview` until no accepted/actionable findings remain;
+- wait for every owner- or repository-required hosted PR review, inspect its summary and inline threads at the exact head, address or evidence-backed reject every actionable finding, rerun required review after any head change, and merge only with zero unresolved actionable review threads;
 - commit and push the final candidate, then open or update its PR;
 - rerun required checks and repair failures until exact-head CI is green;
 - remain active through CI/review/deployment waits using bounded sleep/poll cycles; never stop at a nonterminal waiting status;

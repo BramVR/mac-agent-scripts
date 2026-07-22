@@ -1,0 +1,4 @@
+interface:
+  display_name: "Maya Dev"
+  short_description: "Launch and control managed Maya 2024"
+  default_prompt: "Use $maya-dev to launch the managed Maya 2024 session and verify MayaMCP before working in the scene."
