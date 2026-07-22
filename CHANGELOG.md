@@ -4,6 +4,12 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-07-22 — Autoreview From Canonical Source
+- Replaced the vendored `autoreview` skill with the canonical `openclaw/agent-skills` copy at `c4ab5e7` (helper 2,485 -> 12,001 lines), including its scripts, test suite, fixtures, and the skill-level `AGENTS.md` sync rule.
+- Gains TruffleHog secret scanning over the reviewed diff, a Scope Governor that classifies findings as in-scope blocker / follow-up / stop-and-escalate, oversized-bundle handling, release-branch rules, and Codex `gpt-5.6-sol` with an access-only fallback to `gpt-5.6-terra`.
+- Engines that cannot be fully isolated (`droid`, `copilot`, `opencode`, `cursor`) are now refused rather than run; `--preset` is gone, so the AGENTS rule for API work uses `--engine claude --model claude-opus-4-8`.
+- TruffleHog is a hard requirement: autoreview exits early when it is not on PATH.
+
 ## 2026-07-22 — Validator UTF-8 Fix
 - `scripts/validate-skills` reads `SKILL.md` as UTF-8 instead of inheriting the process locale, so validation and the pre-commit hook stop failing with `invalid byte sequence in US-ASCII` in shells without `LANG` set.
 

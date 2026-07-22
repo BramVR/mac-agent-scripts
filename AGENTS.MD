@@ -55,7 +55,7 @@ Codex CLI output: avoid Markdown tables by default; they render poorly there. Us
 - CI: `gh run list/view`; rerun/fix until green when asked.
 - `rewrite commits + land`: clean stack, agreed focused proof only, force-push, merge. No Codex review, PR-body proof polish, or CI babysitting unless asked.
 - Pre-land/pre-commit code changes: use `$autoreview` until no accepted/actionable findings remain, unless equivalent manual review already done, trivial/docs-only, or user opts out.
-- API work: also run `$autoreview --preset claude-opus` (Claude Opus 4.8) before merge/ship.
+- API work: also run `$autoreview --engine claude --model claude-opus-4-8` before merge/ship. (`--preset` is gone; upstream autoreview uses `--engine`/`--model`.)
 - Replies: cite fix + file/line; resolve threads only after fix lands.
 - Issue fixed on `main` with proof: comment proof + commit/PR, then close.
 - User-facing fixes/landed PRs: changelog unless pure test/internal.
