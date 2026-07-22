@@ -14,7 +14,7 @@ Codex connectors -> normal ChatGPT login in auth.json
 
 Not an HTTP proxy. The API stays authoritative for access, actual model limits, and billing.
 
-Never fast mode on this route: no `--enable fast_mode` flag, no `fast_mode` default in config, on fresh or resumed sessions. Overrides the `$codex-first` house default.
+Never fast mode on this route: no `--enable fast_mode` flag, no `fast_mode` default in config, on fresh or resumed sessions.
 
 ## Safe input window
 

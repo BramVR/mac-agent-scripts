@@ -4,6 +4,10 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-07-22 — Codex First Refresh
+- Refreshed `codex-first` from ten upstream commits: hard gate with autoreview exception, widened routing (diagnose-then-fix, exploratory subagents, git mechanics/PR landing), `gpt-5.6-sol` + high effort pinning, ChatGPT-app PATH recipe, harness-tracked background launches, and the liveness watchdog with explicit-id resume.
+- Bram-local deviations: never fast mode (flag dropped from every invocation), maintainer pointer stays `$bram-maintainer-loop-v2`, loopback-only proxy gate without upstream's personal router host, and the huge-context preflight points at the flat skill mirror.
+
 ## 2026-07-22 — Codex Huge Context
 - Adopted upstream `codex-huge-context` skill for the Codex 1M-token direct OpenAI Responses API route: safe 922k input window, 820k total-scope compaction, Keychain-only credential delivery, and the secret-safe `preflight.rb` check.
 - Scrubbed upstream personal assumptions: no hardcoded `/Users/steipete` paths, no named 1Password vault item, no Mac-fleet rollout section; credential handling routes through `$one-password`.
