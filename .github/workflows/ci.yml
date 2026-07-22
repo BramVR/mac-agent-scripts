@@ -20,7 +20,7 @@ jobs:
 
       - name: Check shell helper syntax
         run: |
-          find skills -path '*/scripts/*' -type f -print0 |
+          find skills scripts -type f -print0 |
             while IFS= read -r -d '' script; do
               if head -n 1 "$script" | grep -q 'bash'; then
                 bash -n "$script"

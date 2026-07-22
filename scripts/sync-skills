@@ -1,0 +1,150 @@
+#!/usr/bin/env bash
+# sync-skills: build/refresh the per-machine agent skill mirror. Idempotent.
+#
+# Both Claude Code and Codex get a flat per-skill symlink mirror:
+#   ~/.claude/skills/<name> -> <canonical skill dir>
+#   ~/.codex/skills/<name>  -> <canonical skill dir>
+# Claude Code loads only ~/.claude/skills/<name>/SKILL.md (one level deep,
+# per-entry symlinks followed, no recursive scan). Codex scans recursively but
+# Bram's setup is documented as per-skill links too, so no whole-root symlink
+# is created (see README: "Do not replace this with a broad ... symlink").
+#
+# Sources, in collision priority order: agent-scripts > manager > codex-local.
+# Skills that already live in a mirror root (codex-local extras) stay put and
+# are mirrored into the other root.
+#
+# Usage: sync-skills [-n|--dry-run] [--no-instructions]
+set -eo pipefail
+
+AGENT_SCRIPTS=${AGENT_SCRIPTS_DIR:-$HOME/Projects/agent-scripts}
+AGENT_SKILLS="$AGENT_SCRIPTS/skills"
+MANAGER_SKILLS=${MANAGER_SKILLS_DIR:-$HOME/Projects/manager/skills}
+CODEX_ROOT="$HOME/.codex/skills"
+CLAUDE_ROOT="$HOME/.claude/skills"
+AGENTS_MD="$AGENT_SCRIPTS/AGENTS.MD"
+
+dry_run=0
+link_instructions=1
+for arg in "$@"; do
+  case $arg in
+    -n | --dry-run) dry_run=1 ;;
+    --no-instructions) link_instructions=0 ;;
+    -h | --help)
+      printf 'Usage: sync-skills [-n|--dry-run] [--no-instructions]\n'
+      exit 0
+      ;;
+    *)
+      printf 'sync-skills: unknown argument %s\n' "$arg" >&2
+      exit 2
+      ;;
+  esac
+done
+
+changed=0
+note() { printf '%s\n' "$*"; changed=1; }
+warn() { printf 'WARN: %s\n' "$*" >&2; }
+run() { [ "$dry_run" = 1 ] && return 0; "$@"; }
+
+# canon <dir>: absolute, symlink-free path, so mirrors never chain links.
+canon() { (cd "$1" 2>/dev/null && pwd -P); }
+
+# link <target> <linkpath>: create/retarget symlink, quiet when already right.
+link() {
+  [ "$(readlink "$2" 2>/dev/null)" = "$1" ] && return 0
+  if [ -e "$2" ] && [ ! -L "$2" ]; then
+    warn "$2 is a real file/dir, not linking (expected -> $1)"
+    return 0
+  fi
+  run ln -sfn "$1" "$2"
+  note "link $2 -> $1"
+}
+
+# --- Claude root must be a real dir; the old layout symlinked the whole dir,
+# which hid manager + codex-local skills.
+if [ -L "$CLAUDE_ROOT" ]; then
+  run rm "$CLAUDE_ROOT"
+  note "replaced legacy whole-dir symlink $CLAUDE_ROOT with real dir"
+fi
+run mkdir -p "$CLAUDE_ROOT" "$CODEX_ROOT"
+
+# --- Collect desired name -> target (bash 3.2: parallel arrays).
+names=()
+targets=()
+lookup() {
+  local i
+  for i in "${!names[@]}"; do
+    [ "${names[$i]}" = "$1" ] && { printf '%s' "${targets[$i]}"; return 0; }
+  done
+  return 1
+}
+claim() { # claim <root> <label>; first root to claim a name wins.
+  local root=$1 label=$2 entry name target taken
+  [ -d "$root" ] || return 0
+  for entry in "$root"/*/; do
+    entry=${entry%/}
+    name=$(basename "$entry")
+    [ -f "$entry/SKILL.md" ] || continue
+    target=$(canon "$entry") || continue
+    [ -n "$target" ] || continue
+    if taken=$(lookup "$name"); then
+      [ "$taken" = "$target" ] || printf 'skip %s (%s): name taken by %s\n' "$name" "$label" "$taken"
+      continue
+    fi
+    names+=("$name")
+    targets+=("$target")
+  done
+}
+claim "$AGENT_SKILLS" agent-scripts
+claim "$MANAGER_SKILLS" manager
+claim "$CODEX_ROOT" codex-local
+claim "$CLAUDE_ROOT" claude-local
+
+# --- Mirror every claimed skill into both roots.
+mirror() {
+  local root=$1 i linkpath
+  for i in "${!names[@]}"; do
+    linkpath="$root/${names[$i]}"
+    # Skill already lives here (codex-local extra): leave it alone.
+    [ "${targets[$i]}" = "$(canon "$linkpath" 2>/dev/null)" ] && continue
+    link "${targets[$i]}" "$linkpath"
+  done
+}
+mirror "$CLAUDE_ROOT"
+mirror "$CODEX_ROOT"
+
+# --- Prune: broken links always; healthy links into managed roots only when
+# no longer desired. Foreign healthy links (user-made) stay.
+prune() {
+  local root=$1 entry name target
+  for entry in "$root"/* "$root"/.[!.]*; do
+    [ -L "$entry" ] || continue
+    name=$(basename "$entry")
+    target=$(readlink "$entry")
+    if [ ! -e "$entry" ]; then
+      run rm "$entry"
+      note "pruned broken link $name -> $target"
+      continue
+    fi
+    case $target in
+      "$AGENT_SKILLS"/* | "$MANAGER_SKILLS"/* | "$CODEX_ROOT"/* | "$CLAUDE_ROOT"/*)
+        lookup "$name" >/dev/null || {
+          run rm "$entry"
+          note "pruned stale link $name -> $target"
+        }
+        ;;
+    esac
+  done
+}
+prune "$CLAUDE_ROOT"
+prune "$CODEX_ROOT"
+
+# --- Global instruction pointers; never clobber a real file.
+if [ "$link_instructions" = 1 ]; then
+  link "$AGENTS_MD" "$HOME/.claude/CLAUDE.md"
+  link "$AGENTS_MD" "$HOME/.claude/AGENTS.md"
+  link "$AGENTS_MD" "$HOME/.codex/AGENTS.md"
+fi
+
+[ "$dry_run" = 1 ] && echo "(dry run; no changes written)"
+[ "$changed" = 0 ] && echo "skills mirror up to date (${#names[@]} skills)"
+exit 0

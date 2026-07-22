@@ -28,32 +28,22 @@ Rules:
 - Validate after edits: `scripts/validate-skills`.
 - Quote `description` in front matter.
 
-Global Codex skills are installed individually:
-- `~/.codex/skills/oracle -> ~/Projects/agent-scripts/skills/oracle`
-- `~/.codex/skills/wacrawl -> ~/Projects/oss/wacrawl/.agents/skills/wacrawl`
-- `~/.codex/skills/codex-debugging -> ~/Projects/agent-scripts/skills/codex-debugging`
-- `~/.codex/skills/github-deep-review -> ~/Projects/agent-scripts/skills/github-deep-review`
-- `~/.codex/skills/github-author-context -> ~/Projects/agent-scripts/skills/github-author-context`
-- `~/.codex/skills/github-cache-hygiene -> ~/Projects/agent-scripts/skills/github-cache-hygiene`
-- `~/.codex/skills/github-project-triage -> ~/Projects/agent-scripts/skills/github-project-triage`
-- `~/.codex/skills/gog -> ~/Projects/gogcli/.agents/skills/gog`
-- `~/.codex/skills/hermes-win -> ~/Projects/agent-scripts/skills/hermes-win`
-- `~/.codex/skills/browser-use -> ~/Projects/agent-scripts/skills/browser-use`
-- `~/.codex/skills/to-issues -> ~/Projects/agent-scripts/skills/to-issues`
-- `~/.codex/skills/grill-with-docs -> ~/Projects/agent-scripts/skills/grill-with-docs`
-- `~/.codex/skills/one-password -> ~/Projects/agent-scripts/skills/one-password`
-- `~/.codex/skills/obsidian -> ~/Projects/agent-scripts/skills/obsidian`
-- `~/.codex/skills/peekaboo -> ~/Projects/agent-scripts/skills/peekaboo`
-- `~/.codex/skills/npm -> ~/Projects/agent-scripts/skills/npm`
-- `~/.codex/skills/tdd -> ~/Projects/agent-scripts/skills/tdd`
-- `~/.codex/skills/to-prd -> ~/Projects/agent-scripts/skills/to-prd`
-- `~/.codex/skills/bram-maintainer-loop -> ~/Projects/agent-scripts/skills/bram-maintainer-loop`
-- `~/.codex/skills/autoreview -> ~/Projects/agent-scripts/skills/autoreview`
-- `~/.codex/skills/video-transcript-downloader -> ~/Projects/agent-scripts/skills/video-transcript-downloader`
-- `~/.codex/skills/whatsapp -> ~/Projects/agent-scripts/skills/whatsapp`
-- `~/.codex/skills/wacli -> ~/Projects/agent-scripts/skills/wacli`
+Global discovery is built by `scripts/sync-skills` (idempotent; run on every Mac after cloning or adding skills):
 
-Do not replace this with a broad `~/.codex/skills -> ~/Projects/agent-scripts/skills` symlink unless intentionally changing Bram's setup.
+```bash
+scripts/sync-skills --dry-run   # preview
+scripts/sync-skills             # apply
+```
+
+It writes one flat per-skill symlink per root, so both agents see the same set:
+- `~/.claude/skills/<name> -> <canonical skill dir>`
+- `~/.codex/skills/<name> -> <canonical skill dir>`
+
+Sources, in collision priority order: `agent-scripts/skills` > `~/Projects/manager/skills` (if present) > codex-local extras already living in `~/.codex/skills`. Repo-owned skills resolve to their own repo, e.g. `gog -> ~/Projects/gogcli/.agents/skills/gog`.
+
+Broken links are pruned always; healthy links into a managed root are pruned only when the skill is gone. Foreign links you made by hand are left alone.
+
+Do not replace this with a broad `~/.codex/skills -> ~/Projects/agent-scripts/skills` symlink unless intentionally changing Bram's setup; Claude Code only scans one level deep, so the flat mirror is what makes a skill discoverable.
 
 Keep shared skills as real folders in `skills/`. Repo-owned skills stay canonical in their repo and are exposed here with tracked relative symlinks only when that repo exists locally, for example:
 
@@ -86,6 +76,11 @@ Repo-specific rules go below that pointer. Do not copy shared blocks into downst
 - Stages exactly the listed files.
 - Enforces a non-empty commit message.
 - Runs skill validation before committing.
+
+`scripts/sync-skills`
+- Builds the per-machine skill mirror for Claude Code and Codex; idempotent, safe to re-run.
+- Flags: `-n`/`--dry-run` to preview, `--no-instructions` to skip the global `AGENTS.MD` pointers.
+- Overrides: `AGENT_SCRIPTS_DIR`, `MANAGER_SKILLS_DIR`.
 
 `scripts/validate-skills`
 - Checks every `skills/*/SKILL.md`.
