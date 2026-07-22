@@ -102,7 +102,7 @@ Repo-specific rules go below that pointer. Do not copy shared blocks into downst
 - Keeps later `GH_OFFLINE=1 gh ...` reads useful during outages.
 
 `config/bram-loop-repos.txt`
-- Flagged repositories for `$bram-maintainer-loop` broad maintenance runs.
+- Flagged repositories for `$bram-maintainer-loop-v2` broad maintenance runs.
 - Starts with `gohealthcli` and `gobankcli`; one repo slug per line.
 
 `scripts/browser-tools.ts`
@@ -116,7 +116,7 @@ Treat this repo as Bram's canonical shared agent setup and portable helper mirro
 
 Upstream intake from `steipete/agent-scripts`:
 - Mine selectively; do not merge wholesale.
-- Preserve Bram-local skills/helpers: `hermes-win`, `hermes-dashboard`, `autoreview`, `bram-maintainer-loop`, `tdd`, `to-prd`, `to-issues`, `grill-with-docs`.
+- Preserve Bram-local skills/helpers: `hermes-win`, `hermes-dashboard`, `autoreview`, `bram-maintainer-loop-v2`, `tdd`, `to-prd`, `to-issues`, `grill-with-docs`.
 - Skip or scrub non-Bram personal/product defaults before adopting docs or skills.
 - Do not adopt symlinks to missing repos unless Bram explicitly configures them.
 - Prefer generic helper/script fixes, CI smoke checks, and non-personal skill improvements.

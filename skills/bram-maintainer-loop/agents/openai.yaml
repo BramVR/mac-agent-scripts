@@ -1,4 +1,0 @@
-interface:
-  display_name: "Bram Maintainer Loop"
-  short_description: "Coordinate current-repo issue work"
-  default_prompt: "Use $bram-maintainer-loop in the current Git repository to synchronize safely, keep one root loop and one heartbeat per canonical repo, protect forgotten work, triage with $github-project-triage, autonomously implement, repair, review, land, and close eligible queue work, coordinate fresh concrete issue/PR workers, apply TDD/to-prd/to-issues where appropriate, gate with live proof, the Review Gate including claude-opus extra review when warranted, and the Public Artifact Confidentiality Gate, capture durable vision decisions, audit dependencies, propose highlighted releases, maintain the per-loop ledger, and report clickable URLs with diff size, risk, proof, and recommendation."
