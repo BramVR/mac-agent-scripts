@@ -1,7 +1,8 @@
 # Upstream mining marker
 
-- Reviewed `upstream/main` through: `0798fed56f5a059e988cddcf068ea19969ad7275` (2026-07-21, reviewed 2026-07-23)
-- Full classification report of that pass: 232 commits → 19 groups already present, 12 skip (Peter-personal), 19 port candidates, 2 preserved-skill conflict families (autoreview, maintainer-loop). Port candidates pending Bram triage.
+- Reviewed `upstream/main` through: `6878dd818b34659a925ec45fb7225a81b6a5c69a` (2026-07-22, reviewed 2026-07-23)
+- Full classification report of the 232-commit pass (through `0798fed`): 19 groups already present, 12 skip (Peter-personal), 19 port candidates, 2 preserved-skill conflict families (autoreview, maintainer-loop). Port candidates pending Bram triage.
+- 2026-07-23 pass (`0798fed..6878dd8`, 1 commit): ported codex-first git-mechanics mandate, guarded CI waits, fresh work-order sessions, AGENTS.md-only rule; scrubbed openclaw watcher example + CLAUDE.md-symlink claim; kept Bram divergences (no fast_mode, loopback-only gate, short description, `$bram-maintainer-loop-v2` pointer).
 
 ## Flow (repeat per pass)
 
