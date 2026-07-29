@@ -19,6 +19,24 @@ Run real Maya plugin proof without rediscovering the same traps. Prefer determin
 6. Inspect Scenario Result JSON first, then screenshots/recordings, logs, and saved scene.
 7. Close only with exact-head proof: commit, CI artifact job/id/hash/size, run id, screenshot/recording paths/sizes, Scenario Result fields, confidentiality pass.
 
+## Consuming Repo Contract
+
+Do not create a project-specific copy of this skill. Make each consuming repo
+own the deterministic test inputs:
+
+- `.maya-stall.yaml` with named Scenario, `pluginArtifacts`, Maya scripts,
+  expected outputs, Visual Evidence, and Validators;
+- a checked-in Maya script that drives real product controls and writes the
+  Scenario Result;
+- a short repo doc with exact build, artifact download, `plan`, `doctor`, and
+  `run` commands;
+- an `AGENTS.md` route to this skill and the repo doc.
+
+Keep Host Config outside the repo. Prefer a stable operator-owned path such as
+`~/.config/maya-stall/hosts.yaml`, selected through `MAYA_STALL_HOST_CONFIG`.
+The skill owns the workflow; the consuming repo owns product assertions; the
+host config owns private infrastructure and trust policy.
+
 ## Preflight
 
 Use exact queries; do not print secrets or full host configs.
