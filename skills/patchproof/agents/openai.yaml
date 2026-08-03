@@ -1,0 +1,4 @@
+interface:
+  display_name: "PatchProof"
+  short_description: "Upload permanent PR screenshots and videos"
+  default_prompt: "Use $patchproof to upload this screenshot or video and return PR-ready Markdown."

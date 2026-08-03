@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+set -euo pipefail
+set +x
+
+usage() {
+  cat <<'EOF'
+Usage:
+  upload --check
+  upload <file> [--alt <text>] [--url <base-url>]
+
+Environment:
+  PATCHPROOF_TOKEN       Existing machine token
+  PATCHPROOF_MACHINE_ID  Keychain account (default: brams-macbook-pro)
+  PATCHPROOF_REPO        Checkout (default: ~/Projects/patchProof)
+  PATCHPROOF_URL         Endpoint (default: workers.dev deployment)
+EOF
+}
+
+check_only=false
+case "${1:-}" in
+  --check)
+    check_only=true
+    shift
+    ;;
+  -h | --help)
+    usage
+    exit 0
+    ;;
+esac
+
+patchproof_repo="${PATCHPROOF_REPO:-$HOME/Projects/patchProof}"
+patchproof_machine_id="${PATCHPROOF_MACHINE_ID:-brams-macbook-pro}"
+patchproof_url="${PATCHPROOF_URL:-https://patchproof.bram-van-rompuy.workers.dev}"
+
+if [[ ! -f "$patchproof_repo/package.json" || ! -f "$patchproof_repo/scripts/upload.ts" ]]; then
+  echo "PatchProof checkout not found at: $patchproof_repo" >&2
+  exit 2
+fi
+if ! command -v pnpm >/dev/null 2>&1; then
+  echo "pnpm is required" >&2
+  exit 2
+fi
+
+patchproof_token="${PATCHPROOF_TOKEN:-}"
+credential_source="environment"
+if [[ -z "$patchproof_token" ]] && [[ "$(uname -s)" == "Darwin" ]] && command -v security >/dev/null 2>&1; then
+  patchproof_token="$(security find-generic-password -s patchproof -a "$patchproof_machine_id" -w 2>/dev/null || true)"
+  credential_source="macOS Keychain"
+fi
+
+if [[ -z "$patchproof_token" ]]; then
+  echo "PatchProof machine token unavailable." >&2
+  echo "Use the one-password skill with op://Codex Automation/PatchProof/machine_token." >&2
+  exit 3
+fi
+case "$patchproof_token" in
+  pp_*_*) ;;
+  *)
+    echo "PatchProof machine token has an unexpected shape" >&2
+    exit 3
+    ;;
+esac
+
+if [[ "$check_only" == true ]]; then
+  curl --fail --silent --show-error --max-time 10 "$patchproof_url/" >/dev/null
+  printf 'PatchProof ready: credential=%s endpoint=%s\n' "$credential_source" "$patchproof_url"
+  exit 0
+fi
+
+if [[ $# -eq 0 ]]; then
+  usage >&2
+  exit 2
+fi
+
+export PATCHPROOF_TOKEN="$patchproof_token"
+export PATCHPROOF_URL="$patchproof_url"
+exec pnpm --dir "$patchproof_repo" upload "$@"
