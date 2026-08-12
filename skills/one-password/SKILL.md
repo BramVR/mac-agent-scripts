@@ -183,6 +183,10 @@ tmux -S "$SOCKET" send-keys -t "$SESSION:" -- "bash /tmp/op-debug.sh; rm -f /tmp
 
 - Never paste secrets into logs, chat, or code.
 - Prefer `op run` / `op inject` over writing secrets to disk.
+- Never move, delete, rewrite, or reset 1Password app/CLI caches, databases,
+  sockets, configuration, account state, or desktop-integration state as
+  recovery. Reuse the one tmux session for the documented targeted retry; if
+  that fails, preserve the redacted error and ask Bram.
 - If sign-in without app integration is needed, use `op account add`.
 - If a command returns "account is not signed in", re-run `op signin` inside tmux and authorize in the app.
 - Do not run `op` outside tmux; stop and ask if tmux is unavailable.

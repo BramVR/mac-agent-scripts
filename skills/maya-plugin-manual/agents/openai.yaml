@@ -1,0 +1,4 @@
+interface:
+  display_name: "Maya Plugin Manual Session"
+  short_description: "Open one persistent Maya plug-in test session"
+  default_prompt: "Use $maya-plugin-manual to open one clean Maya session with the latest plug-in and its tool ready for manual testing."

@@ -21,8 +21,9 @@ Coordinate repository work through completion. This is a control-plane skill: in
 
 ## Activation Watch
 
-- On every activation, inspect the existing heartbeat first. Create one active five-minute heartbeat automation attached to the current root orchestrator thread only when none exists; update it only when its configuration or portfolio instructions materially changed. Name it `Bram Maintainer Loop v2 Watch`; never create duplicates or emit repeated no-op update cards.
-- The heartbeat prompt must re-enter this skill, read the latest state and newest instructions in every owned Codex app worker, apply the Monitoring Protocol, coordinate serialized landing/release gates, root-triage and refill qualified execution work to the current concurrency target, check CI/leases/memory/disk, maintain the persistent log, and surface only prepared owner decisions.
+- On every activation, load the compact state ledger before inspecting workers or root history. Inspect the existing heartbeat once. Create one heartbeat automation attached to the current root orchestrator thread only when none exists; update it only when its prompt, portfolio scope, or cadence tier materially changed. Name it `Bram Maintainer Loop v2 Watch`; never create duplicates or emit repeated no-op update cards.
+- Use a five-minute heartbeat while any lane is actively implementing, reviewing, landing, releasing, or waiting on a time-sensitive CI gate. When all remaining lanes are unchanged external waits, back the single heartbeat off to the earliest ledger deadline: 15 minutes after the first unchanged runner/outage sample, then 30, then 60. Owner-only holds use 60 minutes. Restore five minutes immediately after owner input, worker progress, a new queue item, or a due external deadline.
+- The heartbeat prompt must re-enter this skill, load the ledger, reconcile owned threads once, use cursor-based structured waits for due workers, apply the Monitoring Protocol, coordinate serialized landing/release gates, root-triage and refill qualified execution work to the current concurrency target, check due CI/leases/memory/disk, maintain ledger + log, and surface only prepared owner decisions. It must not reread the full root history or raw worker transcripts on every wake.
 - Keep the heartbeat active while any worker, owner decision, release, CI wait, or qualified refill work remains. Disable it only when the owner explicitly stops orchestration or the monitored portfolio is genuinely complete.
 - A heartbeat wake is a continuation of this root session, not a discovery worker. Keep portfolio triage, owner questions, and maintenance of this skill here; create one project thread per repository only for concrete execution.
 
@@ -36,13 +37,14 @@ Coordinate repository work through completion. This is a control-plane skill: in
 
 ## Session Startup
 
-1. Create or update the required `Bram Maintainer Loop v2 Watch` heartbeat before queue work.
-2. List recent Codex app threads before choosing repositories. Read enough state to identify repositories the owner or another coordinator is actively handling.
-3. Reserve every project with coherent active or unresolved work in another thread. Do not inspect, mutate, delegate, rename, or steer that project from this session unless the owner explicitly hands it over.
-4. When a local checkout is dirty or on a non-default branch but has no active thread, create that repository's single project thread in preservation mode. Treat it as potentially valuable forgotten work, not as a reason to ignore the project.
-5. Use RepoBar for the broad queue map. Filter to eligible, non-archived, non-fork `BramVR` repositories and any repository Bram explicitly added.
-6. Prefer the smallest non-empty effective queues first. Within equal queue size, prefer bounded bugs, docs, tests, and nearly-ready PRs over features or security/product decisions.
-7. Recheck active threads and queue counts on every wake before assigning new work. A newly active project becomes reserved immediately.
+1. Load or initialize the compact state ledger. Treat it as the current orchestration map; use the dated log only for historical lookup.
+2. Create or update the required `Bram Maintainer Loop v2 Watch` heartbeat before queue work, using the ledger's current cadence tier.
+3. List recent Codex app threads once before choosing repositories. Reconcile thread ID, host ID, project, status, and direct-owner activity into the ledger. Do not repeatedly list or read the same unchanged threads during this activation.
+4. Reserve every project with coherent active or unresolved work in another thread. Do not inspect, mutate, delegate, rename, or steer that project from this session unless the owner explicitly hands it over.
+5. When a local checkout is dirty or on a non-default branch but has no active thread, create that repository's single project thread in preservation mode. Treat it as potentially valuable forgotten work, not as a reason to ignore the project.
+6. Use RepoBar for the broad queue map. Filter to eligible, non-archived, non-fork `BramVR` repositories and any repository Bram explicitly added.
+7. Prefer the smallest non-empty effective queues first. Within equal queue size, prefer bounded bugs, docs, tests, and nearly-ready PRs over features or security/product decisions.
+8. On later wakes, use one thread-list reconciliation plus structured waits for due ledger entries before assigning work. A newly active project becomes reserved immediately.
 
 ## Repository Synchronization
 
@@ -168,8 +170,20 @@ Do not restate the task, add speculative requirements, or raise the proof bar mi
 
 Never interrupt, archive, rename, duplicate, or replace a worker without first reading its current state. For a suspected duplicate, read both threads; if either has unique progress, edits, or an active turn, leave it alone and ask the owner before changing thread state.
 
+### Structured Root Monitoring
+
+- `wait_threads` is the root monitor's primary worker-state tool. Batch one to eight due workers per call and pass each stored `hostId` and `afterCursor`. Use `timeoutMs: 0` for heartbeat snapshots; use one bounded 30–120 second wait only while this root turn is actively coordinating a near-term event.
+- For unchanged progress, persist every returned cursor immediately. For a completion, attention, or owner-decision event, atomically store the event as pending with its returned cursor before acting on it; clear the pending marker only after the event is reconciled and any required owner notification is emitted. On restart, process pending events before waiting again. An up-to-date cursor suppresses already-delivered final text; never advance it without preserving the event and never discard it merely to reread the same completion.
+- One compact wait result is sufficient when it proves coherent progress or unchanged state. Do not follow it with `read_thread`, terminal tails, or another zero-time wait.
+- Use `read_thread` only for a new/untracked worker, direct owner steering, a completion or attention event that needs full context, an ambiguity before sending a worker message, or recovery after ledger/cursor inconsistency. Use older-turn cursors only for targeted recovery.
+- Use `read_thread_terminal` or raw output/history reads only when structured state cannot explain a suspected hang, failure, or ownership conflict. Record the recovery reason; never use raw tails for routine liveness polling.
+- Skip workers whose `next_poll_at` is in the future. For an unchanged runner outage or external hold, set the next sample to 15, then 30, then 60 minutes. For an owner-only hold, sample at most hourly and rely on direct owner input to reset it. Any progress, final, failure, owner message, or deadline resets the worker to the five-minute active tier.
+- Before sending a worker message, refresh only that worker when the latest compact event does not include its newest instruction. Send nothing for coherent progress.
+- A heartbeat with no due workers performs ledger/automation reconciliation only, emits no owner update, and ends. If every lane is backed off, update the single heartbeat once to the earliest due tier instead of producing repeated five-minute no-op turns.
+
 ### Active Waits
 
+- These rules apply inside a project worker turn. The root heartbeat uses Structured Root Monitoring instead of per-worker sleep loops.
 - Keep the project turn active until its work reaches a terminal state. Do not emit a final answer or stop merely because CI, a runner, review, mergeability, deployment, an auth prompt, or a long command is pending.
 - Prefer an in-turn 30–60 second sleep/poll cycle over a per-project automation. After each interval, refresh the exact external state, repair or rerun when needed, and continue through landing and closeout.
 - Suppress routine unchanged-poll chatter, but keep polling. The root heartbeat coordinates the portfolio; it does not replace a worker watching its own pending work.
@@ -190,7 +204,10 @@ Never interrupt, archive, rename, duplicate, or replace a worker without first r
 
 ## Persistent Log
 
-- This root orchestrator owns `~/.codex/state/bram-maintainer-loop-v2/portfolio.md`; workers do not edit it.
+- This root orchestrator owns `~/.codex/state/bram-maintainer-loop-v2/state.json` and `portfolio.md`; workers do not edit them.
+- `state.json` is the compact current-state ledger. Keep schema version + update time, heartbeat cadence, and one record per owned worker: thread ID, host ID, repository, item URL, phase, wait cursor, pending event, last notified event, last meaningful event, next action, next poll time, unchanged-wait count, owner-decision state, and title. Replace it atomically after meaningful state/cursor changes. Never store prompts, transcript excerpts, tool output, or secrets.
+- Keep daily counters in the ledger for heartbeat wakes, eventful wakes, structured wait calls, targeted thread reads, raw terminal/history reads, and skipped not-due workers. These support the next audit's goals: at least 60% fewer heartbeat turns, automation below 5% of total tokens, and no missed completion or owner-decision event.
+- Rebuild a missing/corrupt ledger once from `list_threads` plus targeted current-state reads, then resume cursor monitoring. Do not reconstruct it by repeatedly replaying full root or worker histories.
 - Maintain one `## YYYY-MM-DD` heading per day. Append terse, high-level entries for meaningful actions and decisions: policy/skill/automation changes, worker creation or reassignment, queue decisions, lands, closes, releases, and exact blockers.
 - Include full canonical issue/PR URLs when relevant.
 - Never record secrets or routine polling.
@@ -239,6 +256,12 @@ Clearly qualifying noise retains standing silent-close authority. A newer owner 
 For any 1Password or `op` work, use `$one-password` and follow its current `SKILL.md` exactly. Keep credential policy canonical there instead of duplicating it here.
 
 Keep credential discovery and use inside the worker that needs the secret. Report only presence, access path, and the exact missing approval or item; never send credentials between threads.
+
+## External-State Recovery Boundary
+
+- A worker may stop only a verified task-owned process after recording its PID, command, parent, start time, and relevant logs. Unknown, shared, or user-owned application processes are not recovery targets.
+- Recovery stays inside task-owned processes, files, and documented credential routes. Never move, delete, rewrite, or reset another application's caches, databases, configuration, profiles, sessions, keychains, or credential state without Bram's explicit approval for the exact targets.
+- For a stuck upload or credential path, use the owning service skill and `$one-password`; do not improvise against application state. After one documented task-local retry fails, preserve evidence and escalate one exact blocker instead of widening mutation scope.
 
 ## Codex App Worker Contract
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Performance Audit"
+  short_description: "Audit agent history with privacy-safe reports"
+  default_prompt: "Use $agent-performance-audit to compare recent repository Codex performance with the previous audit and report Claude activity coverage separately."

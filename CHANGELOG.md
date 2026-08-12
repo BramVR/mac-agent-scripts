@@ -4,6 +4,15 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-08-12 — Agent Performance Audit
+- Added a reusable personal skill and deterministic CLI for repository-scoped Codex-history audits with separate Claude activity coverage, injected-prompt exclusion, correction and shell-tool-output denominators, cumulative-delta per-turn token accounting, baseline comparisons, redacted causal notes, privacy validation, and self-contained local HTML reports.
+
+## 2026-08-12 — External-State Recovery Boundary
+- Added a global recovery rule plus PatchProof, 1Password, and maintainer-loop guidance: terminate only verified task-owned processes, preserve diagnostics, never mutate another application's caches/databases/configuration/credential state without exact approval, and stop after documented task-local recovery fails.
+
+## 2026-08-12 — Maintainer Loop Structured Monitoring
+- Replaced repeated worker transcript polling with batched cursor-based waits, a compact current-state ledger, explicit 5/15/30/60-minute backoff, targeted raw-history recovery, and counters for verifying heartbeat and automation overhead reductions.
+
 ## 2026-07-22 — Autoreview From Canonical Source
 - Replaced the vendored `autoreview` skill with the canonical `openclaw/agent-skills` copy at `c4ab5e7` (helper 2,485 -> 12,001 lines), including its scripts, test suite, fixtures, and the skill-level `AGENTS.md` sync rule.
 - Gains TruffleHog secret scanning over the reviewed diff, a Scope Governor that classifies findings as in-scope blocker / follow-up / stop-and-escalate, oversized-bundle handling, release-branch rules, and Codex `gpt-5.6-sol` with an access-only fallback to `gpt-5.6-terra`.

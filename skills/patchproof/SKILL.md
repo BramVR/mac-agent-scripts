@@ -44,6 +44,22 @@ Use `PATCHPROOF_REPO` to override the default checkout and `PATCHPROOF_URL` to
 override the endpoint. The helper currently defaults to the verified
 `workers.dev` deployment while `proof.bramvanrompuy.be` DNS remains pending.
 
+## Stuck Upload Recovery
+
+1. Preserve the helper's output and inspect only task-local process metadata.
+   Before stopping anything, verify the exact upload PID, command, parent,
+   start time, input file, and that the process was started by this task.
+2. Gracefully stop only that verified helper process; force-terminate it only
+   if the graceful stop fails. Never terminate a browser, 1Password, Keychain,
+   Cloudflare, or other shared application process to recover an upload.
+3. Run the helper's read-only `--check`. If authentication is missing or stale,
+   use `$one-password` for the exact known PatchProof item/field in its single
+   tmux session, then make one task-local upload retry.
+4. Never move, delete, rewrite, or reset another application's caches,
+   databases, configuration, profiles, sessions, keychains, or credential
+   state. If the verified helper retry still fails, preserve diagnostics, stop,
+   and ask Bram for the exact next action.
+
 ## Constraints
 
 - Supported: PNG, JPEG, WebP, GIF, MP4, MOV, WebM.

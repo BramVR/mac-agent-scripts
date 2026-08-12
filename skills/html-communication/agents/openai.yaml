@@ -1,0 +1,4 @@
+interface:
+  display_name: "HTML Communication"
+  short_description: "Readable HTML plans, reports, and comparisons"
+  default_prompt: "Use $html-communication to present these findings as a readable HTML report."

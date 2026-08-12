@@ -71,6 +71,8 @@ Codex CLI output: avoid Markdown tables by default; they render poorly there. Us
 ## Runtime Safety
 
 - zsh: don't use `status` as a variable.
+- Recovery may gracefully stop or terminate only a verified task-owned process after recording its PID, command, parent, start time, and task evidence. Never kill an unknown, shared, or user-owned application process as incidental recovery.
+- Never move, delete, rewrite, or reset another application's caches, databases, configuration, profiles, sessions, keychains, or credential state without Bram's explicit approval for those exact targets. Use read-only diagnosis and task-local retries first; if those fail, preserve evidence and stop for direction.
 - Passwords/secrets: check `~/.profile` first. `op`/1Password CLI is last resort, must always run inside `tmux`, never directly.
 - NEVER run `op` directly in a normal shell. No exceptions. This includes harmless-looking diagnostics: no direct `op --version`, `op account list`, `op whoami`, `op vault list`, `op item list`, `op read`, or `op item get`.
 - `tmux` is necessary for `op`, but not sufficient: do not spam 1Password. No parallel `op`; no repeated probe sessions; no broad vault/item enumeration; no trial-and-error secret discovery.
