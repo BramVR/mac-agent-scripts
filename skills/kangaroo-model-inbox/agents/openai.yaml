@@ -1,0 +1,4 @@
+interface:
+  display_name: "Kangaroo Model Inbox"
+  short_description: "Run and inspect automatic Maya model checks"
+  default_prompt: "Use $kangaroo-model-inbox to check my configured model inbox and summarize the newest report."
