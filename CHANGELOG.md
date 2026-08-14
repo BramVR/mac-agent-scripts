@@ -4,6 +4,9 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-08-14 — Kangaroo Model Inbox
+- Added a reusable Maya 2022 model-inbox skill for safe Drive-folder scanning, complete per-check OK/needs-attention summaries, canonical dark HTML reports, watcher operation, and isolation from unrelated Maya sessions.
+
 ## 2026-08-12 — Agent Performance Audit
 - Added a reusable personal skill and deterministic CLI for repository-scoped Codex-history audits with separate Claude activity coverage, injected-prompt exclusion, correction and shell-tool-output denominators, cumulative-delta per-turn token accounting, baseline comparisons, redacted causal notes, privacy validation, and self-contained local HTML reports.
 
