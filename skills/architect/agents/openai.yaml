@@ -1,0 +1,6 @@
+interface:
+  display_name: "Architect"
+  short_description: "Sketch interfaces and module structure"
+  default_prompt: "Use $architect to sketch and compare architecture before implementing this change."
+policy:
+  allow_implicit_invocation: false

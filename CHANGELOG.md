@@ -4,6 +4,9 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-08-19 — Diagnosis, Design, and Writing Skills
+- Added Matt Pocock's `diagnosing-bugs` workflow plus minimally adapted Codex-native copies of PStack's `architect` and `blast-radius`, and an unchanged PStack `unslop` workflow, with upstream attribution, MIT notices, UI metadata, validation, and local skill-mirror discovery.
+
 ## 2026-08-12 — Agent Performance Audit
 - Added a reusable personal skill and deterministic CLI for repository-scoped Codex-history audits with separate Claude activity coverage, injected-prompt exclusion, correction and shell-tool-output denominators, cumulative-delta per-turn token accounting, baseline comparisons, redacted causal notes, privacy validation, and self-contained local HTML reports.
 
