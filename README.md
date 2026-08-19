@@ -117,7 +117,7 @@ Treat this repo as Bram's canonical shared agent setup and portable helper mirro
 
 Upstream intake from `steipete/agent-scripts`:
 - Mine selectively; do not merge wholesale.
-- Preserve Bram-local skills/helpers: `hermes-win`, `hermes-dashboard`, `autoreview`, `bram-maintainer-loop-v2`, `tdd`, `to-prd`, `to-issues`, `grill-with-docs`.
+- Preserve Bram-local skills/helpers: `hermes-win`, `hermes-dashboard`, `autoreview`, `bram-maintainer-loop-v2`, `tdd`, `to-prd`, `to-tickets`, `grill-with-docs`.
 - Skip or scrub non-Bram personal/product defaults before adopting docs or skills.
 - Do not adopt symlinks to missing repos unless Bram explicitly configures them.
 - Prefer generic helper/script fixes, CI smoke checks, and non-personal skill improvements.

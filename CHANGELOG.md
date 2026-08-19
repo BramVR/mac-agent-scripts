@@ -4,6 +4,9 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-08-19 — Recent Skill Refresh
+- Replaced the retired `to-issues` route with `to-tickets`, refreshed the Matt Pocock TDD/setup/ticket bundle from current upstream, upgraded Peekaboo CLI and guidance to v4, and updated browser automation for cmux-first routing plus fail-closed Chrome extension relay use.
+
 ## 2026-08-19 — Diagnosis, Design, and Writing Skills
 - Added Matt Pocock's `diagnosing-bugs` workflow plus minimally adapted Codex-native copies of PStack's `architect` and `blast-radius`, and an unchanged PStack `unslop` workflow, with upstream attribution, MIT notices, UI metadata, validation, and local skill-mirror discovery.
 

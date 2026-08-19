@@ -20,7 +20,7 @@ Codex CLI output: avoid Markdown tables by default; they render poorly there. Us
 - Skill descriptions: short generic trigger phrase, not summary; no personal names, long paths, or workflow narration unless needed for routing.
 - Skill frontmatter: quote `description`; after SKILL.md edits, YAML-parse frontmatter before commit.
 - After adding/removing/renaming a skill: run `scripts/sync-skills` (mirrors into `~/.claude/skills` + `~/.codex/skills`, prunes dead links). `--dry-run` to preview.
-- Upstream sync: treat `steipete/agent-scripts` as a source to mine, not a branch to merge. Preserve Bram-local skills/helpers (`hermes-win`, `hermes-dashboard`, `autoreview`, `bram-maintainer-loop-v2`, `tdd`, `to-prd`, `to-issues`, `grill-with-docs`). Scrub or skip non-Bram personal/product assumptions; do not adopt broken symlinks unless Bram explicitly configures that repo. Mining marker + flow: `docs/upstream-mined.md`.
+- Upstream sync: treat `steipete/agent-scripts` as a source to mine, not a branch to merge. Preserve Bram-local skills/helpers (`hermes-win`, `hermes-dashboard`, `autoreview`, `bram-maintainer-loop-v2`, `tdd`, `to-prd`, `to-tickets`, `grill-with-docs`). Scrub or skip non-Bram personal/product assumptions; do not adopt broken symlinks unless Bram explicitly configures that repo. Mining marker + flow: `docs/upstream-mined.md`.
 - Read `~/Projects/agent-scripts/tools.md` when the tool catalog matters.
 
 ## Routing
