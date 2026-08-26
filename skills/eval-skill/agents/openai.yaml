@@ -1,0 +1,4 @@
+interface:
+  display_name: "Evaluate Skill"
+  short_description: "Run a blinded comparison of skill behavior"
+  default_prompt: "Use $eval-skill to compare this Codex skill change with its baseline through blinded behavioral trials."

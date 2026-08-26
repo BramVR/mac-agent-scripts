@@ -4,6 +4,11 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-08-26 — Codex Verification and Eval Skills
+- Added a Codex-native port of PStack's `create-verification-skill`: repo interview, native `.agents/skills/verify-<app>` generation with a protected-directory fallback through `skills/` plus `AGENTS.md` routing, real user-path proof, feature-map examples, safe process ownership and cleanup, authorization boundaries, MIT attribution, UI metadata, validation, and shared skill discovery.
+- Added the companion `maintain-verification-skill`: complete source and live feature coverage, drift and regression triage, safe doctor and cleanup invariants, optional authorized source-reader delegation, and no automatic branch, commit, push, or PR.
+- Added `eval-skill`: blinded skill-versus-baseline trials in sanitized isolated projects, held-back observable rubrics, model-balanced pairs, one shared blind judge, transcript evidence when available, artifact-first grading, and explicit promote, reject, or inconclusive outcomes.
+
 ## 2026-08-19 — Recent Skill Refresh
 - Replaced the retired `to-issues` route with `to-tickets`, refreshed the Matt Pocock TDD/setup/ticket bundle from current upstream, upgraded Peekaboo CLI and guidance to v4, and updated browser automation for cmux-first routing plus fail-closed Chrome extension relay use.
 
