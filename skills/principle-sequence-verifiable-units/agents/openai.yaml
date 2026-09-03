@@ -1,0 +1,6 @@
+interface:
+  display_name: "Sequence Verifiable Units"
+  short_description: "Apply to multi-step work (sweeps, migrations, runs of similar edits) and to how you stack commits and PRs"
+  default_prompt: "Use $principle-sequence-verifiable-units to apply this principle to the current decision."
+policy:
+  allow_implicit_invocation: false

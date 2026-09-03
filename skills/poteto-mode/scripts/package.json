@@ -1,0 +1,17 @@
+{
+  "name": "@codex-skill/poteto-mode-tools",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun build orch/orch.ts --target bun --outfile dist/orch --banner '#!/usr/bin/env bun' && bun build watch-pr/entry.ts --target bun --outfile dist/watch-pr --banner '#!/usr/bin/env bun' && chmod +x dist/orch dist/watch-pr",
+    "test": "bun test orch watch-pr",
+    "typecheck": "tsc --project watch-pr/tsconfig.json --noEmit --strict"
+  },
+  "dependencies": {
+    "commander": "14.0.0"
+  },
+  "devDependencies": {
+    "bun-types": "latest",
+    "typescript": "latest"
+  }
+}

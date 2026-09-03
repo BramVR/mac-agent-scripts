@@ -1,0 +1,6 @@
+interface:
+  display_name: "Foundational Thinking"
+  short_description: "Apply before writing logic: choosing core types and data structures, sequencing scaffold-vs-feature work, asking what co"
+  default_prompt: "Use $principle-foundational-thinking to apply this principle to the current decision."
+policy:
+  allow_implicit_invocation: false

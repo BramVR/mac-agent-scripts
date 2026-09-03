@@ -1,0 +1,6 @@
+interface:
+  display_name: "Subtract Before You Add"
+  short_description: "Apply when sequencing an addition, refactor, or rewrite"
+  default_prompt: "Use $principle-subtract-before-you-add to apply this principle to the current decision."
+policy:
+  allow_implicit_invocation: false

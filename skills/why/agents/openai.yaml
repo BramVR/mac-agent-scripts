@@ -1,0 +1,6 @@
+interface:
+  display_name: "Why"
+  short_description: "Investigate code history and design rationale"
+  default_prompt: "Use $why to investigate why this code or design works this way and report the evidence, confidence, and gaps."
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Exhaust The Design Space"
+  short_description: "Apply when facing a novel UI interaction or architectural decision with no precedent in the codebase"
+  default_prompt: "Use $principle-exhaust-the-design-space to apply this principle to the current decision."
+policy:
+  allow_implicit_invocation: false

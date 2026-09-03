@@ -1,0 +1,6 @@
+interface:
+  display_name: "Experience First"
+  short_description: "Apply when product, UX, or feature-scope tradeoffs come up"
+  default_prompt: "Use $principle-experience-first to apply this principle to the current decision."
+policy:
+  allow_implicit_invocation: false

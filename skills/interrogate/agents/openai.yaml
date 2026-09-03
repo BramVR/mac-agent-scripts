@@ -1,0 +1,6 @@
+interface:
+  display_name: "Interrogate"
+  short_description: "Run independent adversarial code reviews"
+  default_prompt: "Use $interrogate to stress-test these changes with independent adversarial reviewers."
+policy:
+  allow_implicit_invocation: false

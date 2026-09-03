@@ -1,0 +1,6 @@
+interface:
+  display_name: "Poteto Mode"
+  short_description: "Run Lauren Tan's rigorous agent workflow in Codex"
+  default_prompt: "Use $poteto-mode to route this task through the matching Poteto playbook and principles."
+policy:
+  allow_implicit_invocation: false

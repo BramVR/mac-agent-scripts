@@ -1,0 +1,6 @@
+interface:
+  display_name: "How"
+  short_description: "Trace and explain a codebase subsystem"
+  default_prompt: "Use $how to trace how this subsystem works and explain its runtime flow, ownership, and gotchas."
+policy:
+  allow_implicit_invocation: false

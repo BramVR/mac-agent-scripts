@@ -2,3 +2,5 @@ interface:
   display_name: "Maintain Verification Skill"
   short_description: "Audit verification guidance against the real app"
   default_prompt: "Use $maintain-verification-skill to audit this project's verification skill against current source and live behavior."
+policy:
+  allow_implicit_invocation: false

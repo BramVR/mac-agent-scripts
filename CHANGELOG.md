@@ -4,6 +4,16 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-09-03: Codex Poteto Mode
+- Added all 21 PStack principle skills plus a Codex-native `poteto-mode` router with Lauren Tan's playbooks, orchestration ledger, PR watcher, explicit-only invocation, safe Codex write boundaries, matching verification surfaces, and role-based high-reasoning model routing with no fast mode.
+
+## 2026-09-02: Codex PStack Skills
+- Added a Codex-native port of PStack's `how` workflow for codebase explanations and architecture critique, with Luna explorers, Sol explainers and critics, high reasoning, and no fast mode.
+- Added Codex-native ports of PStack's `why` and `technical-writing` workflows, preserving the upstream text outside Codex routing, tool, concurrency, and model adaptations; `why` uses Luna investigators and a Sol synthesizer at high reasoning with no fast mode.
+- Restored `create-verification-skill` to PStack's upstream wording, changing only Codex skill paths, invocation syntax, metadata, and authorization boundaries.
+- Restored `maintain-verification-skill` to PStack's upstream wording, changing only Codex skill paths, invocation syntax, source-reader concurrency and model settings, metadata, and authorization boundaries.
+- Added Codex-native ports of PStack's `swarm`, `arena`, `interrogate`, `reflect`, `figure-it-out`, `show-me-your-work`, `no-comments`, and `bro` skills, preserving upstream wording outside Codex plans, collaboration agents, transcript paths, invocation syntax, permissions, and role-based high-reasoning model routing with no fast mode.
+
 ## 2026-08-26 — Codex Verification and Eval Skills
 - Added a Codex-native port of PStack's `create-verification-skill`: repo interview, native `.agents/skills/verify-<app>` generation with a protected-directory fallback through `skills/` plus `AGENTS.md` routing, real user-path proof, feature-map examples, safe process ownership and cleanup, authorization boundaries, MIT attribution, UI metadata, validation, and shared skill discovery.
 - Added the companion `maintain-verification-skill`: complete source and live feature coverage, drift and regression triage, safe doctor and cleanup invariants, optional authorized source-reader delegation, and no automatic branch, commit, push, or PR.

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Figure It Out"
+  short_description: "Design an auditable playbook for complex work"
+  default_prompt: "Use $figure-it-out to design and run an auditable playbook for this complex task."
+policy:
+  allow_implicit_invocation: false

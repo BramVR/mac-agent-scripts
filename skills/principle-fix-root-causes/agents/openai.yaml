@@ -1,0 +1,6 @@
+interface:
+  display_name: "Fix Root Causes"
+  short_description: "Apply when debugging"
+  default_prompt: "Use $principle-fix-root-causes to apply this principle to the current decision."
+policy:
+  allow_implicit_invocation: false

@@ -2,3 +2,5 @@ interface:
   display_name: "Create Verification Skill"
   short_description: "Build a repo-local real-app verification workflow"
   default_prompt: "Use $create-verification-skill to create and prove a project-local verification skill for this app."
+policy:
+  allow_implicit_invocation: false
