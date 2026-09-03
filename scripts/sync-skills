@@ -218,9 +218,16 @@ for root_index in "${!mirror_roots[@]}"; do
         fi
         continue
       fi
+      exact_owned=0
+      if owned=$(state_lookup "$role" "$name") && [ "$owned" = "$observed" ]; then
+        exact_owned=1
+      fi
+      observed_canonical=$(canon "$linkpath" 2>/dev/null || true)
       plan_remove "$linkpath" "$observed" ''
       plan_create "$target" "$linkpath"
-      intend "$role" "$name" "$target"
+      if [ "$exact_owned" = 1 ] || [ "$observed_canonical" != "$target" ]; then
+        intend "$role" "$name" "$target"
+      fi
       continue
     fi
     if [ -e "$linkpath" ]; then

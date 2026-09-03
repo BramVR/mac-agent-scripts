@@ -210,13 +210,50 @@ done
 [ -f "$case_root/local-sources/claude/claude-deleted/SKILL.md" ] || fail 'removed external Claude target'
 
 new_case
+make_skill "$case_root/local-sources/codex" relative-codex
+relative_codex=$(canonical "$case_root/local-sources/codex/relative-codex")
+mkdir -p "$codex_root"
+ln -s ../../../local-sources/codex/relative-codex "$codex_root/relative-codex"
+run_sync >/dev/null
+
+for root in "$agents_root" "$claude_root" "$codex_root"; do
+  assert_link "$root/relative-codex" "$relative_codex"
+done
+assert_not_contains "$(cat "$state_file")" "codex	relative-codex"
+repeat_output=$(run_sync)
+[ "$repeat_output" = 'skills mirror up to date (1 skills)' ] || fail "unexpected relative Codex repeat output: $repeat_output"
+for root in "$agents_root" "$claude_root" "$codex_root"; do
+  assert_link "$root/relative-codex" "$relative_codex"
+done
+
+new_case
+make_skill "$case_root/local-sources/claude" chained-claude
+chained_claude=$(canonical "$case_root/local-sources/claude/chained-claude")
+ln -s "$chained_claude" "$case_root/intermediate-claude"
+mkdir -p "$claude_root"
+ln -s "$case_root/intermediate-claude" "$claude_root/chained-claude"
+run_sync >/dev/null
+
+for root in "$agents_root" "$claude_root" "$codex_root"; do
+  assert_link "$root/chained-claude" "$chained_claude"
+done
+assert_not_contains "$(cat "$state_file")" "claude	chained-claude"
+repeat_output=$(run_sync)
+[ "$repeat_output" = 'skills mirror up to date (1 skills)' ] || fail "unexpected chained Claude repeat output: $repeat_output"
+for root in "$agents_root" "$claude_root" "$codex_root"; do
+  assert_link "$root/chained-claude" "$chained_claude"
+done
+
+new_case
 make_skill "$case_root/ambiguous" ambiguous
 ambiguous=$(canonical "$case_root/ambiguous/ambiguous")
 mkdir -p "$codex_root" "$claude_root"
 ln -s "$ambiguous" "$codex_root/ambiguous"
-ln -s "$ambiguous" "$claude_root/ambiguous"
+ln -s "$ambiguous" "$case_root/intermediate-ambiguous"
+ln -s "$case_root/intermediate-ambiguous" "$claude_root/ambiguous"
 run_sync >/dev/null
 
+assert_link "$claude_root/ambiguous" "$ambiguous"
 assert_file_text "$state_file" "sync-skills-v1
 agents	ambiguous	$ambiguous"
 rm "$codex_root/ambiguous"
