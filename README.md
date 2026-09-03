@@ -36,7 +36,7 @@ scripts/sync-skills --dry-run   # preview
 scripts/sync-skills             # apply
 ```
 
-It writes one flat per-skill symlink per root, so Codex and Claude Code see the same set:
+It writes one flat per-skill symlink to each supported discovery root:
 - `~/.agents/skills/<name> -> <canonical skill dir>`
 - `~/.claude/skills/<name> -> <canonical skill dir>`
 - `~/.codex/skills/<name> -> <canonical skill dir>`
