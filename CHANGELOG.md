@@ -6,6 +6,7 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 ## 2026-09-03: Codex Poteto Mode
 - Added all 21 PStack principle skills plus a Codex-native `poteto-mode` router with Lauren Tan's playbooks, orchestration ledger, PR watcher, explicit-only invocation, safe Codex write boundaries, matching verification surfaces, and role-based high-reasoning model routing with no fast mode.
+- Added `~/.agents/skills` as a mirror destination only; `scripts/sync-skills` rejects a symlinked root before normal or dry-run work can touch its backing tree.
 
 ## 2026-09-02: Codex PStack Skills
 - Added a Codex-native port of PStack's `how` workflow for codebase explanations and architecture critique, with Luna explorers, Sol explainers and critics, high reasoning, and no fast mode.
