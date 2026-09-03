@@ -27,6 +27,9 @@ jobs:
               fi
             done
 
+      - name: Test skill mirror
+        run: bash tests/sync-skills.sh
+
       - name: Install video transcript downloader dependencies
         working-directory: skills/video-transcript-downloader
         run: npm ci

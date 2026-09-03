@@ -1,17 +1,15 @@
 #!/usr/bin/env bash
 # sync-skills: build/refresh the per-machine agent skill mirror. Idempotent.
-#
-# Both Claude Code and Codex get a flat per-skill symlink mirror:
+# Mirrors:
+#   ~/.agents/skills/<name> -> <canonical skill dir>
 #   ~/.claude/skills/<name> -> <canonical skill dir>
 #   ~/.codex/skills/<name>  -> <canonical skill dir>
 # Claude Code loads only ~/.claude/skills/<name>/SKILL.md (one level deep,
 # per-entry symlinks followed, no recursive scan). Codex scans recursively but
 # Bram's setup is documented as per-skill links too, so no whole-root symlink
 # is created (see README: "Do not replace this with a broad ... symlink").
-#
-# Sources, in collision priority order: agent-scripts > manager > codex-local.
-# Skills that already live in a mirror root (codex-local extras) stay put and
-# are mirrored into the other root.
+# Sources: agent-scripts > manager > codex-local > claude-local.
+# ~/.agents/skills is destination-only.
 #
 # Usage: sync-skills [-n|--dry-run] [--no-instructions]
 set -eo pipefail
@@ -21,7 +19,11 @@ AGENT_SKILLS="$AGENT_SCRIPTS/skills"
 MANAGER_SKILLS=${MANAGER_SKILLS_DIR:-$HOME/Projects/manager/skills}
 CODEX_ROOT="$HOME/.codex/skills"
 CLAUDE_ROOT="$HOME/.claude/skills"
+AGENTS_ROOT="$HOME/.agents/skills"
+STATE_FILE="$HOME/.agents/.sync-skills-v1.tsv"
 AGENTS_MD="$AGENT_SCRIPTS/AGENTS.MD"
+mirror_roots=("$AGENTS_ROOT" "$CLAUDE_ROOT" "$CODEX_ROOT")
+mirror_roles=(agents claude codex)
 
 dry_run=0
 link_instructions=1
@@ -45,10 +47,77 @@ note() { printf '%s\n' "$*"; changed=1; }
 warn() { printf 'WARN: %s\n' "$*" >&2; }
 run() { [ "$dry_run" = 1 ] && return 0; "$@"; }
 
+if [ -L "$AGENTS_ROOT" ]; then
+  warn "$AGENTS_ROOT must be a real directory, not a symlink"
+  exit 1
+fi
+
+if [ -L "$STATE_FILE" ] || { [ -e "$STATE_FILE" ] && [ ! -f "$STATE_FILE" ]; }; then
+  warn "$STATE_FILE must be a regular file, not a symlink or other entry"
+  exit 1
+fi
+
+state_roles=()
+state_names=()
+state_targets=()
+invalid_state() {
+  warn "invalid ownership state $STATE_FILE: $1"
+  exit 1
+}
+state_lookup() {
+  local role=$1 name=$2 i
+  for i in "${!state_roles[@]}"; do
+    if [ "${state_roles[$i]}" = "$role" ] && [ "${state_names[$i]}" = "$name" ]; then
+      printf '%s' "${state_targets[$i]}"
+      return 0
+    fi
+  done
+  return 1
+}
+if [ -f "$STATE_FILE" ]; then
+  state_line_number=0
+  while IFS= read -r state_line || [ -n "$state_line" ]; do
+    state_line_number=$((state_line_number + 1))
+    if [ "$state_line_number" = 1 ]; then
+      [ "$state_line" = sync-skills-v1 ] || invalid_state 'unknown header'
+      continue
+    fi
+    state_tab=$'\t'
+    case $state_line in
+      *"$state_tab"*"$state_tab"*) ;;
+      *) invalid_state "malformed row $state_line_number" ;;
+    esac
+    state_rest=${state_line#*"$state_tab"}
+    case $state_rest in
+      *"$state_tab"*"$state_tab"*) invalid_state "malformed row $state_line_number" ;;
+    esac
+    state_role=${state_line%%"$state_tab"*}
+    state_name=${state_rest%%"$state_tab"*}
+    state_target=${state_rest#*"$state_tab"}
+    case $state_role in
+      agents | claude | codex) ;;
+      *) invalid_state "unknown role on row $state_line_number" ;;
+    esac
+    case $state_name in
+      '' | . | .. | */*) invalid_state "invalid name on row $state_line_number" ;;
+    esac
+    case $state_target in
+      /*) ;;
+      *) invalid_state "invalid target on row $state_line_number" ;;
+    esac
+    if state_lookup "$state_role" "$state_name" >/dev/null; then
+      invalid_state "duplicate key on row $state_line_number"
+    fi
+    state_roles+=("$state_role")
+    state_names+=("$state_name")
+    state_targets+=("$state_target")
+  done < "$STATE_FILE"
+  [ "$state_line_number" -gt 0 ] || invalid_state 'missing header'
+fi
+
 # canon <dir>: absolute, symlink-free path, so mirrors never chain links.
 canon() { (cd "$1" 2>/dev/null && pwd -P); }
 
-# link <target> <linkpath>: create/retarget symlink, quiet when already right.
 link() {
   [ "$(readlink "$2" 2>/dev/null)" = "$1" ] && return 0
   if [ -e "$2" ] && [ ! -L "$2" ]; then
@@ -65,7 +134,9 @@ if [ -L "$CLAUDE_ROOT" ]; then
   run rm "$CLAUDE_ROOT"
   note "replaced legacy whole-dir symlink $CLAUDE_ROOT with real dir"
 fi
-run mkdir -p "$CLAUDE_ROOT" "$CODEX_ROOT"
+for root in "${mirror_roots[@]}"; do
+  run mkdir -p "$root"
+done
 
 # --- Collect desired name -> target (bash 3.2: parallel arrays).
 names=()
@@ -78,14 +149,23 @@ lookup() {
   return 1
 }
 claim() { # claim <root> <label>; first root to claim a name wins.
-  local root=$1 label=$2 entry name target taken
+  local root=$1 label=$2 role=${3:-} entry name target taken owned
   [ -d "$root" ] || return 0
   for entry in "$root"/*/; do
     entry=${entry%/}
     name=$(basename "$entry")
     [ -f "$entry/SKILL.md" ] || continue
+    case $name in
+      *$'\t'* | *$'\n'*) warn "unsupported skill name in $root"; exit 1 ;;
+    esac
+    if [ -n "$role" ] && owned=$(state_lookup "$role" "$name") && [ -L "$entry" ] && [ "$(readlink "$entry")" = "$owned" ]; then
+      continue
+    fi
     target=$(canon "$entry") || continue
     [ -n "$target" ] || continue
+    case $target in
+      *$'\t'* | *$'\n'*) warn "unsupported skill target for $name"; exit 1 ;;
+    esac
     if taken=$(lookup "$name"); then
       [ "$taken" = "$target" ] || printf 'skip %s (%s): name taken by %s\n' "$name" "$label" "$taken"
       continue
@@ -96,47 +176,132 @@ claim() { # claim <root> <label>; first root to claim a name wins.
 }
 claim "$AGENT_SKILLS" agent-scripts
 claim "$MANAGER_SKILLS" manager
-claim "$CODEX_ROOT" codex-local
-claim "$CLAUDE_ROOT" claude-local
+claim "$CODEX_ROOT" codex-local codex
+claim "$CLAUDE_ROOT" claude-local claude
 
-# --- Mirror every claimed skill into both roots.
-mirror() {
-  local root=$1 i linkpath
-  for i in "${!names[@]}"; do
-    linkpath="$root/${names[$i]}"
-    # Skill already lives here (codex-local extra): leave it alone.
-    [ "${targets[$i]}" = "$(canon "$linkpath" 2>/dev/null)" ] && continue
-    link "${targets[$i]}" "$linkpath"
-  done
+remove_paths=()
+remove_targets=()
+remove_messages=()
+create_targets=()
+create_paths=()
+intended_roles=()
+intended_names=()
+intended_targets=()
+
+plan_remove() {
+  remove_paths+=("$1")
+  remove_targets+=("$2")
+  remove_messages+=("$3")
 }
-mirror "$CLAUDE_ROOT"
-mirror "$CODEX_ROOT"
+plan_create() {
+  create_targets+=("$1")
+  create_paths+=("$2")
+}
+intend() {
+  intended_roles+=("$1")
+  intended_names+=("$2")
+  intended_targets+=("$3")
+}
 
-# --- Prune: broken links always; healthy links into managed roots only when
-# no longer desired. Foreign healthy links (user-made) stay.
-prune() {
-  local root=$1 entry name target
+for root_index in "${!mirror_roots[@]}"; do
+  root=${mirror_roots[$root_index]}
+  role=${mirror_roles[$root_index]}
+  for name_index in "${!names[@]}"; do
+    name=${names[$name_index]}
+    target=${targets[$name_index]}
+    linkpath="$root/$name"
+    if [ -L "$linkpath" ]; then
+      observed=$(readlink "$linkpath")
+      if [ "$observed" = "$target" ]; then
+        if owned=$(state_lookup "$role" "$name") && [ "$owned" = "$observed" ]; then
+          intend "$role" "$name" "$target"
+        fi
+        continue
+      fi
+      exact_owned=0
+      if owned=$(state_lookup "$role" "$name") && [ "$owned" = "$observed" ]; then
+        exact_owned=1
+      fi
+      observed_canonical=$(canon "$linkpath" 2>/dev/null || true)
+      plan_remove "$linkpath" "$observed" ''
+      plan_create "$target" "$linkpath"
+      if [ "$exact_owned" = 1 ] || [ "$observed_canonical" != "$target" ]; then
+        intend "$role" "$name" "$target"
+      fi
+      continue
+    fi
+    if [ -e "$linkpath" ]; then
+      if [ -d "$linkpath" ] && [ "$(canon "$linkpath" 2>/dev/null)" = "$target" ]; then
+        continue
+      fi
+      warn "$linkpath is a real file/dir, not linking (expected -> $target)"
+      continue
+    fi
+    plan_create "$target" "$linkpath"
+    intend "$role" "$name" "$target"
+  done
+
   for entry in "$root"/* "$root"/.[!.]*; do
     [ -L "$entry" ] || continue
     name=$(basename "$entry")
-    target=$(readlink "$entry")
+    lookup "$name" >/dev/null && continue
+    observed=$(readlink "$entry")
     if [ ! -e "$entry" ]; then
-      run rm "$entry"
-      note "pruned broken link $name -> $target"
+      plan_remove "$entry" "$observed" "pruned broken link $name -> $observed"
       continue
     fi
-    case $target in
-      "$AGENT_SKILLS"/* | "$MANAGER_SKILLS"/* | "$CODEX_ROOT"/* | "$CLAUDE_ROOT"/*)
-        lookup "$name" >/dev/null || {
-          run rm "$entry"
-          note "pruned stale link $name -> $target"
-        }
-        ;;
-    esac
+    if owned=$(state_lookup "$role" "$name") && [ "$owned" = "$observed" ]; then
+      plan_remove "$entry" "$observed" "pruned stale link $name -> $observed"
+    fi
   done
+done
+
+for remove_index in "${!remove_paths[@]}"; do
+  path=${remove_paths[$remove_index]}
+  observed=${remove_targets[$remove_index]}
+  if [ ! -L "$path" ] || [ "$(readlink "$path")" != "$observed" ]; then
+    warn "$path changed while sync was planning; refusing to remove it"
+    exit 1
+  fi
+  run rm "$path"
+  [ -n "${remove_messages[$remove_index]}" ] && note "${remove_messages[$remove_index]}"
+done
+
+render_manifest() {
+  local i
+  printf 'sync-skills-v1\n'
+  for i in "${!intended_roles[@]}"; do
+    printf '%s\t%s\t%s\n' "${intended_roles[$i]}" "${intended_names[$i]}" "${intended_targets[$i]}"
+  done | LC_ALL=C sort
 }
-prune "$CLAUDE_ROOT"
-prune "$CODEX_ROOT"
+
+manifest_changed=1
+if [ -f "$STATE_FILE" ]; then
+  current_manifest=$(cat "$STATE_FILE")
+  intended_manifest=$(render_manifest)
+  [ "$current_manifest" = "$intended_manifest" ] && manifest_changed=0
+fi
+if [ "$dry_run" = 1 ]; then
+  [ "$manifest_changed" = 1 ] && note "update ownership state $STATE_FILE"
+else
+  umask 077
+  state_tmp=$(mktemp "$HOME/.agents/.sync-skills-v1.tsv.tmp.XXXXXX")
+  trap '[ -z "${state_tmp:-}" ] || rm -f "$state_tmp"' EXIT
+  render_manifest > "$state_tmp"
+  chmod 600 "$state_tmp"
+  if [ -f "$STATE_FILE" ] && cmp -s "$state_tmp" "$STATE_FILE"; then
+    rm -f "$state_tmp"
+  else
+    mv -f "$state_tmp" "$STATE_FILE"
+    note "updated ownership state $STATE_FILE"
+  fi
+  state_tmp=
+fi
+
+for create_index in "${!create_paths[@]}"; do
+  run ln -s "${create_targets[$create_index]}" "${create_paths[$create_index]}"
+  note "link ${create_paths[$create_index]} -> ${create_targets[$create_index]}"
+done
 
 # --- Global instruction pointers; never clobber a real file.
 if [ "$link_instructions" = 1 ]; then
