@@ -20,6 +20,7 @@ new_case() {
   agent_skills="$agent_scripts/skills"
   manager_skills="$case_root/manager/skills"
   agents_root="$home/.agents/skills"
+  state_file="$home/.agents/.sync-skills-v1.tsv"
   claude_root="$home/.claude/skills"
   codex_root="$home/.codex/skills"
   mkdir -p "$home" "$agent_skills" "$manager_skills"
@@ -38,6 +39,22 @@ link_skill() {
 
 canonical() {
   (cd "$1" 2>/dev/null && pwd -P)
+}
+
+file_inode() {
+  if [ "$(uname -s)" = Darwin ]; then
+    stat -f '%i' "$1"
+  else
+    stat -c '%i' "$1"
+  fi
+}
+
+file_mode() {
+  if [ "$(uname -s)" = Darwin ]; then
+    stat -f '%Lp' "$1"
+  else
+    stat -c '%a' "$1"
+  fi
 }
 
 run_sync() {
@@ -62,6 +79,18 @@ assert_contains() {
     *"$2"*) ;;
     *) fail "expected output to contain: $2" ;;
   esac
+}
+
+assert_not_contains() {
+  case $1 in
+    *"$2"*) fail "expected output not to contain: $2" ;;
+  esac
+}
+
+assert_file_text() {
+  local actual
+  actual=$(cat "$1")
+  [ "$actual" = "$2" ] || fail "unexpected contents in $1: $actual"
 }
 
 for mode in normal dry-run; do
@@ -93,13 +122,152 @@ for mode in normal dry-run; do
   assert_absent "$backing_root/mirrored"
 done
 
+for state_kind in malformed symlink; do
+  for mode in normal dry-run; do
+    new_case
+    backing_root="$case_root/claude-backing"
+    mkdir -p "$backing_root" "$codex_root" "$home/.agents" "$home/.claude"
+    printf 'keep claude\n' > "$backing_root/sentinel"
+    printf 'keep codex\n' > "$codex_root/sentinel"
+    ln -s "$backing_root" "$claude_root"
+    if [ "$state_kind" = malformed ]; then
+      printf 'wrong-version\n' > "$state_file"
+    else
+      printf 'sync-skills-v1\n' > "$case_root/state-target"
+      ln -s "$case_root/state-target" "$state_file"
+    fi
+
+    set +e
+    if [ "$mode" = dry-run ]; then
+      state_output=$(run_sync --dry-run 2>&1)
+    else
+      state_output=$(run_sync 2>&1)
+    fi
+    state_status=$?
+    set -e
+
+    [ "$state_status" -ne 0 ] || fail "expected $mode with $state_kind state to fail"
+    assert_link "$claude_root" "$backing_root"
+    [ "$(cat "$backing_root/sentinel")" = 'keep claude' ] || fail "changed Claude backing for $mode with $state_kind state"
+    [ "$(cat "$codex_root/sentinel")" = 'keep codex' ] || fail "changed Codex root for $mode with $state_kind state"
+    case $state_kind in
+      malformed) assert_contains "$state_output" "invalid ownership state $state_file" ;;
+      symlink) assert_contains "$state_output" "$state_file must be a regular file" ;;
+    esac
+  done
+done
+
 new_case
 make_skill "$agent_skills" shared
 run_sync >/dev/null
 
 assert_link "$agents_root/shared" "$(canonical "$agent_skills/shared")"
+[ "$(file_mode "$state_file")" = 600 ] || fail 'expected ownership state mode 600'
+state_inode=$(file_inode "$state_file")
 repeat_output=$(run_sync)
 [ "$repeat_output" = 'skills mirror up to date (1 skills)' ] || fail "unexpected repeat output: $repeat_output"
+[ "$(file_inode "$state_file")" = "$state_inode" ] || fail 'rewrote unchanged ownership state'
+
+new_case
+make_skill "$codex_root" quiet-real-source
+quiet_real_output=$(run_sync 2>&1)
+assert_not_contains "$quiet_real_output" "$codex_root/quiet-real-source is a real file/dir"
+assert_link "$agents_root/quiet-real-source" "$(canonical "$codex_root/quiet-real-source")"
+assert_link "$claude_root/quiet-real-source" "$(canonical "$codex_root/quiet-real-source")"
+
+new_case
+link_skill "$case_root/local-sources/codex" "$codex_root" codex-deleted
+codex_deleted=$(canonical "$case_root/local-sources/codex/codex-deleted")
+run_sync >/dev/null
+
+assert_link "$agents_root/codex-deleted" "$codex_deleted"
+assert_link "$claude_root/codex-deleted" "$codex_deleted"
+[ -f "$state_file" ] || fail "expected ownership state at $state_file"
+assert_file_text "$state_file" "sync-skills-v1
+agents	codex-deleted	$codex_deleted
+claude	codex-deleted	$codex_deleted"
+rm "$codex_root/codex-deleted"
+run_sync >/dev/null
+for root in "$agents_root" "$claude_root" "$codex_root"; do
+  assert_absent "$root/codex-deleted"
+done
+[ -f "$case_root/local-sources/codex/codex-deleted/SKILL.md" ] || fail 'removed external Codex target'
+repeat_output=$(run_sync)
+[ "$repeat_output" = 'skills mirror up to date (0 skills)' ] || fail "unexpected deletion repeat output: $repeat_output"
+
+new_case
+link_skill "$case_root/local-sources/claude" "$claude_root" claude-deleted
+claude_deleted=$(canonical "$case_root/local-sources/claude/claude-deleted")
+run_sync >/dev/null
+
+assert_link "$agents_root/claude-deleted" "$claude_deleted"
+assert_link "$codex_root/claude-deleted" "$claude_deleted"
+rm "$claude_root/claude-deleted"
+run_sync >/dev/null
+for root in "$agents_root" "$claude_root" "$codex_root"; do
+  assert_absent "$root/claude-deleted"
+done
+[ -f "$case_root/local-sources/claude/claude-deleted/SKILL.md" ] || fail 'removed external Claude target'
+
+new_case
+make_skill "$case_root/ambiguous" ambiguous
+ambiguous=$(canonical "$case_root/ambiguous/ambiguous")
+mkdir -p "$codex_root" "$claude_root"
+ln -s "$ambiguous" "$codex_root/ambiguous"
+ln -s "$ambiguous" "$claude_root/ambiguous"
+run_sync >/dev/null
+
+assert_file_text "$state_file" "sync-skills-v1
+agents	ambiguous	$ambiguous"
+rm "$codex_root/ambiguous"
+run_sync >/dev/null
+assert_link "$claude_root/ambiguous" "$ambiguous"
+assert_link "$codex_root/ambiguous" "$ambiguous"
+assert_link "$agents_root/ambiguous" "$ambiguous"
+
+new_case
+link_skill "$case_root/local-sources/codex" "$codex_root" relinquished
+original=$(canonical "$case_root/local-sources/codex/relinquished")
+run_sync >/dev/null
+make_skill "$case_root/local-sources/replacement" relinquished
+replacement=$(canonical "$case_root/local-sources/replacement/relinquished")
+rm "$claude_root/relinquished" "$codex_root/relinquished"
+ln -s "$replacement" "$claude_root/relinquished"
+run_sync >/dev/null
+
+assert_link "$claude_root/relinquished" "$replacement"
+assert_link "$agents_root/relinquished" "$replacement"
+assert_link "$codex_root/relinquished" "$replacement"
+[ -f "$original/SKILL.md" ] || fail 'removed original relinquished target'
+assert_not_contains "$(cat "$state_file")" "claude	relinquished"
+
+new_case
+link_skill "$case_root/local-sources/codex" "$codex_root" removal-crash
+removal_crash=$(canonical "$case_root/local-sources/codex/removal-crash")
+run_sync >/dev/null
+rm "$agents_root/removal-crash"
+run_sync >/dev/null
+
+assert_link "$agents_root/removal-crash" "$removal_crash"
+assert_link "$claude_root/removal-crash" "$removal_crash"
+assert_link "$codex_root/removal-crash" "$removal_crash"
+
+new_case
+link_skill "$case_root/local-sources/codex" "$codex_root" manifest-crash
+manifest_crash=$(canonical "$case_root/local-sources/codex/manifest-crash")
+mkdir -p "$home/.agents"
+printf 'sync-skills-v1\nagents\tmanifest-crash\t%s\n' "$manifest_crash" > "$state_file"
+run_sync >/dev/null
+
+assert_link "$agents_root/manifest-crash" "$manifest_crash"
+assert_link "$claude_root/manifest-crash" "$manifest_crash"
+rm "$codex_root/manifest-crash" "$agents_root/manifest-crash" "$claude_root/manifest-crash"
+printf 'sync-skills-v1\nagents\tmanifest-crash\t%s\n' "$manifest_crash" > "$state_file"
+run_sync >/dev/null
+assert_file_text "$state_file" 'sync-skills-v1'
+for root in "$agents_root" "$claude_root" "$codex_root"; do
+  assert_absent "$root/manifest-crash"
+done
 
 new_case
 make_skill "$agent_skills" foo
@@ -189,6 +357,25 @@ assert_link "$claude_root/agents-target" "$agents_root/foreign-target"
 assert_absent "$codex_root/agents-target"
 
 new_case
+mkdir -p "$agents_root" "$codex_root/prefix-target/child" "$claude_root/prefix-target/child"
+make_skill "$agent_skills" agent-prefix-target
+make_skill "$manager_skills" manager-prefix-target
+prefix_targets=(
+  "$agent_skills/agent-prefix-target"
+  "$manager_skills/manager-prefix-target"
+  "$codex_root/prefix-target/child"
+  "$claude_root/prefix-target/child"
+)
+for prefix_index in "${!prefix_targets[@]}"; do
+  ln -s "${prefix_targets[$prefix_index]}" "$agents_root/foreign-prefix-$prefix_index"
+done
+run_sync >/dev/null
+
+for prefix_index in "${!prefix_targets[@]}"; do
+  assert_link "$agents_root/foreign-prefix-$prefix_index" "${prefix_targets[$prefix_index]}"
+done
+
+new_case
 make_skill "$claude_root" foo
 run_sync >/dev/null
 claude_foo=$(canonical "$claude_root/foo")
@@ -228,9 +415,25 @@ for root in "$agents_root" "$claude_root" "$codex_root"; do
   assert_link "$root/broken-$label" "$case_root/missing-$label"
   assert_link "$root/stale-$label" "$managed_target"
   assert_contains "$dry_run_output" "pruned broken link broken-$label -> $case_root/missing-$label"
-  assert_contains "$dry_run_output" "pruned stale link stale-$label -> $managed_target"
+  assert_not_contains "$dry_run_output" "pruned stale link stale-$label -> $managed_target"
 done
 assert_contains "$dry_run_output" '(dry run; no changes written)'
+
+new_case
+make_skill "$agent_skills" initial
+run_sync >/dev/null
+state_before=$(cat "$state_file")
+state_inode_before=$(file_inode "$state_file")
+make_skill "$agent_skills" dry-state
+
+dry_run_output=$(run_sync --dry-run)
+assert_absent "$agents_root/dry-state"
+assert_absent "$claude_root/dry-state"
+assert_absent "$codex_root/dry-state"
+assert_file_text "$state_file" "$state_before"
+[ "$(file_inode "$state_file")" = "$state_inode_before" ] || fail 'dry-run replaced ownership state'
+[ -z "$(find "$home/.agents" -name '.sync-skills-v1.tsv.tmp.*' -print)" ] || fail 'dry-run created a state temporary file'
+assert_contains "$dry_run_output" "update ownership state $state_file"
 
 new_case
 make_skill "$agent_skills" file-collision

@@ -45,7 +45,7 @@ It writes one flat per-skill symlink to each supported discovery root:
 
 Sources, in collision priority order: `agent-scripts/skills` > `~/Projects/manager/skills` (if present) > codex-local extras in `~/.codex/skills` > claude-local extras in `~/.claude/skills`. `~/.agents/skills` is a mirror destination only. Repo-owned skills resolve to their own repo, e.g. `gog -> ~/Projects/gogcli/.agents/skills/gog`.
 
-Broken links are pruned always; healthy links into a managed root are pruned only when the skill is gone. Non-colliding foreign links you made by hand are left alone.
+Broken links are pruned always. Generated links are tracked in `~/.agents/.sync-skills-v1.tsv` and pruned when their source disappears; non-colliding foreign links are left alone. Matching pre-existing links are not automatically claimed when the state file is first created.
 
 Do not replace this with a broad `~/.codex/skills -> ~/Projects/agent-scripts/skills` symlink unless intentionally changing Bram's setup; Claude Code only scans one level deep, so the flat mirror is what makes a skill discoverable.
 
@@ -82,7 +82,7 @@ Repo-specific rules go below that pointer. Do not copy shared blocks into downst
 - Runs skill validation before committing.
 
 `scripts/sync-skills`
-- Builds the per-machine skill mirror for current and legacy Codex roots plus Claude Code; idempotent, safe to re-run.
+- Builds the per-machine skill mirror for Agents-compatible tools, Claude Code, and Codex; idempotent, safe to re-run.
 - Flags: `-n`/`--dry-run` to preview, `--no-instructions` to skip the global `AGENTS.MD` pointers.
 - Overrides: `AGENT_SCRIPTS_DIR`, `MANAGER_SKILLS_DIR`.
 
