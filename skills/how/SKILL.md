@@ -17,7 +17,8 @@ Two modes:
 Every agent uses `reasoning_effort: "high"` and `fork_turns: "none"` in standard mode.
 
 - Explorers use `model: "gpt-5.6-luna"`.
-- Explainers, synthesizers, and architectural critics use `model: "gpt-5.6-sol"`.
+- Explainers and synthesizers use `model: "gpt-6-astra"`.
+- Architectural critics use `gpt-6-astra`, `gpt-5.6-sol`, and `gpt-5.6-terra`, one critic per model.
 
 Never use fast mode. If a required configuration is unavailable, stop and report the blocker rather than substituting another model or reasoning level.
 
@@ -108,7 +109,7 @@ Run the full explain flow above (Steps 1-4). You must understand the architectur
 
 ### Step 2. Spawn Critics
 
-After the explanation is complete, spawn 3 architectural critics concurrently. Each uses the architectural-critic contract above. These are independent same-model reviews, not multi-model diversity.
+After the explanation is complete, spawn 3 architectural critics in concurrent waves up to the available limit. Use one critic per model from the contract above, with the same prompt and rubric in separate contexts.
 
 Read `references/critic-prompt.md` for the prompt template. Each critic gets:
 1. The explanation from Step 1 (so they don't re-explore)

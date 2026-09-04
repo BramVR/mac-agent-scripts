@@ -24,7 +24,7 @@ The N candidates will receive the same prompt, so the prompt is the contract. Ge
 
 1. State the artifact each candidate is producing.
 2. Derive the rubric. State what success looks like for *this* task, then turn it into 3-6 concrete gradeable criteria. Concrete: `Adds a --dry-run flag that skips writes`. Vague: `code is correct`. The rubric is the picker's tool in Phase D; candidates only see the task.
-3. Pick the runners. For judgment-sensitive work, cycle through `gpt-5.6-sol`, `gpt-5.6-terra`, and `gpt-5.6-luna`, each at `high` reasoning; repeat the pool when `N > 3`. For generation-bound work, use `gpt-5.6-luna` at `high` reasoning for every runner. Use standard mode; never use fast mode or substitute another model or reasoning level. Spawn more when the arena covers multiple design directions.
+3. Pick the runners. For judgment-sensitive work, cycle through `gpt-6-astra`, `gpt-5.6-sol`, `gpt-5.6-terra`, and `gpt-5.6-luna`, each at `high` reasoning; repeat the pool when `N > 4`. For generation-bound work, use `gpt-5.6-luna` at `high` reasoning for every runner. Use standard mode; never use fast mode or substitute another model or reasoning level. Spawn more when the arena covers multiple design directions.
 4. Assign output paths. Each candidate writes to its own location (an authorized Codex worktree where possible, otherwise `/tmp/arena-<slug>/candidate-<n>/`). N candidates writing to the same path is shared mutable state and fails the the **separate-before-serializing-shared-state** principle skill test.
 
 ## Phase B: Fan out
@@ -37,7 +37,7 @@ If a candidate fails to produce output, proceed with N-1 and note the dropout in
 
 ## Phase C: Cross-judge
 
-After all Phase B candidates complete, spawn one separate Codex collaboration agent as judge with `model: "gpt-5.6-sol"`, `reasoning_effort: "high"`, and `fork_turns: "none"`. Use standard mode; never use fast mode or substitute another model or reasoning level. Codex does not expose a read-only switch for collaboration agents, so explicitly instruct the judge not to edit files, change repository state, or perform external writes. It sees the rubric and the candidates by path label, scores each criterion, and recommends a base with rationale. It runs in parallel with the parent's reading in Phase D, not with the candidates themselves. Spawning while candidates are still writing means the judge sees partial or empty outputs and reports them as dropouts.
+After all Phase B candidates complete, spawn one separate Codex collaboration agent as judge with `model: "gpt-6-astra"`, `reasoning_effort: "high"`, and `fork_turns: "none"`. Use standard mode; never use fast mode or substitute another model or reasoning level. Codex does not expose a read-only switch for collaboration agents, so explicitly instruct the judge not to edit files, change repository state, or perform external writes. It sees the rubric and the candidates by path label, scores each criterion, and recommends a base with rationale. It runs in parallel with the parent's reading in Phase D, not with the candidates themselves. Spawning while candidates are still writing means the judge sees partial or empty outputs and reports them as dropouts.
 
 ## Phase D: Pick a base
 

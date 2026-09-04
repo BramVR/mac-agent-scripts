@@ -1,6 +1,6 @@
 ---
 name: reflect
-description: Spawn three parallel review subagents over the active transcript, surface learnings, and route each to a concrete edit on an existing skill. Use when the user says reflect.
+description: "Spawn three parallel review subagents over the active transcript, surface learnings, and route each to a concrete edit on an existing skill. Use when the user says reflect."
 ---
 
 # Reflect
@@ -38,15 +38,15 @@ One message, three Codex collaboration-agent calls. Each uses its assigned model
 
 | Lens | `model` | Prompt template |
 |---|---|---|
-| Judgment | `gpt-5.6-sol` at `high` reasoning | `references/judgment-reviewer.md` |
+| Judgment | `gpt-6-astra` at `high` reasoning | `references/judgment-reviewer.md` |
 | Tooling | `gpt-5.6-luna` at `high` reasoning | `references/tooling-reviewer.md` |
-| Divergent | `gpt-5.6-terra` at `high` reasoning | `references/divergent-reviewer.md` |
+| Divergent | `gpt-5.6-sol` at `high` reasoning | `references/divergent-reviewer.md` |
 
 Pass each template verbatim, substituting the transcript path or digest where marked. Reviewers return findings in their final response.
 
 ### 3. Synthesize
 
-One Codex collaboration-agent call with `model: "gpt-5.6-sol"`, `reasoning_effort: "high"`, and `fork_turns: "none"`. Use standard mode; never use fast mode. The synthesizer's quality check includes spot-verifying citations, which can require tool access. Codex does not expose a read-only switch for collaboration agents; the prompt forbids file writes and the parent applies edits. Use `references/synthesizer.md` verbatim, with each reviewer's full output inlined where marked. The synthesizer returns a structured Accepted / Rejected / Backlog list.
+One Codex collaboration-agent call with `model: "gpt-6-astra"`, `reasoning_effort: "high"`, and `fork_turns: "none"`. Use standard mode; never use fast mode. The synthesizer's quality check includes spot-verifying citations, which can require tool access. Codex does not expose a read-only switch for collaboration agents; the prompt forbids file writes and the parent applies edits. Use `references/synthesizer.md` verbatim, with each reviewer's full output inlined where marked. The synthesizer returns a structured Accepted / Rejected / Backlog list.
 
 ### 4. Structural enforcement check
 

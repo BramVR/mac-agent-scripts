@@ -4,6 +4,9 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-09-04: PStack Astra Routing
+- Made `gpt-6-astra` the PStack default for implementation and synthesis, including Poteto playbooks; retained `gpt-5.6-sol` in mixed-model reviews, Arena candidates, and independent audits. All routes use high reasoning and never fast mode.
+
 ## 2026-09-03: Codex Poteto Mode
 - Added all 21 PStack principle skills plus a Codex-native `poteto-mode` router with Lauren Tan's playbooks, orchestration ledger, PR watcher, explicit-only invocation, safe Codex write boundaries, matching verification surfaces, and role-based high-reasoning model routing with no fast mode.
 - Added `~/.agents/skills` as a mirror destination only; `scripts/sync-skills` rejects a symlinked root before normal or dry-run work can touch its backing tree and tracks links it creates or retargets so deleted local skills do not return through another mirror.
