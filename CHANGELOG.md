@@ -4,6 +4,9 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-09-04: Autoreview Astra Default
+- Changed the autoreview skill and helper default to `gpt-6-astra` at high reasoning, using Sol as the access-only fallback and preserving explicit model selection; skill instructions require standard mode.
+
 ## 2026-09-04: PStack Astra Routing
 - Made `gpt-6-astra` the PStack default for implementation and synthesis, including Poteto playbooks; retained `gpt-5.6-sol` in mixed-model reviews, Arena candidates, and independent audits. All routes use high reasoning and never fast mode.
 
