@@ -36,7 +36,7 @@ Launch all reviewers as Codex collaboration agents in concurrent waves up to the
 
 | Subagent | Model |
 |----------|-------|
-| Reviewer A | `gpt-5.6-sol` at `high` reasoning |
+| Reviewer A | `gpt-6-astra` at `high` reasoning |
 | Reviewer B | `gpt-5.6-terra` at `high` reasoning |
 | Reviewer C | `gpt-5.6-luna` at `high` reasoning |
 | Reviewer D | `gpt-5.5` at `high` reasoning |

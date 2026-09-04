@@ -63,7 +63,7 @@ Fix the log, not the story. If the work diverged from what a row claims, the row
 
 ## Independent review of the trail
 
-Before handing back, you must spawn a separate Codex collaboration agent with `model: "gpt-5.6-terra"`, `reasoning_effort: "high"`, and `fork_turns: "none"`. If Terra performed the work being reviewed, use `model: "gpt-5.6-sol"` instead. Use standard mode; never use fast mode or substitute another model or reasoning level. Codex does not expose a read-only switch for collaboration agents, so explicitly instruct it not to edit files, change repository state, or perform external writes. Self-review is not a substitute; the point is fresh context you cannot bring yourself. The subagent reads the audit trail and the run's transcript, then flags what the user should pay attention to. Not a redo of the work, a scan for what's suboptimal or risky.
+Before handing back, you must spawn a separate Codex collaboration agent with `model: "gpt-5.6-terra"`, `reasoning_effort: "high"`, and `fork_turns: "none"`. If Terra performed the work being reviewed, use `model: "gpt-6-astra"` instead. Use standard mode; never use fast mode or substitute another model or reasoning level. Codex does not expose a read-only switch for collaboration agents, so explicitly instruct it not to edit files, change repository state, or perform external writes. Self-review is not a substitute; the point is fresh context you cannot bring yourself. The subagent reads the audit trail and the run's transcript, then flags what the user should pay attention to. Not a redo of the work, a scan for what's suboptimal or risky.
 
 - Decisions logged with weak or absent evidence.
 - Verification steps skipped or claimed without proof in the transcript.

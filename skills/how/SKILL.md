@@ -17,7 +17,7 @@ Two modes:
 Every agent uses `reasoning_effort: "high"` and `fork_turns: "none"` in standard mode.
 
 - Explorers use `model: "gpt-5.6-luna"`.
-- Explainers, synthesizers, and architectural critics use `model: "gpt-5.6-sol"`.
+- Explainers, synthesizers, and architectural critics use `model: "gpt-6-astra"`.
 
 Never use fast mode. If a required configuration is unavailable, stop and report the blocker rather than substituting another model or reasoning level.
 
