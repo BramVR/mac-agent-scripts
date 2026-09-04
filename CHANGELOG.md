@@ -5,7 +5,7 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 # Changelog
 
 ## 2026-09-04: PStack Astra Routing
-- Changed all PStack Sol routes to `gpt-6-astra` at high reasoning, including Poteto playbooks; retained Luna and Terra roles and the ban on fast mode.
+- Made `gpt-6-astra` the PStack default for implementation and synthesis, including Poteto playbooks; retained `gpt-5.6-sol` in mixed-model reviews, Arena candidates, and independent audits. All routes use high reasoning and never fast mode.
 
 ## 2026-09-03: Codex Poteto Mode
 - Added all 21 PStack principle skills plus a Codex-native `poteto-mode` router with Lauren Tan's playbooks, orchestration ledger, PR watcher, explicit-only invocation, safe Codex write boundaries, matching verification surfaces, and role-based high-reasoning model routing with no fast mode.

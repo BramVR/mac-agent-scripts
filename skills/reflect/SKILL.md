@@ -1,6 +1,6 @@
 ---
 name: reflect
-description: Spawn three parallel review subagents over the active transcript, surface learnings, and route each to a concrete edit on an existing skill. Use when the user says reflect.
+description: "Spawn three parallel review subagents over the active transcript, surface learnings, and route each to a concrete edit on an existing skill. Use when the user says reflect."
 ---
 
 # Reflect
@@ -40,7 +40,7 @@ One message, three Codex collaboration-agent calls. Each uses its assigned model
 |---|---|---|
 | Judgment | `gpt-6-astra` at `high` reasoning | `references/judgment-reviewer.md` |
 | Tooling | `gpt-5.6-luna` at `high` reasoning | `references/tooling-reviewer.md` |
-| Divergent | `gpt-5.6-terra` at `high` reasoning | `references/divergent-reviewer.md` |
+| Divergent | `gpt-5.6-sol` at `high` reasoning | `references/divergent-reviewer.md` |
 
 Pass each template verbatim, substituting the transcript path or digest where marked. Reviewers return findings in their final response.
 
