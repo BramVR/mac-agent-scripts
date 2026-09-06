@@ -24,12 +24,12 @@ The N candidates will receive the same prompt, so the prompt is the contract. Ge
 
 1. State the artifact each candidate is producing.
 2. Derive the rubric. State what success looks like for *this* task, then turn it into 3-6 concrete gradeable criteria. Concrete: `Adds a --dry-run flag that skips writes`. Vague: `code is correct`. The rubric is the picker's tool in Phase D; candidates only see the task.
-3. Pick the runners. For judgment-sensitive work, cycle through `gpt-6-astra`, `gpt-5.6-sol`, `gpt-5.6-terra`, and `gpt-5.6-luna`, each at `high` reasoning; repeat the pool when `N > 4`. For generation-bound work, use `gpt-5.6-luna` at `high` reasoning for every runner. Use standard mode; never use fast mode or substitute another model or reasoning level. Spawn more when the arena covers multiple design directions.
+3. Pick the runners. For judgment-sensitive work, cycle through `gpt-6-astra`, `gpt-5.6-sol`, `gpt-5.6-terra`, and `gpt-5.6-luna`, using Astra at `medium` reasoning by default and the other models at `high`; repeat the pool when `N > 4`. Use Astra `high` for reviews or reasoning-heavy candidates involving architectural or algorithmic tradeoffs, ambiguous root causes, or cross-system constraints. For generation-bound work, use `gpt-5.6-luna` at `high` reasoning for every runner. Use standard mode; never use fast mode or substitute another model or reasoning level. Spawn more when the arena covers multiple design directions.
 4. Assign output paths. Each candidate writes to its own location (an authorized Codex worktree where possible, otherwise `/tmp/arena-<slug>/candidate-<n>/`). N candidates writing to the same path is shared mutable state and fails the the **separate-before-serializing-shared-state** principle skill test.
 
 ## Phase B: Fan out
 
-Spawn all N Codex collaboration agents in one concurrent batch when capacity allows and otherwise in waves, each with its Phase A model, `reasoning_effort: "high"`, `fork_turns: "none"`, the task, the path to the shared grounding, its own output path, and instructions to produce both the artifact and a short rationale.
+Spawn all N Codex collaboration agents in one concurrent batch when capacity allows and otherwise in waves, each with its Phase A model and explicit `reasoning_effort`, `fork_turns: "none"`, the task, the path to the shared grounding, its own output path, and instructions to produce both the artifact and a short rationale.
 
 The rationale is mandatory. Without it, the parent cannot tell whether a candidate's structure is principled or accidental, which makes Phase E grafting unreliable. Each rationale names the alternatives the candidate considered and what it rejected.
 

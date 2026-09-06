@@ -63,7 +63,7 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
 
 ### Verdict and merge, for every PR
 
-- [ ] At the merge-ready head SHA, run the swarm per `${CODEX_HOME:-$HOME/.codex}/skills/swarm/SKILL.md`. The ten live lanes from the PR's **Verify, live** block use `gpt-5.6-luna` at high reasoning. One gates lane, the perf lane from its **Verify, perf** block, and one audit lane that reads the diff and the receipts and distrusts the PR body use `gpt-6-astra` at high reasoning.
+- [ ] At the merge-ready head SHA, run the swarm per `${CODEX_HOME:-$HOME/.codex}/skills/swarm/SKILL.md`. The ten live lanes from the PR's **Verify, live** block use `gpt-5.6-luna` at high reasoning. The gates lane and the perf lane from its **Verify, perf** block use `gpt-6-astra` at medium reasoning; use high if they require reasoning-heavy diagnosis under **Model routing**. One audit lane that reads the diff and the receipts and distrusts the PR body uses `gpt-6-astra` at high reasoning.
 - [ ] Clean only when every lane is `PASS`. Findings go back to the owner. A new head gets a fresh swarm and a fresh verdict.
 - [ ] <The merge or append rule from the execution playbook, with the patch-id rule from `playbooks/shipping.md`.>
 

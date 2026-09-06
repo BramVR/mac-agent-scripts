@@ -14,11 +14,11 @@ Two modes:
 
 ## Codex Agent Contracts
 
-Every agent uses `reasoning_effort: "high"` and `fork_turns: "none"` in standard mode.
+Every agent uses `fork_turns: "none"` in standard mode. Set `reasoning_effort` explicitly by role below.
 
-- Explorers use `model: "gpt-5.6-luna"`.
-- Explainers and synthesizers use `model: "gpt-6-astra"`.
-- Architectural critics use `gpt-6-astra`, `gpt-5.6-sol`, and `gpt-5.6-terra`, one critic per model.
+- Explorers use `model: "gpt-5.6-luna"` at `high` reasoning.
+- Explainers and synthesizers use `model: "gpt-6-astra"` at `medium` reasoning. Use `high` when explaining complex cross-system behavior or reconciling conflicting evidence requires substantial reasoning.
+- Architectural critics use `gpt-6-astra`, `gpt-5.6-sol`, and `gpt-5.6-terra`, one critic per model, all at `high` reasoning because these are reviews.
 
 Never use fast mode. If a required configuration is unavailable, stop and report the blocker rather than substituting another model or reasoning level.
 

@@ -11,10 +11,10 @@ Companion to the `how` skill. `how` answers what the code does and how it works.
 
 ## Codex Agent Contracts
 
-Every agent uses `reasoning_effort: "high"` and `fork_turns: "none"` in standard mode.
+Every agent uses `fork_turns: "none"` in standard mode. Set `reasoning_effort` explicitly by role below.
 
-- Investigators use `model: "gpt-5.6-luna"`.
-- The synthesizer uses `model: "gpt-6-astra"`.
+- Investigators use `model: "gpt-5.6-luna"` at `high` reasoning.
+- The synthesizer uses `model: "gpt-6-astra"` at `medium` reasoning. Use `high` when conflicting historical evidence or architectural tradeoffs require substantial reasoning.
 
 Never use fast mode. If a required configuration is unavailable, stop and report the blocker rather than substituting another model or reasoning level.
 
