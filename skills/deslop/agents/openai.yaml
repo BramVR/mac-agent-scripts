@@ -1,0 +1,4 @@
+interface:
+  display_name: "Deslop"
+  short_description: "Strip AI code slop from a branch diff"
+  default_prompt: "Use $deslop to remove AI-generated slop from the current branch diff without changing behavior."
