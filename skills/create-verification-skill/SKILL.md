@@ -1,6 +1,6 @@
 ---
 name: create-verification-skill
-description: "Create a project-local verification skill that drives the real app through its user-facing entry point."
+description: "Generate a project-local verification skill that drives your app the way a user does — any language, framework, or platform. Use for /create-verification-skill, \"make a control skill for this repo\", or when a project has no scripted way to prove UI/CLI/service behavior."
 ---
 
 # Create a verification skill
@@ -17,17 +17,9 @@ Answer these from the codebase and only ask the user what you cannot observe:
 - **Observe:** what evidence can be captured? Screenshots, terminal transcripts, response bodies, logs, exit codes, DB state.
 - **Isolate:** can two instances run side by side (ports, data dirs, profiles)? If not, say so in the generated skill: refusing to double-drive a shared instance beats corrupting the user's session.
 
-If the checkout doesn't build or start as-is, report it precisely before generating. Fix it first only when the user also authorized a product fix; a skill written against a broken base teaches wrong steps. When an irrelevant missing asset blocks startup (a static dir the API never serves, a sample config), the generated skill may create it, clearly marked as verification scaffolding, and remove it in cleanup.
+If the checkout doesn't build or start as-is, fix that first (or report it precisely) before generating; a skill written against a broken base teaches wrong steps. When an irrelevant missing asset blocks startup (a static dir the API never serves, a sample config), the generated skill may create it, clearly marked as verification scaffolding, and remove it in cleanup.
 
-## 2. Choose the install location
-
-Prefer `.agents/skills/verify-<app>`. Before creating its nested structure, check whether the current Codex filesystem policy permits a normal write there. Use one exact task-owned probe file and remove only that file after a successful check. Do not change permissions, flags, mounts, or ownership to force access.
-
-If `.agents/skills` rejects the write, use `skills/verify-<app>` instead. Add or update a short `Local skills` entry in the nearest applicable `AGENTS.md` that tells a cold agent when to read the skill and gives its exact relative `SKILL.md` path. Keep existing project instructions intact. Do not request broader filesystem access solely to get the preferred location.
-
-Call the selected directory `<skill-dir>` below. Mention a fallback and its cause in the handoff. If neither location is writable, report the blocker and stop.
-
-## 3. Generate the skill
+## 2. Generate the skill
 
 Write `<skill-dir>/SKILL.md` with YAML frontmatter (`name: verify-<app>` and a `description` that names the app, the surface, and when to reach for it — without frontmatter the skill never registers) and these sections, each grounded in what the interview actually found (no placeholders left):
 
@@ -38,16 +30,14 @@ Write `<skill-dir>/SKILL.md` with YAML frontmatter (`name: verify-<app>` and a `
 - **Cleanup:** how to tear down instances the run created. Never kill by process name; kill what you started. Cleanup removes instances and scratch state, never the evidence: proof artifacts survive the teardown, in a location the skill names.
 - **Helpers:** any script the skill ships is executable and its invocation is shown in the skill body. A helper the reader has to reverse-engineer is not a helper.
 
-## 4. Seed the feature map
+## 3. Seed the feature map
 
 Create `<skill-dir>/features/README.md` plus one file per user-facing feature you can identify (aim for the top 3-5 to start, from routes, commands, menus, or docs). Follow the shape in [`references/feature-map-example/`](references/feature-map-example/), with a README index and one file per feature. Each file answers, from the user's point of view: what the feature is, how to reach it, how to drive it with the harness, and what observable end state proves it works. The four H2s are `Sub-features`, `How to get to it (user POV)`, `Driving it with <harness>`, and `Gotchas`. The map is the repo's maintained verification source; a proof that drives one convenient entry point is incomplete when the map lists others.
 
-## 5. Prove the generated skill before handing it over
-
-Before exercising a mapped feature, identify any consequential external side effects. Do not send real messages, publish, deploy, purchase, charge, mutate production data, or use production credentials unless the user explicitly authorized that exact action or the generated skill proves it is isolated. When authorization or isolation is unavailable, mark that path unproved and exercise only its safe boundary.
+## 4. Prove the generated skill before handing it over
 
 Run its own instructions end to end once: launch, doctor, drive ONE mapped feature (one is enough; the map exists so later runs can cover the rest), capture evidence, clean up. After cleanup, confirm the evidence still exists at the named location — a cleanup that eats the proof fails this step. Fix what fails, and run the generated cleanup after every failed iteration too, so broken attempts don't strand processes and ports. A generated skill that was never executed is a draft, not a deliverable.
 
-## 6. Offer the maintenance loop
+## 5. Offer the maintenance loop
 
 Point the user at `$maintain-verification-skill` for keeping the map honest as the app changes. Suggest a cadence only if they ask.

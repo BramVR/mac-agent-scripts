@@ -4,6 +4,15 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-09-11: Reviewed PStack refresh and deslop
+- Added the Cursor team kit `deslop` skill for stripping AI code slop from a branch diff, alongside the prose-focused `unslop` and the comment-focused `no-comments`.
+- Landed the reviewed upstream text for `architect`, `blast-radius`, `create-verification-skill`, `figure-it-out`, `how`, `interrogate`, `maintain-verification-skill`, `make-bot-ui`, and `no-comments`, keeping the local `$name` invocation form and omitting Cursor-only frontmatter.
+
+## 2026-09-08: PStack upstream refresh and model roles
+- Reconciled the Codex PStack port through upstream `23a56e2`: retained the already-ported forge-neutral PR and stack workflows and recorded the Cursor-only metadata and packaging that Codex cannot accept.
+- Routed Astra at medium reasoning to orchestration, judgment, synthesis, and primary review; Sol at high reasoning to implementation; Luna at high reasoning to discovery and procedural verification; and Fable 5.1 at max reasoning only to optional independent review. Autoreview now enforces the same review defaults and no longer falls back from Astra to Sol.
+- Added PStack's `typescript-best-practices` skill and patterns reference at upstream `23a56e2`, omitting Cursor-only frontmatter, plus a fail-closed Codex adaptation of `make-bot-ui` that requires an existing webhook and server-side secret path when no webhook-routine tool exists.
+
 ## 2026-09-06: Astra Reasoning Defaults
 - Defaulted routine Astra work in PStack skills and Poteto playbooks to medium reasoning; retained high for reviews and reasoning-heavy tasks, including Autoreview, with fast mode still forbidden.
 
