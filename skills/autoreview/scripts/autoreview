@@ -782,11 +782,11 @@ TEST_ENV_ALLOWED_EXACT = {
 TEST_ENV_ALLOWED_PREFIXES = ("AUTOREVIEW_FAKE_", "LC_")
 DEFAULT_MODEL_BY_ENGINE = {
     "codex": "gpt-6-astra",
-    "claude": "claude-fable-5",
+    "claude": "claude-fable-5-1",
 }
-DEFAULT_CODEX_ACCESS_FALLBACK_MODEL = "gpt-5.6-sol"
 DEFAULT_THINKING_BY_ENGINE = {
-    "codex": "high",
+    "codex": "medium",
+    "claude": "max",
 }
 THINKING_LEVELS_BY_ENGINE = {
     "codex": {"none", "minimal", "low", "medium", "high", "xhigh", "max"},
@@ -9051,9 +9051,9 @@ def ensure_claude_isolation_supported(args: argparse.Namespace, repo: Path) -> N
     temp_root = safe_temp_root(repo)
     result = run([claude_bin, "--version"], temp_root, check=False, env=engine_env)
     selected_models = [args.model, *(getattr(args, "fallback_model", "") or "").split(",")]
-    uses_fable = any(model in {"claude-fable-5", "fable"} for model in selected_models)
+    uses_fable = any(model in {"claude-fable-5", "claude-fable-5-1", "fable"} for model in selected_models)
     minimum_version = CLAUDE_FABLE_MIN_VERSION if uses_fable else CLAUDE_SAFE_MODE_MIN_VERSION
-    version_reason = "for claude-fable-5" if uses_fable else "for --safe-mode"
+    version_reason = "for Claude Fable" if uses_fable else "for --safe-mode"
     if result.returncode != 0:
         raise SystemExit(f"claude engine requires Claude Code >= {format_version(minimum_version)}; --version failed")
     version = parse_cli_version(result.stdout or result.stderr)
@@ -9163,59 +9163,6 @@ def codex_speed_override(args: argparse.Namespace) -> str | None:
     return f'service_tier="{speed}"'
 
 
-def codex_error_messages(result: subprocess.CompletedProcess[str]) -> list[str]:
-    messages: list[str] = []
-    for stream, accept_plain_text in (
-        (result.stderr, True),
-        (result.stdout, False),
-    ):
-        for raw_line in stream.splitlines():
-            line = raw_line.strip()
-            if not line:
-                continue
-            if not line.startswith("{"):
-                if accept_plain_text:
-                    messages.append(line)
-                continue
-            try:
-                event = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            if not isinstance(event, dict) or event.get("type") not in {
-                "error",
-                "turn.failed",
-            }:
-                continue
-            message = event.get("message")
-            if isinstance(message, str):
-                messages.append(message)
-            error = event.get("error")
-            if isinstance(error, str):
-                messages.append(error)
-            elif isinstance(error, dict) and isinstance(error.get("message"), str):
-                messages.append(error["message"])
-    return messages
-
-
-def codex_model_access_failure(result: subprocess.CompletedProcess[str], model: str) -> bool:
-    for message in codex_error_messages(result):
-        lowered = message.lower()
-        if model.lower() not in lowered:
-            continue
-        if any(
-            marker in lowered
-            for marker in (
-                "does not exist or you do not have access",
-                "do not have access to",
-                "don't have access to",
-                "does not appear in the list of models available to your account",
-                "not supported when using codex",
-            )
-        ):
-            return True
-    return False
-
-
 def codex_command(
     args: argparse.Namespace,
     source_repo: Path,
@@ -9275,11 +9222,6 @@ def run_codex(args: argparse.Namespace, repo: Path, prompt: str) -> str:
         dir=temp_root,
     ) as output_file:
         output_path = Path(output_file.name)
-    models = [args.model]
-    fallback_model = getattr(args, "fallback_model", None)
-    if fallback_model and fallback_model != args.model:
-        models.append(fallback_model)
-    primary_failure: subprocess.CompletedProcess[str] | None = None
     try:
         # The validated bundle is the sole repository input. The empty
         # workspace keeps ignored credentials and linked-worktree metadata
@@ -9315,7 +9257,7 @@ def run_codex(args: argparse.Namespace, repo: Path, prompt: str) -> str:
                 if file_auth_linked or source_codex_home is None
                 else source_codex_home
             )
-            for index, model in enumerate(models):
+            for model in [args.model]:
                 output_path.write_text("")
                 cmd = codex_command(
                     args,
@@ -9356,25 +9298,7 @@ def run_codex(args: argparse.Namespace, repo: Path, prompt: str) -> str:
                 output = output_path.read_text()
                 if result.returncode == 0:
                     return output or result.stdout
-                if (
-                    index == 0
-                    and len(models) > 1
-                    and model
-                    and codex_model_access_failure(result, model)
-                ):
-                    primary_failure = result
-                    print(
-                        f"codex model {model} is unavailable for this account; retrying with {models[1]}",
-                        file=sys.stderr,
-                    )
-                    continue
                 detail = result.stderr or result.stdout
-                if primary_failure is not None:
-                    primary_detail = primary_failure.stderr or primary_failure.stdout
-                    raise SystemExit(
-                        f"codex engine failed with primary model ({primary_failure.returncode})\n{primary_detail}\n"
-                        f"codex fallback model failed ({result.returncode})\n{detail}"
-                    )
                 raise SystemExit(f"codex engine failed ({result.returncode})\n{detail}")
     finally:
         schema_path.unlink(missing_ok=True)
@@ -10491,7 +10415,7 @@ def self_test_engine_isolation() -> int:
                 raise SystemExit("claude version floor self-test failed")
 
             os.environ["AUTOREVIEW_FAKE_CLAUDE_VERSION"] = "2.1.169 (Claude Code)"
-            args.model = "claude-fable-5"
+            args.model = "claude-fable-5-1"
             try:
                 ensure_claude_isolation_supported(args, repo)
             except SystemExit as exc:
@@ -11113,12 +11037,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--base")
     parser.add_argument("--commit", default="HEAD")
     parser.add_argument("--engine", choices=ENGINE_CHOICES, default=os.environ.get("AUTOREVIEW_ENGINE", "codex"))
-    parser.add_argument("--reviewers", help="Comma-separated review panel, e.g. codex,claude,pi or codex:gpt-6-astra:high.")
+    parser.add_argument("--reviewers", help="Comma-separated review panel, e.g. codex,claude,pi or codex:gpt-6-astra:medium.")
     parser.add_argument("--panel", action="store_true", help="Run a Codex/Claude review panel unless --engine changes the first reviewer.")
     parser.add_argument(
         "--model",
         action="append",
-        help="Model for all reviewers or engine=model. Repeatable. Defaults: codex=gpt-6-astra with an access-only gpt-5.6-sol retry, claude=claude-fable-5.",
+        help="Model for all reviewers or engine=model. Repeatable. Defaults: codex=gpt-6-astra, claude=claude-fable-5-1.",
     )
     parser.add_argument("--thinking", action="append", help="Thinking/effort for all reviewers or engine=level. Repeatable. Codex: none, minimal, low, medium, high, xhigh, max. Claude: low, medium, high, xhigh, max. Droid: off, none, low, medium, high. Pi: off, minimal, low, medium, high, xhigh. OpenCode: minimal, low, medium, high, max. Cursor: none.")
     parser.add_argument(
@@ -11360,8 +11284,6 @@ def reviewer_args(args: argparse.Namespace) -> list[argparse.Namespace]:
                 or env_fallback_by_engine.get(engine)
                 or env_global_fallback
             )
-        elif engine == "codex" and model == DEFAULT_MODEL_BY_ENGINE["codex"]:
-            fallback_model = DEFAULT_CODEX_ACCESS_FALLBACK_MODEL
         else:
             fallback_model = None
         if thinking and thinking not in THINKING_LEVELS_BY_ENGINE[engine]:
@@ -11561,26 +11483,24 @@ def self_test_config_defaults() -> None:
         default_codex = reviewer_args(reviewer_test_args(engine="codex"))[0]
         if default_codex.model != "gpt-6-astra":
             raise SystemExit(f"self-test config defaults failed: default codex model={default_codex.model!r}")
-        if default_codex.fallback_model != "gpt-5.6-sol":
-            raise SystemExit(
-                f"self-test config defaults failed: default codex fallback={default_codex.fallback_model!r}"
-            )
+        if default_codex.fallback_model is not None:
+            raise SystemExit(f"self-test config defaults failed: default codex fallback={default_codex.fallback_model!r}")
         explicit_astra = reviewer_args(reviewer_test_args(engine="codex", model=["gpt-6-astra"]))[0]
-        if explicit_astra.fallback_model != "gpt-5.6-sol":
-            raise SystemExit(
-                f"self-test config defaults failed: explicit Astra access fallback={explicit_astra.fallback_model!r}"
-            )
+        if explicit_astra.fallback_model is not None:
+            raise SystemExit(f"self-test config defaults failed: explicit Astra fallback={explicit_astra.fallback_model!r}")
         explicit_sol = reviewer_args(reviewer_test_args(engine="codex", model=["gpt-5.6-sol"]))[0]
         if explicit_sol.model != "gpt-5.6-sol" or explicit_sol.fallback_model is not None:
             raise SystemExit("self-test config defaults failed: explicit Sol must stay pinned")
-        if default_codex.thinking != "high":
+        if default_codex.thinking != "medium":
             raise SystemExit(f"self-test config defaults failed: default codex thinking={default_codex.thinking!r}")
         max_effort = reviewer_args(reviewer_test_args(engine="codex", thinking=["max"]))[0]
         if max_effort.thinking != "max":
             raise SystemExit("self-test config defaults failed: Codex max thinking should be accepted")
         default_claude = reviewer_args(reviewer_test_args(engine="claude"))[0]
-        if default_claude.model != "claude-fable-5":
+        if default_claude.model != "claude-fable-5-1":
             raise SystemExit(f"self-test config defaults failed: default claude model={default_claude.model!r}")
+        if default_claude.thinking != "max":
+            raise SystemExit(f"self-test config defaults failed: default claude thinking={default_claude.thinking!r}")
         os.environ["AUTOREVIEW_MODEL"] = "env-global-model"
         os.environ["AUTOREVIEW_CODEX_MODEL"] = "env-codex-model"
         os.environ["AUTOREVIEW_THINKING"] = "low"
@@ -11687,10 +11607,8 @@ def self_test_fallback_scope() -> None:
         reviewers = reviewer_args(base)
         codex = next(r for r in reviewers if r.engine == "codex")
         claude = next(r for r in reviewers if r.engine == "claude")
-        if codex.fallback_model != "gpt-5.6-sol":
-            raise SystemExit(
-                f"self-test fallback scope failed: codex access fallback={codex.fallback_model!r}"
-            )
+        if codex.fallback_model is not None:
+            raise SystemExit(f"self-test fallback scope failed: codex fallback={codex.fallback_model!r}")
         if claude.fallback_model != "env-claude-fallback":
             raise SystemExit(f"self-test fallback scope failed: claude fallback={claude.fallback_model!r}")
         os.environ.pop("AUTOREVIEW_CLAUDE_FALLBACK_MODEL")
@@ -11714,7 +11632,7 @@ def self_test_fallback_scope() -> None:
         panel = reviewer_args(reviewer_test_args(reviewers="codex,claude", fallback_model=["cli-global"]))
         panel_codex = next(r for r in panel if r.engine == "codex")
         panel_claude = next(r for r in panel if r.engine == "claude")
-        if panel_codex.fallback_model != "gpt-5.6-sol" or panel_claude.fallback_model != "cli-global":
+        if panel_codex.fallback_model is not None or panel_claude.fallback_model != "cli-global":
             raise SystemExit("self-test fallback scope failed: CLI global fallback should apply only to Claude panel reviewers")
         try:
             reviewer_args(reviewer_test_args(engine="codex", fallback_model=["cli-global"]))
