@@ -1,0 +1,6 @@
+interface:
+  display_name: "Test Behavior, Not Implementation"
+  short_description: "Apply when writing, changing, or keeping a test"
+  default_prompt: "Use $principle-test-behavior-not-implementation to apply this principle to the current decision."
+policy:
+  allow_implicit_invocation: false

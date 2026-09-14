@@ -1,0 +1,6 @@
+interface:
+  display_name: "Attack the Premise"
+  short_description: "Apply when repeated fixes share one failing premise"
+  default_prompt: "Use $principle-attack-the-premise to apply this principle to the current decision."
+policy:
+  allow_implicit_invocation: false

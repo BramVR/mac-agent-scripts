@@ -1,0 +1,6 @@
+interface:
+  display_name: "Automate Me"
+  short_description: "Turn the user's working conventions into a -mode skill"
+  default_prompt: "Use $automate-me to draft or refresh my -mode skill."
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Control UI"
+  short_description: "Drive and inspect a web, IDE, or Electron UI locally"
+  default_prompt: "Use $control-ui to build or adapt a local harness for this surface."

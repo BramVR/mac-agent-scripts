@@ -1,0 +1,4 @@
+interface:
+  display_name: "Control CLI"
+  short_description: "Drive, inspect, and profile an interactive CLI or TUI locally"
+  default_prompt: "Use $control-cli to build or adapt a local harness for this surface."
