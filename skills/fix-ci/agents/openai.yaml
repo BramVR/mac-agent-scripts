@@ -1,0 +1,4 @@
+interface:
+  display_name: "Fix CI"
+  short_description: "Find failing PR checks and apply focused fixes"
+  default_prompt: "Use $fix-ci to find the failing checks on this PR and fix them."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Get PR comments"
+  short_description: "Fetch and summarize review comments on the active PR"
+  default_prompt: "Use $get-pr-comments to summarize the review comments on this PR."

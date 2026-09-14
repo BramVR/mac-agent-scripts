@@ -1,0 +1,6 @@
+interface:
+  display_name: "Thermo-nuclear code quality review"
+  short_description: "Extremely strict maintainability audit"
+  default_prompt: "Use $thermo-nuclear-code-quality-review to audit this codebase."
+policy:
+  allow_implicit_invocation: false

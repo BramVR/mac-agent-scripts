@@ -1,0 +1,4 @@
+interface:
+  display_name: "Make PR easy to review"
+  short_description: "Clean history and PR description before review"
+  default_prompt: "Use $make-pr-easy-to-review to tidy this PR before review."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Fix merge conflicts"
+  short_description: "Resolve merge conflicts and validate the result"
+  default_prompt: "Use $fix-merge-conflicts to resolve the conflicts on this branch."
