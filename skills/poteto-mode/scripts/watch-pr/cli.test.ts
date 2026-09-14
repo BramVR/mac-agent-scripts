@@ -151,39 +151,6 @@ describe("rendering", () => {
       "| [#1](https://github.com/owner/repo/pull/1) | \u2014 | \u2014 | ✅ merged |"
     );
   });
-
-  it("strips terminal control characters from external text", () => {
-    const verdict = {
-      schemaVersion: 1,
-      sequence: 2,
-      observedAt: "2026-07-26T00:00:00.000Z",
-      mode: "single",
-      kind: "BLOCKER",
-      terminal: true,
-      exitCode: 3,
-      blocker: {
-        kind: "review-threads",
-        pr: context,
-        threads: [
-          {
-            id: "thread-1",
-            firstComment: {
-              authorLogin: "attacker",
-              body: "before\u001b]52;c;payload\u0007after",
-              path: "file.ts",
-              line: 1,
-              createdAt: "now",
-            },
-            isBugbot: false,
-            bugbotReviewPasses: 0,
-          },
-        ],
-      },
-    } satisfies WatcherVerdict;
-    const rendered = renderPretty(verdict);
-    expect(rendered).not.toContain("\u001b");
-    expect(rendered).not.toContain("\u0007");
-  });
 });
 
 describe("main", () => {

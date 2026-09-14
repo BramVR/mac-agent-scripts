@@ -52,6 +52,7 @@ export interface PullRequestFacts {
 }
 export interface OpenPullRequest {
   readonly number: PrNumber;
+  readonly headRepository: Repository | null;
   readonly headRefName: string;
   readonly baseRefName: string;
 }
@@ -151,7 +152,7 @@ export type PrSnapshot =
   | {
       readonly kind: "open";
       readonly context: PrContext;
-      readonly facts: PullRequestFacts;
+      readonly facts: PullRequestFacts & { readonly headRefOid: string };
       readonly threads: readonly ReviewThread[];
       readonly ci: CiState;
       readonly reviewAutomationRunning: boolean;
@@ -160,15 +161,13 @@ export interface ReadyPr {
   readonly kind: "ready-pr";
   readonly context: PrContext;
   readonly proof: {
+    readonly headRefOid: string;
     readonly mergeability: "clear";
     readonly threads: readonly [];
     readonly ci: CiClean;
     readonly gate: {
       readonly state: "OPEN";
-      readonly reviewDecision: Exclude<
-        ReviewDecision,
-        "CHANGES_REQUESTED" | "REVIEW_REQUIRED"
-      >;
+      readonly reviewDecision: Exclude<ReviewDecision, "CHANGES_REQUESTED">;
       readonly draft: "not-draft" | "draft-allowed";
     };
   };
@@ -181,8 +180,7 @@ export interface MergedPr {
 export type MergeGateReason =
   | "closed-without-merge"
   | "draft-pr"
-  | "changes-requested"
-  | "review-required";
+  | "changes-requested";
 export type MergeBlocker =
   | {
       readonly kind: "merge-conflicts";
@@ -206,6 +204,16 @@ export type MergeBlocker =
     };
 export type QueryFailure =
   | {
+      readonly kind: "deadline";
+      readonly retryable: false;
+      readonly detail: string;
+    }
+  | {
+      readonly kind: "snapshot-changed" | "invalid-stack";
+      readonly retryable: true;
+      readonly detail: string;
+    }
+  | {
       readonly kind: "json-parse";
       readonly retryable: true;
       readonly detail: string;
@@ -223,21 +231,6 @@ export type QueryFailure =
       readonly code: number;
     }
   | {
-      readonly kind: "command-timeout";
-      readonly retryable: true;
-      readonly detail: string;
-    }
-  | {
-      readonly kind: "head-changed";
-      readonly retryable: true;
-      readonly detail: string;
-    }
-  | {
-      readonly kind: "mergeability-unknown";
-      readonly retryable: true;
-      readonly detail: string;
-    }
-  | {
       readonly kind: "checks-unavailable";
       readonly retryable: true;
       readonly detail: string;
@@ -247,16 +240,6 @@ export type QueryFailure =
       readonly retryable: false;
       readonly detail: string;
       readonly rawValue: string;
-    }
-  | {
-      readonly kind: "incomplete-list";
-      readonly retryable: false;
-      readonly detail: string;
-    }
-  | {
-      readonly kind: "invalid-stack";
-      readonly retryable: false;
-      readonly detail: string;
     };
 /**
  * `frontier` names the lowest unmerged PR that is actually waiting, and
@@ -412,11 +395,12 @@ export interface GitHubReader {
   originRepo(): Promise<Repository | null>;
   currentPr(pr: PrNumber | null): Promise<PrContext>;
   pullRequest(context: PrContext): Promise<PullRequestFacts>;
+  headCommit(context: PrContext): Promise<string | null>;
   openPullRequests(repository: Repository): Promise<readonly OpenPullRequest[]>;
   checksFastPath(context: PrContext): Promise<ChecksFastPath>;
   checkRollupPage(
     context: PrContext,
-    after: string | null
+    after: string | null,
   ): Promise<RollupPage>;
   reviewThreads(context: PrContext): Promise<readonly ReviewThread[]>;
   commitRollups(context: PrContext): Promise<readonly CommitRollup[]>;

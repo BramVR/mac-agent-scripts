@@ -63,7 +63,7 @@ describe("readiness truth table", () => {
     ];
     for (const [mergeStateStatus, headRollupState, expected] of cases) {
       expect(
-        assessGitHubMerge({ mergeStateStatus, headRollupState }).kind
+        assessGitHubMerge({ mergeStateStatus, headRollupState }).kind,
       ).toBe(expected);
     }
   });
@@ -88,33 +88,6 @@ describe("readiness truth table", () => {
       blocker: { kind: "failing-checks" },
     });
   });
-
-  it("does not report ready while GitHub mergeability is unknown", async () => {
-    const reader = fakeReader({ facts: { mergeable: "UNKNOWN" } });
-    await expect(
-      readSnapshot({
-        reader,
-        context: context(7),
-        pendingHistory: "include",
-        allowDraft: false,
-      })
-    ).rejects.toMatchObject({
-      failure: { kind: "mergeability-unknown", retryable: true },
-    });
-  });
-
-  it("blocks a PR whose required review is outstanding", async () => {
-    const snapshot = await readSnapshot({
-      reader: fakeReader({ facts: { reviewDecision: "REVIEW_REQUIRED" } }),
-      context: context(8),
-      pendingHistory: "include",
-      allowDraft: false,
-    });
-    expect(classifyPr(snapshot)).toMatchObject({
-      kind: "blocker",
-      blocker: { kind: "merge-gate", reason: "review-required" },
-    });
-  });
 });
 
 describe("snapshot query planning", () => {
@@ -135,7 +108,7 @@ describe("snapshot query planning", () => {
       "pullRequest",
       "reviewThreads",
       "checksFastPath",
-      "pullRequest",
+      "headCommit",
     ]);
   });
 
@@ -173,56 +146,9 @@ describe("snapshot query planning", () => {
           pendingHistory: "include",
           allowDraft: false,
         })
-      ).kind
+      ).kind,
     ).toBe("merged");
     expect(reader.calls).toEqual(["pullRequest"]);
-  });
-
-  it("retries when the PR head changes during a snapshot", async () => {
-    const base = fakeReader();
-    let reads = 0;
-    const reader = {
-      ...base,
-      async pullRequest(pr: PrContext) {
-        const facts = await base.pullRequest(pr);
-        reads += 1;
-        return reads === 1 ? facts : { ...facts, headRefOid: "new-head" };
-      },
-    };
-    await expect(
-      readSnapshot({
-        reader,
-        context: context(6),
-        pendingHistory: "include",
-        allowDraft: false,
-      })
-    ).rejects.toMatchObject({ failure: { kind: "head-changed" } });
-  });
-
-  it("recomputes GitHub CI refusal from the final PR facts", async () => {
-    const base = fakeReader({
-      commitRollups: [{ oid: "head", state: "FAILURE" }],
-    });
-    let reads = 0;
-    const reader = {
-      ...base,
-      async pullRequest(pr: PrContext) {
-        const facts = await base.pullRequest(pr);
-        reads += 1;
-        return reads === 1
-          ? facts
-          : { ...facts, mergeStateStatus: "BLOCKED" as const };
-      },
-    };
-    const snapshot = await readSnapshot({
-      reader,
-      context: context(9),
-      pendingHistory: "include",
-      allowDraft: false,
-    });
-    expect(snapshot.kind).toBe("open");
-    if (snapshot.kind !== "open") throw new Error("expected open snapshot");
-    expect(snapshot.ci.kind).toBe("ci-github-rejected");
   });
 });
 
@@ -375,13 +301,10 @@ describe("queued-stack cadence", () => {
     expect(timeline).toEqual([
       "emit:QUEUE",
       "read:20",
-      "read:20",
       "fail:21",
       "emit:RETRY",
       "sleep",
       "read:21",
-      "read:21",
-      "read:22",
       "read:22",
       "emit:STATUS",
       "emit:WAITING",
@@ -396,7 +319,7 @@ describe("queued-stack cadence", () => {
       state,
       await openSnapshot(queue[0]),
       0,
-      options
+      options,
     );
     expect(first.completedSweepRows).toBeNull();
     state = first.state;
@@ -404,10 +327,10 @@ describe("queued-stack cadence", () => {
       state,
       await openSnapshot(queue[1]),
       5,
-      options
+      options,
     );
     expect(
-      second.completedSweepRows?.map((row) => Number(row.context.number))
+      second.completedSweepRows?.map((row) => Number(row.context.number)),
     ).toEqual([30, 31]);
     expect(second.state.nextSweepAt).toBe(305);
   });
@@ -425,7 +348,7 @@ describe("queued-stack cadence", () => {
         const facts = await base.pullRequest(pr);
         const count = (reads.get(pr.number) ?? 0) + 1;
         reads.set(pr.number, count);
-        return pr.number === one.number && count > 2
+        return pr.number === one.number && count > 1
           ? {
               ...facts,
               state: "MERGED" as const,
@@ -461,11 +384,10 @@ describe("queued-stack cadence", () => {
     await expect(running).rejects.toThrow("stop after advance proof");
     expect(emitted.some((event) => event.kind === "ADVANCE")).toBe(true);
     const firstSleep = timeline.indexOf("sleep");
-    expect(timeline.slice(firstSleep, firstSleep + 6)).toEqual([
+    expect(timeline.slice(firstSleep, firstSleep + 5)).toEqual([
       "sleep",
       "read:40",
       "emit:ADVANCE",
-      "read:41",
       "read:41",
       "emit:WAITING",
     ]);
@@ -478,82 +400,17 @@ describe("queued-stack cadence", () => {
       state,
       await openSnapshot(queue[0]),
       0,
-      options
+      options,
     ).state;
-    const first = evaluateQueue(state, 0, options);
+    const first = evaluateQueue(state, options);
     expect(first.kind).toBe("waiting");
     if (first.kind !== "waiting") throw new Error("expected waiting");
     expect(first.emit).toBe(true);
-    const second = evaluateQueue(first.state, 10, options);
+    const second = evaluateQueue(first.state, options);
     expect(second.kind).toBe("waiting");
     if (second.kind !== "waiting") throw new Error("expected waiting");
     expect(second.emit).toBe(false);
     expect(planQueue(second.state, 300).work?.kind).toBe("whole-stack-sweep");
-  });
-
-  it("emits a new wait when the pending check identity changes", async () => {
-    const queue = [context(51)] satisfies NonEmpty<PrContext>;
-    let state = createQueueState(queue, 0);
-    state = applyQueueSnapshot(
-      state,
-      await readSnapshot({
-        reader: fakeReader({
-          fastPath: { kind: "checks", checks: [pendingCheck("build")] },
-        }),
-        context: queue[0],
-        pendingHistory: "omit",
-        allowDraft: false,
-      }),
-      0,
-      options
-    ).state;
-    const first = evaluateQueue(state, 0, options);
-    expect(first.kind).toBe("waiting");
-    if (first.kind !== "waiting") throw new Error("expected waiting");
-    state = applyQueueSnapshot(
-      planQueue(first.state, 1),
-      await readSnapshot({
-        reader: fakeReader({
-          fastPath: { kind: "checks", checks: [pendingCheck("lint")] },
-        }),
-        context: queue[0],
-        pendingHistory: "omit",
-        allowDraft: false,
-      }),
-      1,
-      options
-    ).state;
-    const second = evaluateQueue(state, 1, options);
-    expect(second.kind).toBe("waiting");
-    if (second.kind !== "waiting") throw new Error("expected waiting");
-    expect(second.emit).toBe(true);
-  });
-
-  it("clamps a polling sleep to the remaining timeout", async () => {
-    const reader = fakeReader({
-      fastPath: { kind: "checks", checks: [pendingCheck()] },
-    });
-    let now = 0;
-    const sleeps: number[] = [];
-    const verdict = await runQueued({
-      dependencies: {
-        reader,
-        clock: {
-          now: () => now,
-          observedAt: () => "2026-07-26T00:00:00.000Z",
-          async sleep(seconds) {
-            sleeps.push(seconds);
-            now += seconds;
-          },
-        },
-        emit() {},
-      },
-      contexts: [context(52)],
-      options: { ...options, interval: 60, timeout: 5 },
-    });
-    expect(verdict.kind).toBe("TIMEOUT");
-    expect(sleeps).toEqual([5]);
-    expect(reader.calls.filter((call) => call === "pullRequest")).toHaveLength(2);
   });
 });
 

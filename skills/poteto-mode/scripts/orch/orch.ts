@@ -1,9 +1,6 @@
-import {
-  Command,
-  CommanderError,
-  InvalidArgumentError,
-  Option,
-} from "commander";
+#!/usr/bin/env bun
+
+import { ensureDependenciesInstalled } from "../bootstrap.ts";
 import {
   NotFoundError,
   UsageError,
@@ -19,6 +16,15 @@ import {
   type Unit,
   type Verdict,
 } from "./store.ts";
+
+ensureDependenciesInstalled();
+const {
+  Command: CommanderCommand,
+  CommanderError,
+  InvalidArgumentError,
+  Option,
+} = await import("commander");
+type Command = InstanceType<typeof CommanderCommand>;
 
 const DISPLAY_LIMIT = 4;
 
@@ -246,7 +252,7 @@ function requireSubcommand(program: Command): never {
 }
 
 function createProgram(io: Io): Command {
-  const program = new Command("orch")
+  const program = new CommanderCommand("orch")
     .description("Plain-file orchestrate bookkeeping")
     .usage("[--store <dir>] [--json] [--force] <command>")
     .configureOutput({ writeOut: io.stdout, writeErr: io.stderr })
@@ -466,18 +472,18 @@ function createProgram(io: Io): Command {
 
   const frontier = program
     .command("frontier")
-    .description("manage the GitHub stack frontier")
+    .description("manage the Graphite stack frontier")
     .action(() => requireSubcommand(program));
-  leaf(frontier, "set", "read an explicit GitHub PR order and set the frontier")
+  leaf(frontier, "set", "discover the Graphite stack and set the frontier")
     .addOption(
       new Option(
         "--repo <dir>",
         "repository directory (or ORCH_REPO)"
       ).env("ORCH_REPO")
     )
-    .requiredOption(
+    .option(
       "--prs <n,...>",
-      "pull request order from bottom to top",
+      "optional expected pull request order pin",
       prList
     )
     .action((options: FrontierSetOptions) =>

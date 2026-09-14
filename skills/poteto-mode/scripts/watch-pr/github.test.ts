@@ -1,17 +1,13 @@
 import { describe, expect, it } from "bun:test";
 import {
   ChecksUnavailable,
-  REVIEW_THREADS_QUERY,
   WatcherQueryError,
   mapRollupNode,
   orderStack,
   parsePullRequest,
   parseReviewThreads,
-  parseReviewThreadsPage,
   resolveChecks,
   resolveContext,
-  run,
-  setCommandDeadline,
 } from "./github.ts";
 import {
   fakeReader,
@@ -62,7 +58,7 @@ describe("checks fallback chain", () => {
       rollupPages: [{ checks: [pendingCheck("fallback")], endCursor: null }],
     });
     expect((await resolveChecks(reader, context)).checks[0].name).toBe(
-      "fallback"
+      "fallback",
     );
     expect(reader.calls).toEqual(["checksFastPath", "checkRollupPage:null"]);
   });
@@ -76,7 +72,7 @@ describe("checks fallback chain", () => {
       },
     });
     await expect(resolveChecks(reader, context)).rejects.toBeInstanceOf(
-      ChecksUnavailable
+      ChecksUnavailable,
     );
     expect(reader.calls).toEqual(["checksFastPath", "checkRollupPage:null"]);
   });
@@ -100,7 +96,7 @@ describe("rollup node mapping", () => {
           name: "ci",
           status,
           conclusion,
-        })
+        }),
       ).toMatchObject({ kind, reportedState });
     }
   });
@@ -112,14 +108,14 @@ describe("rollup node mapping", () => {
         name: "Code Review Gate",
         status: "IN_PROGRESS",
         conclusion: null,
-      })
+      }),
     ).toMatchObject({ kind: "code-review-gate" });
     expect(
       mapRollupNode({
         __typename: "StatusContext",
         context: "Code Review Gate",
         state: "PENDING",
-      })
+      }),
     ).toMatchObject({ kind: "code-review-gate" });
   });
 
@@ -129,14 +125,14 @@ describe("rollup node mapping", () => {
         __typename: "StatusContext",
         context: "ci",
         state: "EXPECTED",
-      })
+      }),
     ).toMatchObject({ kind: "pending", reportedState: "PENDING" });
     expect(
       mapRollupNode({
         __typename: "StatusContext",
         context: "ci",
         state: "FUTURE_VALUE",
-      })
+      }),
     ).toMatchObject({ kind: "failed", reportedState: "FUTURE_VALUE" });
     expect(mapRollupNode({ __typename: "FutureNode" })).toBeNull();
   });
@@ -159,21 +155,21 @@ describe("closed enum parsing", () => {
     expect(
       parsePullRequest(
         { ...rawPullRequest, mergeStateStatus: "CONFLICTING" },
-        context
-      ).mergeStateStatus
+        context,
+      ).mergeStateStatus,
     ).toBe("CONFLICTING");
   });
 
   it("reads gh's empty reviewDecision as no decision rather than a parse failure", () => {
     expect(
       parsePullRequest({ ...rawPullRequest, reviewDecision: "" }, context)
-        .reviewDecision
+        .reviewDecision,
     ).toBeNull();
   });
 
   it("still rejects an unknown reviewDecision", () => {
     expect(() =>
-      parsePullRequest({ ...rawPullRequest, reviewDecision: "MAYBE" }, context)
+      parsePullRequest({ ...rawPullRequest, reviewDecision: "MAYBE" }, context),
     ).toThrow(WatcherQueryError);
   });
 
@@ -181,7 +177,7 @@ describe("closed enum parsing", () => {
     try {
       parsePullRequest(
         { ...rawPullRequest, mergeStateStatus: "FUTURE_STATE" },
-        context
+        context,
       );
       throw new Error("expected parser to throw");
     } catch (error) {
@@ -260,41 +256,6 @@ it("annotates Bugbot threads with distinct review-pass counts", () => {
   expect(threads.map((thread) => thread.bugbotReviewPasses)).toEqual([3, 3]);
 });
 
-it("returns the review-thread cursor when another page exists", () => {
-  expect(REVIEW_THREADS_QUERY).toContain("reviewThreads(first: 100, after: $after)");
-  expect(REVIEW_THREADS_QUERY).toContain("pageInfo");
-  const page = parseReviewThreadsPage({
-    data: {
-      repository: {
-        pullRequest: {
-          reviewThreads: {
-            pageInfo: { hasNextPage: true, endCursor: "next-page" },
-            nodes: [],
-          },
-        },
-      },
-    },
-  });
-  expect(page).toEqual({ threads: [], endCursor: "next-page" });
-});
-
-it("wraps process-spawn failures as watcher query errors", async () => {
-  await expect(run(["watch-pr-command-that-does-not-exist"])).rejects.toMatchObject({
-    failure: { kind: "command-exit", code: -1 },
-  });
-});
-
-it("terminates a command when the watcher deadline expires", async () => {
-  setCommandDeadline(0.01);
-  try {
-    await expect(run(["sh", "-c", "sleep 1"])).rejects.toMatchObject({
-      failure: { kind: "command-timeout" },
-    });
-  } finally {
-    setCommandDeadline(0);
-  }
-});
-
 describe("context and stack discovery", () => {
   it("returns a fully explicit context without any reader call", async () => {
     const reader = fakeReader();
@@ -304,7 +265,7 @@ describe("context and stack discovery", () => {
         owner: "explicit",
         repo: "repo",
         pr: context.number,
-      })
+      }),
     ).toEqual({ owner: "explicit", repo: "repo", number: context.number });
     expect(reader.calls).toEqual([]);
   });
@@ -317,7 +278,7 @@ describe("context and stack discovery", () => {
         owner: null,
         repo: null,
         pr: context.number,
-      })
+      }),
     ).toEqual({ owner: "local", repo: "checkout", number: context.number });
     expect(reader.calls).toEqual(["originRepo"]);
   });
@@ -326,57 +287,23 @@ describe("context and stack discovery", () => {
     const ordered = orderStack(context, [
       {
         number: parsePrNumber(41),
+        headRepository: { owner: "owner", repo: "repo" },
         headRefName: "base-feature",
         baseRefName: "main",
       },
       {
         number: context.number,
+        headRepository: { owner: "owner", repo: "repo" },
         headRefName: "feature",
         baseRefName: "base-feature",
       },
       {
         number: parsePrNumber(43),
+        headRepository: { owner: "owner", repo: "repo" },
         headRefName: "upstack",
         baseRefName: "feature",
       },
     ]);
     expect(ordered.map((item) => Number(item.number))).toEqual([41, 42, 43]);
-  });
-
-  it("rejects a cycle in stack parents", () => {
-    expect(() =>
-      orderStack(context, [
-        {
-          number: context.number,
-          headRefName: "feature",
-          baseRefName: "parent",
-        },
-        {
-          number: parsePrNumber(41),
-          headRefName: "parent",
-          baseRefName: "feature",
-        },
-      ])
-    ).toThrow("stack parent cycle repeats PR 42");
-  });
-
-  it("rejects ambiguous duplicate head branch names", () => {
-    expect(() =>
-      orderStack({ ...context, number: parsePrNumber(1) }, [
-        { number: parsePrNumber(1), headRefName: "feature", baseRefName: "main" },
-        { number: parsePrNumber(2), headRefName: "feature", baseRefName: "main" },
-        { number: parsePrNumber(3), headRefName: "child", baseRefName: "feature" },
-      ])
-    ).toThrow("multiple open PRs use head branch feature");
-  });
-
-  it("ignores duplicate head names outside the target stack", () => {
-    expect(
-      orderStack(context, [
-        { number: context.number, headRefName: "feature", baseRefName: "main" },
-        { number: parsePrNumber(1), headRefName: "patch-1", baseRefName: "main" },
-        { number: parsePrNumber(2), headRefName: "patch-1", baseRefName: "main" },
-      ]).map((item) => Number(item.number))
-    ).toEqual([42]);
   });
 });

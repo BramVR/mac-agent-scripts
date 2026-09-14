@@ -6,3 +6,5 @@ bin/*
 !bin/git
 !bin/rm
 skills/.system/
+
+node_modules/
