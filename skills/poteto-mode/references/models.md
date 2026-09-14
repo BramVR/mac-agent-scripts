@@ -6,6 +6,8 @@ description: pstack per-role model choices (overrides skill defaults)
 
 One line per role. Delete a line to fall back to the skill default.
 
+# budget: unlimited (keep role defaults)
+
 `inherit-parent` or `auto` as a value: the role runs on the parent chat model (omit `model`). Alias entries in a panel list still count toward its fan-out.
 
 `<slug>` at `<effort>`: pass the slug as `model` and the effort as `reasoning_effort` on the collaboration agent. `claude-fable-5-1` entries run through `claude -p --model claude-fable-5-1 --effort <effort>`.

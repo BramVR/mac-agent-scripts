@@ -1,4 +1,4 @@
 interface:
   display_name: "Setup pstack"
-  short_description: "Configure pstack models per role"
-  default_prompt: "Use $setup-pstack to review or change which model each pstack role uses."
+  short_description: "Configure PStack models and reasoning budget"
+  default_prompt: "Use $setup-pstack to review or change PStack models and reasoning budget."

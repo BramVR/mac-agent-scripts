@@ -1,6 +1,6 @@
 ---
 name: setup-pstack
-description: "Configure which models pstack uses per role. Detects your available models and writes the models file that overrides the skill defaults. Use for $setup-pstack, \"configure pstack models\", or changing pstack's model choices."
+description: "Configure PStack models and reasoning budget per role."
 ---
 
 # Setup pstack
@@ -17,19 +17,28 @@ Enumerate the model slugs you can pass to a Codex collaboration agent in this se
 
 ### 2. Load current state
 
-The default role-to-model mapping is the rule shape shown in step 5 below. If `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` already exists, read it and treat its values as the current choices. Otherwise start from those defaults.
+The default role-to-model mapping is the rule shape shown in step 5 below. If `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` already exists, read its `# budget` line and role values as the current choices. If the budget line is absent, treat it as `unlimited`. Otherwise start from the defaults.
 
-### 3. Map and confirm
+### 3. Budget, map, and confirm
 
-Show every role with its current model, marking any real slug not in the detected set as needing a choice. Ask whether to accept as-is or change specific roles, offering the detected models plus `inherit-parent` and `auto` (both mean: this role runs on the parent chat model, which is how Auto users stay on Auto) as the options. Prefer structured choices over free text. For panel roles (arena runners, architect runners, interrogate reviewers) the value is a list, and one subagent runs per entry, alias entries included, so the list length sets the count. `arena cross-judge pool` is also a list, but Arena selects one value from it whose model family differs from the parent's when possible. `swarm workers` is the default model for every worker unless a race or comparison assigns another model per arm.
+**(a) Ask for a budget.** Show the current budget and offer four choices:
+
+- `unlimited — keep role defaults`
+- `large — xhigh reasoning`
+- `medium — high reasoning`
+- `small — medium reasoning`
+
+**(b) Apply it.** Start from the skill defaults. On a re-run, retain each role whose model, panel list, or alias (`inherit-parent`, `auto`) differs from the default. `unlimited` leaves those efforts unchanged. The other budgets set every real model entry, including panel entries, to their named effort. Codex passes model and `reasoning_effort` separately. Use the selected model's highest supported effort at or below the budget target when the exact effort is unavailable; if none is supported, mark that entry as needing a choice. Leave aliases unchanged.
+
+**(c) Show the roles and confirm.** Show every role with its model and effort, marking unsupported choices as needing a choice. Ask whether to accept as-is or change specific roles, offering the detected models plus `inherit-parent` and `auto` (both mean: this role runs on the parent chat model, which is how Auto users stay on Auto) as the options. Prefer structured choices over free text. For panel roles (arena runners, architect runners, interrogate reviewers) the value is a list, and one subagent runs per entry, alias entries included, so the list length sets the count. `arena cross-judge pool` is also a list, but Arena selects one value from it whose model family differs from the parent's when possible. `swarm workers` is the default model for every worker unless a race or comparison assigns another model per arm.
 
 ### 4. Validate
 
-Every real slug written must be in the detected set. `inherit-parent` and `auto` always pass. If a chosen real slug is not available, stop and ask again.
+Every real model and its effort must be supported. `inherit-parent` and `auto` always pass. If a chosen model or effort is unavailable, stop and ask again.
 
 ### 5. Write the rule
 
-Write `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` with one line per role, using the same labels poteto-mode uses. Overwrite the whole file so re-runs stay idempotent. Shape:
+Write `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` with the chosen `# budget` line and one line per role, using the same labels poteto-mode uses. Overwrite the whole file so re-runs stay idempotent. Shape:
 
 ```
 ---
@@ -39,6 +48,8 @@ description: pstack per-role model choices (overrides skill defaults)
 # pstack model configuration
 
 One line per role. Delete a line to fall back to the skill default.
+
+# budget: unlimited (keep role defaults)
 
 `inherit-parent` or `auto` as a value: the role runs on the parent chat model (omit `model`). Alias entries in a panel list still count toward its fan-out.
 

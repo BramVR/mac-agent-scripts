@@ -4,6 +4,9 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-09-14: PStack setup reasoning budgets
+- Ported upstream PStack `5bf2b1544d`: `setup-pstack` now offers four reasoning budgets, records the choice, and validates each model's supported effort before writing per-role settings.
+
 ## 2026-09-13: PStack port bumped to upstream 889ec4b, hardened scripts, six team-kit skills
 - Regenerated the port at `cursor/plugins` `889ec4b`; upstream moved bug-fix, perf-issue, and hillclimb to its fast code model, which the port already rendered as `gpt-5.6-sol` at `high`, so only the surrounding prose changed.
 - Replaced the poteto-mode scripts with the hardened set from [michael-denyer/pstack-claude](https://github.com/michael-denyer/pstack-claude) (v0.9.29): the PR watcher reads every review-thread page, rejects non-advancing cursors, and checks the head SHA stayed put under one deadline; the orch store serializes mutations and splits into `frontier.ts`, `status.ts`, `types.ts`; `worktree-audit.sh` parses NUL-delimited records and runs on GNU and BSD coreutils; `check-plan.mjs` handles tilde fences and requires a box per task; `bootstrap.ts` refuses node and installs production deps only. Re-applied the two Codex edits (rollout transcripts path, plan markers). 79 tests pass.
