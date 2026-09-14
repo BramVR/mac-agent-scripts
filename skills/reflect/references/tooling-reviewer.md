@@ -18,8 +18,6 @@ Examples of the pattern:
 - User describes a flaky test the agent could have queried via an observability MCP. Routing: the debugging skill should mention the observability MCP.
 - User links a chat thread the agent could have fetched via a chat MCP. Routing: the relevant skill should mention the chat MCP.
 
-The durable improvement is the skill learning to use available tools, not this one user typing one less ticket title.
-
 Read the active transcript at <ABSOLUTE_PATH> (or use the digest below if no path is given).
 
 Scan for:
@@ -34,23 +32,23 @@ Scan for:
 
 Findings must point to skills, tools, or MCPs invoked in this transcript. Speculative routings to skills the parent never opened do not count. To check whether a skill was used, scan the transcript for:
 
-- file-read tool calls against any `SKILL.md` file (repository `skills/` or `.agents/skills/`, user-level `~/.codex/skills/` or `~/.agents/skills/`, or plugin-installed skill paths)
-- `spawn_agent` prompts that name a skill path
-- Tool calls (`exec_command`, `rg`, MCP, etc.) that match a skill's documented commands
+- `Read` tool calls against any `SKILL.md` file (workspace `${CODEX_HOME:-$HOME/.codex}/skills/`, user-level `${CODEX_HOME:-$HOME/.codex}/skills/`, or `~/.agents/skills/`)
+- spawn prompts that name a skill path
+- Tool calls (Shell, Grep, MCP, etc.) that match a skill's documented commands
 
 Two valid finding shapes:
 
 - The parent invoked the skill and you found a real gap in its body. Route to the skill's relevant section.
 - The skill was visible in the catalog but did not trigger when it would have helped. Tune the skill's description so future agents pick it up. Route as `tune description: <skill path>`.
 
-If a skill was neither invoked nor a missed-trigger candidate, drop it. Adding text to a skill the parent never opened does not change behavior.
+If a skill was neither invoked nor a missed-trigger candidate, drop it.
 
 Surface 3-5 durable learnings. For each:
 - Principle: one sentence naming the convention or technical fact. Concrete enough that a future agent recognizes when it applies.
 - Evidence: the exact moment in the transcript (turn number or short quote, including the command or flag).
-- Routing: most relevant existing skill (give the `SKILL.md` path as it appears in the transcript), OR `tune description: <skill path>` when the skill should have triggered but didn't, OR "new skill via skill-creator: <kebab-name>".
+- Routing: most relevant existing skill (give the `SKILL.md` path as it appears in the transcript), OR `tune description: <skill path>` when the skill should have triggered but didn't, OR "new skill: <kebab-name>".
 
-Skip trivial things (typos, retries). Skip anything already obvious from the existing skill the parent followed. Skip implementation details that drift: specific SHAs, current file paths, version numbers, exact byte counts. Convention generalizes; pinned details don't.
+Skip trivial things (typos, retries). Skip anything already obvious from the existing skill the parent followed. Skip implementation details that drift: specific SHAs, current file paths, version numbers, exact byte counts. Convention generalizes. Pinned details don't.
 
 Return as a numbered list. No exposition.
 

@@ -18,34 +18,25 @@ When in doubt, take the simple path.
 
 ## Step 2a. Explore (complex questions only)
 
-Decompose the question into 2 to 4 exploration angles, each a distinct slice of the subsystem. Spawn all explorers in a single message:
+Decompose the question into 2 to 4 exploration angles, each a distinct slice of the subsystem. Spawn all explorers concurrently:
 
-- `subagent_type`: `generalPurpose`
-- `model`: `gpt-5.6-luna`
-- `reasoning_effort`: `high`
-- `fork_turns`: `none`
+- `model`: your configured `how explorer` model from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` (default `gpt-5.6-luna` at `high` reasoning)
 
 Each explorer gets the prompt in `references/explorer-prompt.md` with its angle filled in. Then go to Step 3.
 
 ## Step 2b. Direct Explain (simple questions)
 
-Spawn one Task subagent that explores and explains in one pass:
+Spawn one agent that explores and explains in one pass:
 
-- `subagent_type`: `generalPurpose`
-- `model`: `gpt-6-astra`
-- `reasoning_effort`: `medium`
-- `fork_turns`: `none`
+- `model`: your configured `how explainer` model from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` (default `gpt-5.6-sol` at `high` reasoning)
 
 Build its prompt from `references/explainer-prompt.md` without the explorer-findings section. Go to Step 4.
 
 ## Step 3. Synthesize (complex questions only)
 
-Once all explorers have returned, spawn one Task subagent to synthesize their findings into one explanation:
+Once all explorers have returned, spawn one agent to synthesize their findings into one explanation:
 
-- `subagent_type`: `generalPurpose`
-- `model`: `gpt-6-astra`
-- `reasoning_effort`: `high`
-- `fork_turns`: `none`
+- `model`: your configured `how explainer` model from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` (default `gpt-5.6-sol` at `high` reasoning)
 
 Build its prompt from `references/explainer-prompt.md` with every explorer's findings filled in.
 

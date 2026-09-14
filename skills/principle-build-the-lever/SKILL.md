@@ -1,40 +1,24 @@
 ---
 name: principle-build-the-lever
-description: "Build a rerunnable tool for non-trivial repetitive or auditable work."
+description: "Apply to any non-trivial work, not just bulk work: edits, migrations, analyses, checks. Build the tool that does it or proves it (codemod, script, generator, or a skill your subagents follow) instead of working by hand. The tool is the artifact a reviewer can rerun."
 ---
-
-# Build the lever
+# Build the Lever
 
 _Source: [PStack](https://github.com/cursor/plugins/tree/main/pstack/skills/principle-build-the-lever), MIT license. Adapted for Codex tooling and delegation rules._
 
-When work is non-trivial, build the smallest tool that performs or proves it instead of relying on hand edits.
+When the work isn't trivial, build the tool that does it instead of doing it by hand.
 
-## Decide
+**Why:** Two payoffs. Throughput: a codemod, generator, or script does the work the same way every time and reruns for free. Confidence: the tool is one artifact a reviewer can read and rerun to check the work. Hand-done changes can only be re-verified by redoing them. A deterministic script turns "trust me" into "run this".
 
-Skip the lever only when the work is a couple of obvious edits that can be checked at a glance. A one-off still deserves a lever when auditability matters.
+**Pattern:** Default to building the lever. Skip it only when the task is trivial, a couple of obvious edits you can see at a glance.
 
-Useful levers include:
+- Do the first unit by hand to learn the recipe, then build the tool. Prove it by rerunning it on that unit and diffing against your hand-done version. Make the lever safe to rerun.
+- Codemod or script for edits, generator for repetitive files, a dump-to-sqlite query for analysis, a rerunnable check for verification.
+- A deterministic lever beats fan-out. If the tool can process every unit in one pass, run it yourself. Don't fan out delegates to hand-apply what a script can do.
+- When you fan work out to subagents, write the lever as a skill they all read: the recipe, the verification contract, and the do-not-touch fences in one artifact. Keep it outside the delegates' write scope so they can't quietly edit the contract.
+- Applying this principle produces a file. If you cited it and there is no codemod, script, generator, or delegate skill in the diff, you didn't apply it.
+- Commit the lever when the work outlives the session.
 
-- a codemod or script for coordinated edits;
-- a generator for repeated files;
-- a query or extractor for analysis;
-- a rerunnable check for verification;
-- a skill containing one shared recipe and safety boundary when the user explicitly requests delegated work.
+**Balance:** The bar is triviality, not repetition. A one-off still earns a lever when the lever is what makes the work checkable. Per the [Laziness Protocol](../principle-laziness-protocol/SKILL.md), build the smallest script that does or proves the job, never a framework.
 
-Prefer one deterministic pass over agents repeating a mechanical recipe by hand.
-
-## Build
-
-1. Do one representative unit manually to learn the recipe.
-2. Build the smallest script, generator, query, or check that captures it.
-3. Make reruns safe. Prefer idempotent behavior and explicit inputs and outputs.
-4. Run it against the representative unit and compare its result with the manual version.
-5. Run it over the full scope.
-
-Keep the lever in the repository when the work or proof will recur. A task-local script is enough when it only supports the current investigation.
-
-## Prove
-
-The lever is part of the result. Report its path, invocation, and observed result. If no rerunnable artifact exists, do not claim this skill was applied.
-
-Use `$principle-prove-it-works` to verify the real output after the lever runs.
+Distinct from [Encode Lessons in Structure](../principle-encode-lessons-in-structure/SKILL.md), which makes a recurring instruction a durable guardrail. This is throughput and reviewability on the work in front of you. For scripting the verification itself, see [Prove It Works](../principle-prove-it-works/SKILL.md).

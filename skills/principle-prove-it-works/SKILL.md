@@ -1,38 +1,34 @@
 ---
 name: principle-prove-it-works
-description: "Prove completed work through the real artifact and direct observable behavior."
+description: "Apply after completing a task, before declaring done. Verify against the real artifact (run the feature, read the actual value, inspect the diff), not a proxy, self-report, or 'it compiles.'"
 ---
 
-# Prove it works
+# Prove It Works
 
 _Source: [PStack](https://github.com/cursor/plugins/tree/main/pstack/skills/principle-prove-it-works), MIT license. Adapted for Codex verification workflows._
 
-Before declaring a task complete, check the real result directly. Compilation, timestamps, cached output, and agent summaries are supporting evidence, not proof of behavior.
+Verify every task output by checking the real thing directly. Do not infer from proxies, self-reports, or "it compiles."
 
-## Choose the proof
+**Why:** Unverified work has unknown correctness. Indirect verification (file mtimes, output freshness, agent self-reports, cached screenshots) feels cheaper than direct observation. Acting on a wrong inference costs far more than checking the source.
 
-Ask: what direct observation would fail if this work were wrong?
+**Pattern:** After completing any task, ask: "how do I prove this actually works?"
 
-- Code: build it, run the real feature path, and check the input-to-output chain.
-- Integration: exercise the full communication path when safe and authorized.
-- Data or configuration: read the actual stored value, not a derived indicator.
-- Process: inspect liveness and identity directly.
-- Delegated work: inspect the diff, files, and runtime result; do not rely on the delegate's report.
+Check the real thing, not a proxy:
+- Check process liveness directly, not indirectly through derived state
+- Read the actual value, not a cached or derived representation
+- When verification fails, suspect the observation method before suspecting the system
 
-If the real path is unavailable, name the missing prerequisite and the strongest lower-level proof achieved. Do not silently promote a proxy into end-to-end proof.
+Code and features:
+1. Build it (necessary but not sufficient)
+2. Run it and exercise the actual feature path
+3. Check the full chain: does data flow from input to output?
+4. For integrations, test the full communication path end-to-end
 
-## Run the proof
+Delegation: trust artifacts, not self-reports.
+When verifying delegated work, inspect the actual output artifact (git diff, file contents, runtime behavior), not the delegate's summary.
 
-1. Record the starting state when residue or mutation matters.
-2. Exercise the actual artifact with representative input.
-3. Assert the expected output and the important failure case.
-4. Check side effects, exit status, and cleanup where relevant.
-5. Preserve concise evidence that another person can inspect or rerun.
+## Script the check when you can
 
-When a check fails, validate the observation method before blaming the system.
+The strongest proof is a deterministic script that re-runs the same comparison, not a one-time eyeball. Write the script, run it, and keep its output as an artifact a reviewer can re-run instead of trusting your word.
 
-## Make it rerunnable
-
-Prefer a deterministic script over a one-time visual check when the comparison is subtle or repeated. Keep the script when future reviewers will need the same proof; otherwise a visible task-local artifact is enough.
-
-Report the command, artifact path, observed result, and any boundary that remained unverified. Use `$principle-build-the-lever` when the proof itself needs a reusable tool.
+Keep the artifact visible for the human. Commit it only for large or complex work where the trail has to be auditable later, like a big port or migration (the **show-me-your-work** skill).

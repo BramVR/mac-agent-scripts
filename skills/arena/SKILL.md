@@ -9,7 +9,7 @@ Fan out N parallel attempts at the same task. Read every candidate end to end. P
 
 ## Start
 
-Open a plan with one entry per phase before launching anything. The arena runs autonomously and the list keeps phases from silently disappearing.
+Call `update_plan` with one entry per phase before launching anything.
 
 1. Frame
 2. Fan out
@@ -20,32 +20,32 @@ Open a plan with one entry per phase before launching anything. The arena runs a
 
 ## Phase A: Frame
 
-The N candidates will receive the same prompt, so the prompt is the contract. Get it right before spawning anything.
+The N candidates will receive the same prompt, so the prompt is the contract.
 
 1. State the artifact each candidate is producing.
-2. Derive the rubric. State what success looks like for *this* task, then turn it into 3-6 concrete gradeable criteria. Concrete: `Adds a --dry-run flag that skips writes`. Vague: `code is correct`. The rubric is the picker's tool in Phase D; candidates only see the task.
-3. Pick the runners. For judgment-sensitive work, cycle through `gpt-6-astra`, `gpt-5.6-sol`, `gpt-5.6-terra`, and `gpt-5.6-luna`, using Astra at `medium` reasoning by default and the other models at `high`; repeat the pool when `N > 4`. Use Astra `high` for reviews or reasoning-heavy candidates involving architectural or algorithmic tradeoffs, ambiguous root causes, or cross-system constraints. For generation-bound work, use `gpt-5.6-luna` at `high` reasoning for every runner. Use standard mode; never use fast mode or substitute another model or reasoning level. Spawn more when the arena covers multiple design directions.
-4. Assign output paths. Each candidate writes to its own location (an authorized Codex worktree where possible, otherwise `/tmp/arena-<slug>/candidate-<n>/`). N candidates writing to the same path is shared mutable state and fails the **separate-before-serializing-shared-state** principle skill test.
+2. Derive the rubric. State what success looks like for *this* task, then turn it into 3-6 concrete gradeable criteria. The rubric is the picker's tool in Phase D. Candidates only see the task.
+3. Pick the runners. Use `arena runners` from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` when present. Otherwise default to one each on `gpt-5.6-sol` at `high` reasoning, `gpt-5.6-terra` at `high` reasoning, `gpt-5.6-luna` at `high` reasoning. Spawn more when the arena covers multiple design directions. Same model N times when the work is generation-bound rather than judgment-sensitive.
+4. Assign output paths. Each candidate writes to its own location (a git worktree where possible, otherwise `/tmp/arena-<slug>/candidate-<n>/`), per the **separate-before-serializing-shared-state** principle skill.
 
 ## Phase B: Fan out
 
-Spawn all N Codex collaboration agents in one concurrent batch when capacity allows and otherwise in waves, each with its Phase A model and explicit `reasoning_effort`, `fork_turns: "none"`, the task, the path to the shared grounding, its own output path, and instructions to produce both the artifact and a short rationale.
+Spawn all N agents concurrently, each with `model` and `reasoning_effort`, the task, the path to the shared grounding, its own output path, and instructions to produce both the artifact and a short rationale.
 
-The rationale is mandatory. Without it, the parent cannot tell whether a candidate's structure is principled or accidental, which makes Phase E grafting unreliable. Each rationale names the alternatives the candidate considered and what it rejected.
+Each rationale names the alternatives the candidate considered and what it rejected.
 
 If a candidate fails to produce output, proceed with N-1 and note the dropout in the synthesis record.
 
 ## Phase C: Cross-judge
 
-After all Phase B candidates complete, spawn one separate Codex collaboration agent as judge with `model: "gpt-6-astra"`, `reasoning_effort: "high"`, and `fork_turns: "none"`. Use standard mode; never use fast mode or substitute another model or reasoning level. Codex does not expose a read-only switch for collaboration agents, so explicitly instruct the judge not to edit files, change repository state, or perform external writes. It sees the rubric and the candidates by path label, scores each criterion, and recommends a base with rationale. It runs in parallel with the parent's reading in Phase D, not with the candidates themselves. Spawning while candidates are still writing means the judge sees partial or empty outputs and reports them as dropouts.
+After all Phase B candidates complete, choose one model from the `arena cross-judge pool` in `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` when present. Otherwise use `gpt-6-astra` at `medium` reasoning, `gpt-5.6-sol` at `high` reasoning. Prefer a different model family from the parent's. Spawn one judge agent on that model and instruct it not to edit files or change repository state. It sees the rubric and the candidates by path label, scores each criterion, and recommends a base with rationale. It runs in parallel with the parent's reading in Phase D, not with the candidates themselves. Don't spawn the judge while candidates are still writing.
 
 ## Phase D: Pick a base
 
-Read every candidate end to end before picking. Skimming N candidates surfaces only the candidate whose surface looks most familiar.
+Read every candidate end to end before picking.
 
 Score each candidate against the rubric criterion by criterion, not on holistic feel. Compare against the cross-judge. Agreement on the base confirms the pick. Disagreement means one of you is biased or the rubric was ambiguous. Read both rationales before deciding.
 
-Pick the base on which candidate a future maintainer can extend most easily without breaking invariants. Prefer the cleaner boundary or smaller surface area when two feel tied, per the Laziness Protocol.
+Pick the base on which candidate a future maintainer can extend most easily without breaking invariants. Prefer the cleaner boundary or smaller API when two feel tied, per the Laziness Protocol.
 
 Record the pick and the reason in a short synthesis note alongside the base artifact, including the cross-judge's verdict.
 
@@ -55,13 +55,13 @@ Walk each losing candidate once more and identify what is worth porting into the
 
 Fold each graft in by hand, per the **redesign-from-first-principles** principle skill. Don't paste mechanically. The result has to remain coherent under one mental model.
 
-Record what was grafted, from which candidate, and what was rejected and why. The rejection notes are the highest-signal part of the record. Future readers learn from what you considered and dropped, not just what you kept.
+Record what was grafted, from which candidate, and what was rejected and why.
 
 When N candidates converge on the same shape, that is a strong agreement signal. Note the convergence in the record and ship the consensus shape. No graft is needed. When N candidates wildly diverge, Phase A was under-specified. Reframe and re-run rather than averaging the divergence.
 
 ## Phase F: Verify
 
-The synthesized artifact has to hold up under the same scrutiny as any other output, per the **prove-it-works** principle skill. The arena does not earn you a pass.
+The synthesized artifact has to hold up under the same scrutiny as any other output, per the **prove-it-works** principle skill.
 
 If verification surfaces a problem the arena did not catch, either Phase A was wrong (re-frame and re-run) or one candidate caught it and you missed the graft (go back to Phase E). Don't paper over.
 
