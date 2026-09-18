@@ -24,12 +24,12 @@ The N candidates will receive the same prompt, so the prompt is the contract.
 
 1. State the artifact each candidate is producing.
 2. Derive the rubric. State what success looks like for *this* task, then turn it into 3-6 concrete gradeable criteria. The rubric is the picker's tool in Phase D. Candidates only see the task.
-3. Pick the runners. Use `arena runners` from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` when present. Otherwise default to one each on `gpt-5.6-sol` at `high` reasoning, `gpt-5.6-terra` at `high` reasoning, `gpt-5.6-luna` at `high` reasoning. Spawn more when the arena covers multiple design directions. Same model N times when the work is generation-bound rather than judgment-sensitive.
+3. Pick the runners. Honor an explicit runner list from the caller (including Architect); otherwise use `arena runners` from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` when present. Otherwise default to one each on `gpt-5.6-sol` at `high` reasoning, `gpt-5.6-terra` at `high` reasoning, `gpt-5.6-luna` at `high` reasoning. Spawn more when the arena covers multiple design directions. Same model N times when the work is generation-bound rather than judgment-sensitive.
 4. Assign output paths. Each candidate writes to its own location (a git worktree where possible, otherwise `/tmp/arena-<slug>/candidate-<n>/`), per the **separate-before-serializing-shared-state** principle skill.
 
 ## Phase B: Fan out
 
-Spawn all N agents concurrently, each with `model` and `reasoning_effort`, the task, the path to the shared grounding, its own output path, and instructions to produce both the artifact and a short rationale.
+Launch all N candidates concurrently with the task, the path to the shared grounding, their own output path, and instructions to produce both the artifact and a short rationale. Use Codex collaboration agents with `model` and `reasoning_effort` for Codex entries. Run `claude-fable-5-1` entries through `claude -p --model claude-fable-5-1 --effort <effort>` with the same candidate inputs and output contract.
 
 Each rationale names the alternatives the candidate considered and what it rejected.
 

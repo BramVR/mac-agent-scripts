@@ -27,6 +27,6 @@ One line per role. Delete a line to fall back to the skill default.
 - arena runners: `gpt-5.6-sol` at `high`, `gpt-5.6-terra` at `high`, `gpt-5.6-luna` at `high`
 - arena cross-judge pool: `gpt-6-astra` at `medium`, `gpt-5.6-sol` at `high`
 - swarm workers: `gpt-5.6-luna` at `high`
-- architect runners: `gpt-5.6-sol` at `high`, `gpt-5.6-terra` at `high`, `gpt-5.6-luna` at `high`
+- architect runners: `gpt-5.6-sol` at `high`, `gpt-6-astra` at `low`, `claude-fable-5-1` at `high`
 - interrogate reviewers: `gpt-6-astra` at `high`, `gpt-5.6-sol` at `high`, `claude-fable-5-1` at `xhigh`
 - Comment Sicko: `gpt-5.6-luna` at `high`

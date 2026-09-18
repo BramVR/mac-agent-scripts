@@ -4,6 +4,9 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-09-17: Design panel models
+- Architect now uses Sol high, Astra low, and Fable 5.1 high; Arena honors the design panel and runs its Fable candidate through Claude CLI.
+
 ## 2026-09-14: PStack setup reasoning budgets
 - Ported upstream PStack `5bf2b1544d`: `setup-pstack` now offers four reasoning budgets, records the choice, and validates each model's supported effort before writing per-role settings.
 
