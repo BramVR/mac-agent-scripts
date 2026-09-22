@@ -77,7 +77,7 @@ Aim for a complete **coverage map**, not a minimal one. Document the null, don't
 Launch all matching investigators concurrently so they run concurrently. Don't ask one agent to cover multiple MCPs.
 
 Subagent config (each):
-- `model`: your configured `why investigators` model from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` (default `gpt-5.6-luna` at `high` reasoning)
+- `model`: your configured `why investigators` model from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` (default `gpt-6-luna` at `high` reasoning)
 - Codex has no read-only switch for collaboration agents. Instruct every agent not to edit files, change repository state, or perform external writes.
 
 Each investigator gets:
@@ -120,7 +120,7 @@ If your scope assessment suggests a single-commit trivial target where the PR de
 
 Spawn one synthesizer subagent:
 
-- `model`: your configured `why synthesizer` model from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` (default `gpt-5.6-sol` at `high` reasoning)
+- `model`: your configured `why synthesizer` model from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` (default `gpt-6-sol` at `high` reasoning)
 - Codex has no read-only switch for collaboration agents; instruct the agent not to edit files, change repository state, or perform external writes. The synthesizer's quality check spot-verifies citations, which can require MCP access. Readonly/Ask mode strips MCPs and defeats that.
 
 The synthesizer gets:

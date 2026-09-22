@@ -24,12 +24,12 @@ The N candidates will receive the same prompt, so the prompt is the contract.
 
 1. State the artifact each candidate is producing.
 2. Derive the rubric. State what success looks like for *this* task, then turn it into 3-6 concrete gradeable criteria. The rubric is the picker's tool in Phase D. Candidates only see the task.
-3. Pick the runners. Honor an explicit runner list from the caller (including Architect); otherwise use `arena runners` from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` when present. Otherwise default to one each on `gpt-5.6-sol` at `high` reasoning, `gpt-5.6-terra` at `high` reasoning, `gpt-5.6-luna` at `high` reasoning. Spawn more when the arena covers multiple design directions. Same model N times when the work is generation-bound rather than judgment-sensitive.
+3. Pick the runners. Honor an explicit runner list from the caller (including Architect); otherwise use `arena runners` from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` when present. Otherwise default to one each on `gpt-6-astra` at `medium`, `gpt-6-sol` at `high`, `gpt-5.6-sol` at `high`, `claude-opus-5-5` at `high`, `claude-fable-5-1` at `high`. Spawn more when the arena covers multiple design directions. Same model N times when the work is generation-bound rather than judgment-sensitive.
 4. Assign output paths. Each candidate writes to its own location (a git worktree where possible, otherwise `/tmp/arena-<slug>/candidate-<n>/`), per the **separate-before-serializing-shared-state** principle skill.
 
 ## Phase B: Fan out
 
-Launch all N candidates concurrently with the task, the path to the shared grounding, their own output path, and instructions to produce both the artifact and a short rationale. Use Codex collaboration agents with `model` and `reasoning_effort` for Codex entries. Run `claude-fable-5-1` entries through `claude -p --model claude-fable-5-1 --effort <effort>` with the same candidate inputs and output contract.
+Launch all N candidates concurrently with the task, the path to the shared grounding, their own output path, and instructions to produce both the artifact and a short rationale. Use Codex collaboration agents with `model` and `reasoning_effort` for Codex entries. Run Claude entries through `claude -p --model <slug> --effort <effort>` with the same candidate inputs and output contract. `claude-opus-5-5` requires Claude Code 2.1.280 or newer. Schedule in waves when runner count exceeds available concurrency; keep one candidate per configured entry.
 
 Each rationale names the alternatives the candidate considered and what it rejected.
 
@@ -37,7 +37,7 @@ If a candidate fails to produce output, proceed with N-1 and note the dropout in
 
 ## Phase C: Cross-judge
 
-After all Phase B candidates complete, choose one model from the `arena cross-judge pool` in `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` when present. Otherwise use `gpt-6-astra` at `medium` reasoning, `gpt-5.6-sol` at `high` reasoning. Prefer a different model family from the parent's. Spawn one judge agent on that model and instruct it not to edit files or change repository state. It sees the rubric and the candidates by path label, scores each criterion, and recommends a base with rationale. It runs in parallel with the parent's reading in Phase D, not with the candidates themselves. Don't spawn the judge while candidates are still writing.
+After all Phase B candidates complete, choose one model from the `arena cross-judge pool` in `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` when present. Otherwise use `gpt-6-astra` at `medium` reasoning, `gpt-6-sol` at `high` reasoning. Prefer a different model family from the parent's. Spawn one judge agent on that model and instruct it not to edit files or change repository state. It sees the rubric and the candidates by path label, scores each criterion, and recommends a base with rationale. It runs in parallel with the parent's reading in Phase D, not with the candidates themselves. Don't spawn the judge while candidates are still writing.
 
 ## Phase D: Pick a base
 

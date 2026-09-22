@@ -37,7 +37,7 @@ Launch all reviewers as Codex collaboration agents. Use the `interrogate reviewe
 | Subagent | Default model |
 |----------|---------------|
 | Reviewer A | `gpt-6-astra` at `high` reasoning |
-| Reviewer B | `gpt-5.6-sol` at `high` reasoning |
+| Reviewer B | `gpt-6-sol` at `high` reasoning |
 | Reviewer C | `claude -p --model claude-fable-5-1 --effort xhigh` |
 
 For each reviewer:

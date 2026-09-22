@@ -20,7 +20,7 @@ When in doubt, take the simple path.
 
 Decompose the question into 2 to 4 exploration angles, each a distinct slice of the subsystem. Spawn all explorers concurrently:
 
-- `model`: your configured `how explorer` model from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` (default `gpt-5.6-luna` at `high` reasoning)
+- `model`: your configured `how explorer` model from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` (default `gpt-6-luna` at `high` reasoning)
 
 Each explorer gets the prompt in `references/explorer-prompt.md` with its angle filled in. Then go to Step 3.
 
@@ -28,7 +28,7 @@ Each explorer gets the prompt in `references/explorer-prompt.md` with its angle 
 
 Spawn one agent that explores and explains in one pass:
 
-- `model`: your configured `how explainer` model from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` (default `gpt-5.6-sol` at `high` reasoning)
+- `model`: your configured `how explainer` model from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` (default `gpt-6-sol` at `high` reasoning)
 
 Build its prompt from `references/explainer-prompt.md` without the explorer-findings section. Go to Step 4.
 
@@ -36,7 +36,7 @@ Build its prompt from `references/explainer-prompt.md` without the explorer-find
 
 Once all explorers have returned, spawn one agent to synthesize their findings into one explanation:
 
-- `model`: your configured `how explainer` model from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` (default `gpt-5.6-sol` at `high` reasoning)
+- `model`: your configured `how explainer` model from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` (default `gpt-6-sol` at `high` reasoning)
 
 Build its prompt from `references/explainer-prompt.md` with every explorer's findings filled in.
 
