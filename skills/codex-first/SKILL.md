@@ -54,12 +54,12 @@ P=$(mktemp); cat >"$P" <<'EOF'
 <goal, repo + key paths, constraints ("don't touch X"), non-goals, proof expected, output shape>
 EOF
 command codex exec --yolo -C <repo> \
-  -m gpt-5.6-sol \
+  -m gpt-6-sol \
   -c model_reasoning_effort="high" \
   -o /tmp/codex-last.md - <"$P" 2>/dev/null
 ```
 
-- Model default: `gpt-5.6-sol`, effort `high` — pin both explicitly; don't rely on user config.
+- Model default: `gpt-6-sol`, effort `high` — pin both explicitly; don't rely on user config.
 - Never fast mode: no `--enable fast_mode`, on any route.
 - `--yolo` is the house default; Codex may run commands/tests freely. Keep prompts scoped to the target repo.
 - `command codex` bypasses any interactive shell alias. If codex isn't on PATH, it depends on how it was installed:
@@ -95,7 +95,7 @@ Follow-up fixes — cheaper than fresh runs, keeps context. `resume` has no `-C`
 For runs you must not babysit, trade the stderr suppression for a log and watch its mtime; read only the `-o` file into context, never the log body.
 
 ```bash
-command codex exec --yolo -C <repo> -m gpt-5.6-sol \
+command codex exec --yolo -C <repo> -m gpt-6-sol \
   -c model_reasoning_effort="high" \
   -o "$OUT" - <"$P" > "$LOG" 2>&1
 # Claude Code: run the line above as its own Bash run_in_background call

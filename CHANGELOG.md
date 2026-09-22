@@ -4,6 +4,12 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-09-22: GPT-6 Sol and Luna role upgrades
+- Require three distinct Architect designs, one per configured runner, before synthesis; verified Sol high, Astra low, and Fable 5.1 high through a complete design-only dry run.
+- Set Arena runners to Astra medium, GPT-6 Sol high, GPT-5.6 Sol high, Opus 5.5 high, and Fable 5.1 high; route both Claude candidates through `claude -p` and require Claude Code 2.1.280+ for Opus.
+- Upgrade active Luna roles to GPT-6 Luna at high reasoning: discovery, Swarm, comment audits, and live-verification lanes; align the plan validator and setup template.
+- Upgrade active Sol roles to GPT-6 Sol at high reasoning: Arena runners and cross-judge pool, Architect, Interrogate, implementation playbooks, explainers, synthesis, tooling reflection, and Codex-first defaults; keep setup templates aligned.
+
 ## 2026-09-17: Design panel models
 - Architect now uses Sol high, Astra low, and Fable 5.1 high; Arena honors the design panel and runs its Fable candidate through Claude CLI.
 

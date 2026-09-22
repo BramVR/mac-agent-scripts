@@ -32,7 +32,7 @@ One message, three agent calls, explicit `model:` and `reasoning_effort` on each
 | Lens | `model` | Prompt template |
 |---|---|---|
 | Judgment | your configured `reflect judgment` model from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` (default `gpt-6-astra` at `medium` reasoning) | `references/judgment-reviewer.md` |
-| Tooling | your configured `reflect tooling` model from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` (default `gpt-5.6-sol` at `high` reasoning) | `references/tooling-reviewer.md` |
+| Tooling | your configured `reflect tooling` model from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` (default `gpt-6-sol` at `high` reasoning) | `references/tooling-reviewer.md` |
 | Divergent | your configured `reflect judgment` model from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` (default `gpt-6-astra` at `medium` reasoning) | `references/divergent-reviewer.md` |
 
 Pass each template verbatim, substituting the transcript path or digest where marked. Reviewers return findings in the agent response body.
