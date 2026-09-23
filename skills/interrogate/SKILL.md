@@ -32,13 +32,13 @@ Write one clear paragraph. If you're unsure about the intent, ask the user befor
 
 ## Step 3, Spawn Reviewers
 
-Launch all reviewers as Codex collaboration agents. Use the `interrogate reviewers` list from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` when present, one reviewer per entry, extending or shrinking the Reviewer A/B/C/D labels below to the configured entry count. Otherwise use the table defaults.
+Launch Codex reviewers as collaboration agents with their model and reasoning effort. Launch Claude reviewers through `claude -p --model <slug> --effort <effort>`; Opus 5.5 requires Claude Code 2.1.280+. Use the `interrogate reviewers` list from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` when present, one reviewer per entry, extending or shrinking the Reviewer A/B/C/D labels below to the configured entry count. Otherwise use the table defaults.
 
 | Subagent | Default model |
 |----------|---------------|
 | Reviewer A | `gpt-6-astra` at `high` reasoning |
 | Reviewer B | `gpt-6-sol` at `high` reasoning |
-| Reviewer C | `claude -p --model claude-fable-5-1 --effort xhigh` |
+| Reviewer C | `claude -p --model claude-opus-5-5 --effort xhigh` |
 
 For each reviewer:
 - `model`: the configured `interrogate reviewers` entry, or the table default with no configured line

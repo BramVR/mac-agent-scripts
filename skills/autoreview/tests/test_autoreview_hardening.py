@@ -5291,6 +5291,26 @@ class AutoreviewHardeningTests(unittest.TestCase):
             ):
                 self.helper["ensure_claude_isolation_supported"](args, repo)
 
+    def test_opus_55_requires_current_cli_for_primary_and_fallback(self) -> None:
+        for model, fallback in [("claude-opus-5-5", None), ("opus", None), ("fable", "claude-opus-5-5")]:
+            for version, rejected in [("2.1.279", True), ("2.1.280", False)]:
+                with self.subTest(model=model, fallback=fallback, version=version), tempfile.TemporaryDirectory() as tempdir:
+                    args = argparse.Namespace(claude_bin="claude", model=model, fallback_model=fallback)
+                    def fake_run(command, *_args, **_kwargs):
+                        output = version if "--version" in command else "--safe-mode --setting-sources --strict-mcp-config --disallowedTools --tools"
+                        return subprocess.CompletedProcess(command, 0, output, "")
+                    with mock.patch.dict(self.helper["ensure_claude_isolation_supported"].__globals__, {
+                        "resolve_command": lambda *_args: "/usr/bin/claude",
+                        "safe_engine_env": lambda *_args, **_kwargs: {},
+                        "safe_temp_root": lambda _repo: Path(tempdir),
+                        "run": fake_run,
+                    }):
+                        if rejected:
+                            with self.assertRaisesRegex(SystemExit, "2.1.280.*Opus 5.5"):
+                                self.helper["ensure_claude_isolation_supported"](args, Path(tempdir))
+                        else:
+                            self.helper["ensure_claude_isolation_supported"](args, Path(tempdir))
+
     def test_claude_runs_outside_repo_with_auto_memory_disabled(self) -> None:
         args = argparse.Namespace(
             claude_allowed_tools=None,
