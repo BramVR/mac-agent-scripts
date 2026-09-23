@@ -4,6 +4,10 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-09-23: Opus design and review roles
+- Use Opus 5.5 for Interrogate at xhigh and optional Claude Autoreview at high; add it to Arena’s cross-judge pool at high, with Claude CLI routing and a 2.1.280 minimum-version check.
+- Replace Architect’s Astra low candidate with Opus 5.5 high through `claude -p`; retain GPT-6 Sol high, Fable 5.1 high, and the three-candidate requirement.
+
 ## 2026-09-22: GPT-6 Sol and Luna role upgrades
 - Require three distinct Architect designs, one per configured runner, before synthesis; verified Sol high, Astra low, and Fable 5.1 high through a complete design-only dry run.
 - Set Arena runners to Astra medium, GPT-6 Sol high, GPT-5.6 Sol high, Opus 5.5 high, and Fable 5.1 high; route both Claude candidates through `claude -p` and require Claude Code 2.1.280+ for Opus.

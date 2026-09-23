@@ -7,7 +7,7 @@ description: "Pre-commit/ship code review: Codex default; optional Claude or Pi.
 
 Run the bundled structured review helper as a closeout check. This is code review, not Guardian `auto_review` approval routing.
 
-Codex review is the default when no engine is set. It uses `gpt-6-astra` with `medium` reasoning. Claude is an optional second reviewer and uses `claude-fable-5-1` with `max` reasoning by default. Use standard mode for Codex reviews (`--codex-speed default`); never use fast mode.
+Codex review is the default when no engine is set. It uses `gpt-6-astra` with `medium` reasoning. Opus 5.5 requires Claude Code 2.1.280+. Claude is an optional second reviewer and uses `claude-opus-5-5` with `high` reasoning by default. Use standard mode for Codex reviews (`--codex-speed default`); never use fast mode.
 
 For user-visible behavior, pair autoreview with `behavior-validator`. Autoreview is source-aware and judges the change bundle; behavior validation is source-blind and judges the running product or tool against a behavior contract. A clean autoreview is not proof that a UI, CLI, API, or generated artifact works from the user's perspective.
 
@@ -268,13 +268,13 @@ Run multiple reviewers against one frozen bundle:
 Set reviewer models and thinking/effort explicitly:
 
 ```bash
-"$AUTOREVIEW" --reviewers codex,claude --model codex=gpt-6-astra --thinking codex=medium --model claude=claude-fable-5-1 --thinking claude=max
+"$AUTOREVIEW" --reviewers codex,claude --model codex=gpt-6-astra --thinking codex=medium --model claude=claude-opus-5-5 --thinking claude=high
 ```
 
 Inline syntax is also supported for simple model IDs:
 
 ```bash
-"$AUTOREVIEW" --reviewers codex:gpt-6-astra:medium,claude:claude-fable-5-1:max
+"$AUTOREVIEW" --reviewers codex:gpt-6-astra:medium,claude:claude-opus-5-5:high
 ```
 
 For models with slashes or extra colons, prefer keyed form:
@@ -295,14 +295,14 @@ Recommended model defaults:
 | Engine              | Default model                                      | Source note                                           |
 | ------------------- | -------------------------------------------------- | ----------------------------------------------------- |
 | **codex** (default) | `gpt-6-astra`                                      | Primary review model                                  |
-| **claude**          | `claude-fable-5-1`                                 | Optional independent second reviewer                  |
+| **claude**          | `claude-opus-5-5`                                 | Optional independent second reviewer                  |
 
 CLI flags and environment variables override these defaults. Pi does not get a built-in model default because its provider catalog may vary by installation. Droid, Copilot, Cursor, and OpenCode are currently refused.
 
 | Engine              | Model flag                 | Example model IDs                                                            | Thinking flag                 | Accepted levels                                            |
 | ------------------- | -------------------------- | ---------------------------------------------------------------------------- | ----------------------------- | ---------------------------------------------------------- |
 | **codex** (default) | `codex --model X exec ...` | `gpt-6-astra`                                                                | `-c model_reasoning_effort=Y` | `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max` |
-| **claude**          | `claude --model X`         | `claude-fable-5-1`, `claude-opus-4-8`, `claude-sonnet-4-6`, `claude-haiku-4-5` | `--effort Y`                  | `low`, `medium`, `high`, `xhigh`, `max`                    |
+| **claude**          | `claude --model X`         | `claude-opus-5-5`, `claude-fable-5-1`, `claude-opus-4-8`, `claude-sonnet-4-6`, `claude-haiku-4-5` | `--effort Y`                  | `low`, `medium`, `high`, `xhigh`, `max`                    |
 | **droid**           | currently refused          | Factory model IDs                                                            | `-r, --reasoning-effort Y`    | `off`, `none`, `low`, `medium`, `high`, `xhigh`, `max`     |
 | **copilot**         | currently refused          | Copilot model aliases                                                        | not supported                 | n/a                                                        |
 | **pi**              | `pi --model X`             | `anthropic/claude-sonnet-4`, `openai/gpt-4o`                                 | `--thinking Y`                | `off`, `minimal`, `low`, `medium`, `high`, `xhigh`         |
@@ -326,8 +326,8 @@ Examples matching current `main` behavior:
 "$AUTOREVIEW" --engine codex --codex-config 'service_tier="default"'
 
 # Claude Code aliases or full model names, with optional availability fallback
-"$AUTOREVIEW" --engine claude --model claude-fable-5-1 --thinking max
-"$AUTOREVIEW" --engine claude --model claude-fable-5-1 --fallback-model claude-opus-4-8,claude-sonnet-4-6
+"$AUTOREVIEW" --engine claude --model claude-opus-5-5 --thinking high
+"$AUTOREVIEW" --engine claude --model claude-opus-5-5 --fallback-model claude-opus-4-8,claude-sonnet-4-6
 
 # Pi with explicit model and thinking level
 "$AUTOREVIEW" --engine pi --model anthropic/claude-sonnet-4 --thinking high --pi-bin pi
@@ -423,7 +423,7 @@ The helper:
 - supports `--dry-run`, `--parallel-tests`, `--parallel-tests-shell`, `--prompt`, repo-relative `--prompt-file`, repo-relative `--dataset`, `--no-tools`, `--no-web-search`, repeatable Codex-only safe model/response tuning with `--codex-config key=value`, Codex-only `--codex-speed fast|flex|default`, and commit refs
 - supports `--stream-engine-output` or `AUTOREVIEW_STREAM_ENGINE_OUTPUT=1` for live engine text while preserving structured validation; Codex and Claude hide tool/file event details, emit compact activity summaries, and report usage at turn completion
 - supports opt-in review panels with `--panel` / `--reviewers`, plus per-engine `--model`, `--thinking`, and Claude `--fallback-model`
-- uses built-in defaults `codex=gpt-6-astra` with `medium` reasoning and optional second reviewer `claude=claude-fable-5-1` with `max` reasoning; honors `AUTOREVIEW_MODEL`, `AUTOREVIEW_THINKING`, `AUTOREVIEW_FALLBACK_MODEL`, and per-engine `AUTOREVIEW_<ENGINE>_MODEL` / `AUTOREVIEW_<ENGINE>_THINKING` environment overrides when CLI flags are omitted
+- uses built-in defaults `codex=gpt-6-astra` with `medium` reasoning and optional second reviewer `claude=claude-opus-5-5` with `high` reasoning; honors `AUTOREVIEW_MODEL`, `AUTOREVIEW_THINKING`, `AUTOREVIEW_FALLBACK_MODEL`, and per-engine `AUTOREVIEW_<ENGINE>_MODEL` / `AUTOREVIEW_<ENGINE>_THINKING` environment overrides when CLI flags are omitted
 - gives Codex the bundle in an empty workspace with web search available; Claude receives the bundle plus WebSearch by default and optional domain-constrained WebFetch, and Pi receives the bundle with no tools
 - runs Claude with `--safe-mode` (`v2.1.169+`), `--setting-sources user`, MCP and auto-memory disabled, no filesystem/shell tools, an empty external workspace, and `--fallback-model` when set
 - refuses Droid, Copilot, Cursor, and OpenCode reviews until their CLIs expose the required project, filesystem, and network isolation
