@@ -520,4 +520,22 @@ done
 assert_contains "$prune_output" "pruned stale link removed-agent -> $(canonical "$agent_skills/removed-agent")"
 assert_contains "$prune_output" "pruned stale link removed-manager -> $(canonical "$manager_skills/removed-manager")"
 
+new_case
+make_skill "$agent_skills" shared
+make_skill "$agent_skills" codex-tuned
+make_skill "$agent_skills" foreign-kept
+run_sync >/dev/null
+assert_link "$claude_root/codex-tuned" "$(canonical "$agent_skills/codex-tuned")"
+ln -sfn "$case_root/elsewhere" "$claude_root/foreign-kept"
+printf '%s\n' '# comment' codex-tuned foreign-kept > "$agent_skills/.codex-only"
+codex_only_output=$(run_sync)
+assert_contains "$codex_only_output" "pruned codex-only link codex-tuned -> $(canonical "$agent_skills/codex-tuned")"
+assert_absent "$claude_root/codex-tuned"
+assert_link "$claude_root/foreign-kept" "$case_root/elsewhere"
+assert_link "$claude_root/shared" "$(canonical "$agent_skills/shared")"
+for root in "$agents_root" "$codex_root"; do
+  assert_link "$root/codex-tuned" "$(canonical "$agent_skills/codex-tuned")"
+done
+assert_not_contains "$(run_sync)" "link $claude_root/codex-tuned"
+
 printf 'sync-skills tests passed\n'

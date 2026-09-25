@@ -9,6 +9,8 @@
 # Bram's setup is documented as per-skill links too, so no whole-root symlink
 # is created (see README: "Do not replace this with a broad ... symlink").
 # Sources: agent-scripts > manager > codex-local > claude-local.
+# skills/.codex-only names agent-scripts skills kept out of ~/.claude/skills
+# (Claude gets its own copies from the pstack plugin).
 # ~/.agents/skills is destination-only.
 #
 # Usage: sync-skills [-n|--dry-run] [--no-instructions]
@@ -175,6 +177,23 @@ claim() { # claim <root> <label>; first root to claim a name wins.
   done
 }
 claim "$AGENT_SKILLS" agent-scripts
+
+codex_only_names=()
+if [ -f "$AGENT_SKILLS/.codex-only" ]; then
+  while IFS= read -r codex_only_line || [ -n "$codex_only_line" ]; do
+    case $codex_only_line in '' | '#'*) continue ;; esac
+    codex_only_names+=("$codex_only_line")
+  done < "$AGENT_SKILLS/.codex-only"
+fi
+# codex_only <name> <target>: listed and still served from agent-scripts.
+codex_only() {
+  local n
+  [ "$2" = "$(canon "$AGENT_SKILLS/$1")" ] || return 1
+  for n in ${codex_only_names[@]+"${codex_only_names[@]}"}; do
+    [ "$n" = "$1" ] && return 0
+  done
+  return 1
+}
 claim "$MANAGER_SKILLS" manager
 claim "$CODEX_ROOT" codex-local codex
 claim "$CLAUDE_ROOT" claude-local claude
@@ -210,6 +229,13 @@ for root_index in "${!mirror_roots[@]}"; do
     name=${names[$name_index]}
     target=${targets[$name_index]}
     linkpath="$root/$name"
+    if [ "$role" = claude ] && codex_only "$name" "$target"; then
+      # Prune only our own link; foreign links and real dirs stay untouched.
+      if [ -L "$linkpath" ] && owned=$(state_lookup claude "$name") && [ "$owned" = "$(readlink "$linkpath")" ]; then
+        plan_remove "$linkpath" "$owned" "pruned codex-only link $name -> $owned"
+      fi
+      continue
+    fi
     if [ -L "$linkpath" ]; then
       observed=$(readlink "$linkpath")
       if [ "$observed" = "$target" ]; then

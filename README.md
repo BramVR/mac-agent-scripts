@@ -43,6 +43,8 @@ It writes one flat per-skill symlink to each supported discovery root:
 
 `~/.agents/skills` must be a real directory, not a whole-directory symlink.
 
+PStack split: skills here are the Codex-tuned PStack. Names in `skills/.codex-only` skip `~/.claude/skills` (owned links there are pruned); Claude Code gets Claude-tuned copies from the `pstack` plugin in [BramVR/claude-pstack](https://github.com/BramVR/claude-pstack) (`claude plugin marketplace add BramVR/claude-pstack`, `claude plugin install pstack@pstack-claude`). Update the list when either side adds or drops a PStack skill.
+
 Sources, in collision priority order: `agent-scripts/skills` > `~/Projects/manager/skills` (if present) > codex-local extras in `~/.codex/skills` > claude-local extras in `~/.claude/skills`. `~/.agents/skills` is a mirror destination only. Repo-owned skills resolve to their own repo, e.g. `gog -> ~/Projects/gogcli/.agents/skills/gog`.
 
 Broken links are pruned always. Generated links are tracked in `~/.agents/.sync-skills-v1.tsv` and pruned when their source disappears; non-colliding foreign links are left alone. Matching pre-existing links are not automatically claimed when the state file is first created.

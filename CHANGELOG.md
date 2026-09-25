@@ -4,6 +4,9 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-09-25: PStack split into Codex and Claude halves
+- Stopped mirroring the 57 Codex-tuned PStack skills listed in `skills/.codex-only` into `~/.claude/skills`; `sync-skills` prunes its own links there and keeps them for `~/.agents` and `~/.codex`. Claude Code now gets PStack from the `pstack` plugin in the new private [BramVR/claude-pstack](https://github.com/BramVR/claude-pstack) fork of `michael-denyer/pstack-claude`, with Codex-parity model roles (Fable judgment, Opus code, Sonnet scouts) and an opt-in routing hook.
+
 ## 2026-09-23: Opus design and review roles
 - Use Opus 5.5 for Interrogate at xhigh and optional Claude Autoreview at high; add it to Arena’s cross-judge pool at high, with Claude CLI routing and a 2.1.280 minimum-version check.
 - Replace Architect’s Astra low candidate with Opus 5.5 high through `claude -p`; retain GPT-6 Sol high, Fable 5.1 high, and the three-candidate requirement.
