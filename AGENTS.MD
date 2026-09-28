@@ -8,6 +8,7 @@ Codex CLI output: avoid Markdown tables by default; they render poorly there. Us
 - 3rd-party/OSS (non-BramVR): clone under `~/Projects/oss`.
 - Private ops repo: none configured. If domain/DNS/runbook work appears, ask Bram where to store it before creating a new repo.
 - Remote hosts: `hermes-win`, `hermes-vm`; see `skills/hermes-win/SKILL.md`.
+- Chatbot CI: remote Hermes runner only; never run CI on this Mac. Setup: `skills/hermes-win/references/chatbot-runners.md`.
 - Files: repo or `~/Projects/agent-scripts`.
 - "Make a note" here => terse `AGENTS.MD` edit. Ignore `CLAUDE.md`.
 - `ship` => changelog, commit in groups, push, pull.
