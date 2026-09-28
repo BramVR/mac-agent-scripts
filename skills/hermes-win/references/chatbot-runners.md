@@ -9,6 +9,7 @@ Use the Windows `hermes-win` VirtualBox host for `BramVR/chatbot` CI. The Mac on
 - Verify the clone through SSH as `runner` with strict host-key checking and a task-local known-hosts file. Confirm hostname before registration. Use `crabbox warmup --provider ssh --target linux --static-host hermes-win --static-user runner --static-port <port> --static-work-root /home/runner/crabbox --ttl 2h --idle-timeout 1h`.
 - For each queued job, run `crabbox actions register --id <lease-id> --provider ssh --target linux --static-host hermes-win --static-user runner --static-port <port> --static-work-root /home/runner/crabbox --repo BramVR/chatbot --name <unique-task-runner-name> --labels crabbox,untrusted,ephemeral --ephemeral`. Register **one at a time** on this VM. An ephemeral registration handles one job, then unregisters. Inspect `gh run view <run-id> --json jobs` before the next registration.
 - If a job fails, read its GitHub log, fix the source, rerun review and focused checks, push, and use fresh ephemeral registrations for the new run. Keep the clone until the latest head is green.
+- Ubuntu unattended upgrades can take the dpkg lock after VM boot and make Playwright's `--with-deps` step fail. Let the upgrade finish; never kill or bypass it. Rerun the failed job with a fresh ephemeral registration once the lock is free.
 
 ## Trusted live proof
 
