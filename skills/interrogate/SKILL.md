@@ -36,9 +36,8 @@ Launch Codex reviewers as collaboration agents with their model and reasoning ef
 
 | Subagent | Default model |
 |----------|---------------|
-| Reviewer A | `gpt-6-astra` at `high` reasoning |
-| Reviewer B | `gpt-6-sol` at `high` reasoning |
-| Reviewer C | `claude -p --model claude-opus-5-5 --effort xhigh` |
+| Reviewer A | `gpt-6.1-sol` at `xhigh` reasoning |
+| Reviewer B | `claude -p --model claude-opus-5-5 --effort xhigh` |
 
 For each reviewer:
 - `model`: the configured `interrogate reviewers` entry, or the table default with no configured line
