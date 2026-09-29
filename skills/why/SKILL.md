@@ -120,7 +120,7 @@ If your scope assessment suggests a single-commit trivial target where the PR de
 
 Spawn one synthesizer subagent:
 
-- `model`: your configured `why synthesizer` model from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` (default `gpt-6-sol` at `high` reasoning)
+- `model`: your configured `why synthesizer` model from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` (default `gpt-6.1-sol` at `high` reasoning)
 - Codex has no read-only switch for collaboration agents; instruct the agent not to edit files, change repository state, or perform external writes. The synthesizer's quality check spot-verifies citations, which can require MCP access. Readonly/Ask mode strips MCPs and defeats that.
 
 The synthesizer gets:
