@@ -781,11 +781,11 @@ TEST_ENV_ALLOWED_EXACT = {
 }
 TEST_ENV_ALLOWED_PREFIXES = ("AUTOREVIEW_FAKE_", "LC_")
 DEFAULT_MODEL_BY_ENGINE = {
-    "codex": "gpt-6-astra",
+    "codex": "gpt-6.1-sol",
     "claude": "claude-opus-5-5",
 }
 DEFAULT_THINKING_BY_ENGINE = {
-    "codex": "medium",
+    "codex": "xhigh",
     "claude": "high",
 }
 THINKING_LEVELS_BY_ENGINE = {
@@ -11042,12 +11042,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--base")
     parser.add_argument("--commit", default="HEAD")
     parser.add_argument("--engine", choices=ENGINE_CHOICES, default=os.environ.get("AUTOREVIEW_ENGINE", "codex"))
-    parser.add_argument("--reviewers", help="Comma-separated review panel, e.g. codex,claude,pi or codex:gpt-6-astra:medium.")
+    parser.add_argument("--reviewers", help="Comma-separated review panel, e.g. codex,claude,pi or codex:gpt-6.1-sol:xhigh.")
     parser.add_argument("--panel", action="store_true", help="Run a Codex/Claude review panel unless --engine changes the first reviewer.")
     parser.add_argument(
         "--model",
         action="append",
-        help="Model for all reviewers or engine=model. Repeatable. Defaults: codex=gpt-6-astra, claude=claude-opus-5-5.",
+        help="Model for all reviewers or engine=model. Repeatable. Defaults: codex=gpt-6.1-sol, claude=claude-opus-5-5.",
     )
     parser.add_argument("--thinking", action="append", help="Thinking/effort for all reviewers or engine=level. Repeatable. Codex: none, minimal, low, medium, high, xhigh, max. Claude: low, medium, high, xhigh, max. Droid: off, none, low, medium, high. Pi: off, minimal, low, medium, high, xhigh. OpenCode: minimal, low, medium, high, max. Cursor: none.")
     parser.add_argument(
@@ -11486,7 +11486,7 @@ def self_test_config_defaults() -> None:
         for key in keys:
             os.environ.pop(key, None)
         default_codex = reviewer_args(reviewer_test_args(engine="codex"))[0]
-        if default_codex.model != "gpt-6-astra":
+        if default_codex.model != "gpt-6.1-sol":
             raise SystemExit(f"self-test config defaults failed: default codex model={default_codex.model!r}")
         if default_codex.fallback_model is not None:
             raise SystemExit(f"self-test config defaults failed: default codex fallback={default_codex.fallback_model!r}")
@@ -11496,7 +11496,7 @@ def self_test_config_defaults() -> None:
         explicit_sol = reviewer_args(reviewer_test_args(engine="codex", model=["gpt-5.6-sol"]))[0]
         if explicit_sol.model != "gpt-5.6-sol" or explicit_sol.fallback_model is not None:
             raise SystemExit("self-test config defaults failed: explicit Sol must stay pinned")
-        if default_codex.thinking != "medium":
+        if default_codex.thinking != "xhigh":
             raise SystemExit(f"self-test config defaults failed: default codex thinking={default_codex.thinking!r}")
         max_effort = reviewer_args(reviewer_test_args(engine="codex", thinking=["max"]))[0]
         if max_effort.thinking != "max":
