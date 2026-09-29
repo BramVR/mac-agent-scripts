@@ -77,7 +77,7 @@ Aim for a complete **coverage map**, not a minimal one. Document the null, don't
 Launch all matching investigators concurrently so they run concurrently. Don't ask one agent to cover multiple MCPs.
 
 Subagent config (each):
-- `model`: your configured `why investigators` model from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` (default `gpt-6-luna` at `high` reasoning)
+- `model`: your configured `why investigators` model from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` (default `gpt-6.1-sol` at `low` reasoning)
 - Codex has no read-only switch for collaboration agents. Instruct every agent not to edit files, change repository state, or perform external writes.
 
 Each investigator gets:

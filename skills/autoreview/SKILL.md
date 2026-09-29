@@ -311,7 +311,7 @@ CLI flags and environment variables override these defaults. Pi does not get a b
 
 Claude also supports `--fallback-model a,b` for availability-based fallback chains ([model-config](https://code.claude.com/docs/en/model-config)). Current Claude docs note that auth, billing, rate-limit, request-size, and transport errors do not trigger fallback, and the changelog documents interactive-session support in `v2.1.166`.
 
-Autoreview defaults to Astra at `medium` reasoning. Explicit model requests remain supported, but Codex review never switches models automatically.
+Autoreview defaults to `gpt-6.1-sol` at `xhigh` reasoning. Explicit model requests remain supported, but Codex review never switches models automatically.
 
 Examples matching current `main` behavior:
 

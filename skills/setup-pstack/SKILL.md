@@ -60,19 +60,19 @@ One line per role. Delete a line to fall back to the skill default.
 - perf-issue: `gpt-6.1-sol` at `high`
 - hillclimb: `gpt-6.1-sol` at `high`
 - judgment and prose: `gpt-6-sol` at `high`
-- hardest tasks: `gpt-6-sol` at `high`
-- how explorer: `gpt-6-luna` at `high`
+- hardest tasks: `gpt-6.1-sol` at `high`
+- how explorer: `gpt-6.1-sol` at `low`
 - how explainer: `gpt-6.1-sol` at `high`
-- why investigators: `gpt-6-luna` at `high`
+- why investigators: `gpt-6.1-sol` at `low`
 - why synthesizer: `gpt-6.1-sol` at `high`
 - reflect tooling: `gpt-6.1-sol` at `high`
-- reflect judgment, divergent, synthesizer: `gpt-6-sol` at `high`
+- reflect judgment, divergent, synthesizer: `gpt-6.1-sol` at `high`
 - arena runners: `gpt-6.1-sol` at `high`, `claude-opus-5-5` at `high`, `claude-fable-5-1` at `high`
 - arena cross-judge pool: `gpt-6.1-sol` at `high`, `claude-opus-5-5` at `high`
-- swarm workers: `gpt-6-luna` at `high`
+- swarm workers: `gpt-6.1-sol` at `low`
 - architect runners: `gpt-6.1-sol` at `xhigh`, `claude-opus-5-5` at `high`, `claude-fable-5-1` at `high`
 - interrogate reviewers: `gpt-6.1-sol` at `xhigh`, `claude-opus-5-5` at `xhigh`
-- Comment Sicko: `gpt-6-luna` at `high`
+- Comment Sicko: `gpt-6.1-sol` at `low`
 ```
 
 ### 6. Confirm
