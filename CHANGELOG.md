@@ -5,6 +5,9 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 # Changelog
 
 ## 2026-09-29: GPT-6.1 Sol routing
+- Correct the remaining Autoreview prose summary to GPT-6.1 Sol xhigh, matching its executable and documented defaults.
+- Move hardest tasks and Reflect judgment, divergent, and synthesis roles to GPT-6.1 Sol high; align their setup and fallback defaults.
+- Replace Luna discovery, investigation, Swarm, comment-audit, and live-verification routes with GPT-6.1 Sol low; align setup templates, skill defaults, and the plan validator.
 - Upgrade GPT-6 Sol implementation and synthesis roles to GPT-6.1 Sol high; replace Astra judgment, prose, hardest-task, and reflection roles with GPT-6 Sol high.
 - Use GPT-6.1 Sol high, Opus 5.5 high, and Fable 5.1 high for Arena runners; keep Sol 6.1 high and Opus high in its cross-judge pool.
 - Use GPT-6.1 Sol xhigh for Architect, Interrogate, and Codex Autoreview; keep Architect’s three candidates and one Sol reviewer alongside Opus xhigh in Interrogate.
