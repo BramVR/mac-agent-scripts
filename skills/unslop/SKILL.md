@@ -5,15 +5,12 @@ description: "Cut AI tells from any writing. Must always apply."
 
 # Unslop
 
-_Source: [PStack](https://github.com/cursor/plugins/tree/main/pstack/skills/unslop), MIT license._
-
 Edit text to remove AI patterns.
 
 ## Process
 
 1. Scan for the patterns below.
 2. Rewrite. Preserve meaning, match intended tone.
-3. Self-audit: "What makes this obviously AI generated?" Fix remaining tells.
 
 ## Patterns to detect and fix
 

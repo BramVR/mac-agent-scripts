@@ -5,8 +5,6 @@ description: "TypeScript best practices. Use when reading or editing any .ts or 
 
 # TypeScript best practices
 
-_Source: [PStack](https://github.com/cursor/plugins/tree/main/pstack/skills/typescript-best-practices), MIT license._
-
 Apply the **type-system-discipline** principle skill first.
 
 | Rule | Summary |
