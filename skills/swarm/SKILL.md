@@ -9,7 +9,7 @@ Fan out N parallel Codex collaboration agents. They may cover separate slices, r
 
 ## Start
 
-Call `update_plan` with one entry per phase before launching anything.
+Open a todolist with one entry per phase before launching anything.
 
 1. Frame
 2. Fan out
@@ -22,21 +22,21 @@ Call `update_plan` with one entry per phase before launching anything.
 2. Choose the shape. Partition into slices, race N workers on identical briefs, or mix both. For a race or mixed shape, declare `first pass`, `rank all`, or `best-of` before spawning.
 3. Set N from the user or derive it from the shape. N is total workers, not the Codex concurrency limit.
 4. Pick the worker model from `swarm workers` in `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` when present. Otherwise use `gpt-6.1-sol` at `low` reasoning. For a model race, name each arm's model up front.
-5. Give each worker its own writable output when it writes.
+5. Give each worker its own writable output when it writes. When workers verify or measure commits, each brief names the exact SHAs. A measurement brief also names the method (sample count, what one sample is, order). The worker records both in its result.
 
 ## Phase B: Fan out
 
-Spawn all N workers concurrently as Codex collaboration agents, each with `model` and `reasoning_effort` set to the configured model. Use a local worktree only when the worker needs local state.
+Spawn all N workers concurrently with `collaboration.spawn_agent`, `fork_turns: "none"`, and the step 4 `model` and `reasoning_effort`. Codex collaboration agents share the checkout; give parallel writers disjoint files or separate worktrees when authorized.
 
-When a worker must start from a non-default pushed branch, start the agent in a worktree based on that branch.
+When a worker must start from a non-default pushed branch, give it an authorized worktree based on that branch.
 
-Every brief stands alone. Include the goal, scope, exact slice or race arm, how to verify, and what to report. Reports use `PASS`, `ISSUES`, or `BLOCKED` with evidence.
+Every brief stands alone. Include the goal, scope, exact slice or race arm, how to verify, and what to report. Reports use `PASS`, `ISSUES`, or `BLOCKED` with evidence. A worker that can prove a defect reports `ISSUES` and lists every issue it can prove, not only the first.
 
 If a worker drops out, proceed with N-1 and note it.
 
 ## Phase C: Aggregate
 
-Read the agent results. For coverage, every required slice needs a result. For a race, apply the selection rule declared up front. Use first pass, rank all, or best-of. Do not paste raw worker dumps.
+Read the agent results. Drop a result that does not record the SHAs and method its brief names, and respawn that worker once. After a second miss, record a gap. A gap does not count as a pass. For coverage, every required slice needs a result. For a race, apply the selection rule declared up front. Use first pass, rank all, or best-of. Do not paste raw worker dumps.
 
 Keep a compact result table, one-line evidenced issues, and explicit gaps or dropouts.
 

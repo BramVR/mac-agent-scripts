@@ -57,6 +57,8 @@ skills/wacrawl -> ../../oss/wacrawl/.agents/skills/wacrawl
 
 Optional crawler/messaging symlinks may be absent on Bram's machine; agents must check before use.
 
+The [PStack guide](docs/pstack/README.md) covers setup, prompting, design, verification, and overnight work. Use `$poteto-help` for a question or `$ketchup` to catch up on the current chat.
+
 ## Agent Instructions
 
 Shared hard rules live in `AGENTS.MD`.

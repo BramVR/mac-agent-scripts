@@ -4,6 +4,21 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-10-11: PStack workflow and guide refresh
+- Ported PStack 0.15.17 through `978ca6e9c0`, preserving all existing models, efforts, panel sizes, aliases, fallback policy, and executable helpers.
+- Added explicitly invoked `poteto-help` and `ketchup`, prompting references, and the ten-page PStack guide with upstream images.
+- Applied upstream prompt distillation and Architect grounding correction; changed only the Codex invocation, agent, transcript, installation, goal, and scheduler interfaces.
+- Removed remaining PStack per-skill license copies and source banners, preserving the root license and existing skill instructions.
+
+## 2026-10-04: PStack workflow refresh
+- Ported upstream PStack 0.15.9 workflows through `e43c7ee26e`, preserving every local model, effort, panel, and model-routing override.
+- Added `correct`, `benchmark-checklist`, and `principle-explain-the-number`; strengthened Architect ownership/API checks and schema-first TypeScript validation examples.
+- Defaulted new assignments and fix rounds to fresh agents; moved autopilot verification to code-ready rounds, tracked child recovery, and adapted hourly quiet audit ticks to Codex heartbeat scheduling.
+- Tightened Swarm SHA/method receipts, PR briefing sections, rebase/CI verdict reuse, and append-only run-aware decision logs; applied upstream prompt trimming.
+- Restored upstream's worktree isolation and checkout-recovery policy in Opening a PR; translated `Task` to Codex's `collaboration.spawn_agent`.
+- Dry-run fixes: restore upstream's todolist wording instead of requiring an unavailable `update_plan` tool; name Codex's `/goal` correctly in Bug fix.
+- Landing checks: retain the plan checker's existing fenced-code handling and required checklist boxes; upstream skill wording and model policy unchanged.
+
 ## 2026-09-29: GPT-6.1 Sol routing
 - Correct the remaining Autoreview prose summary to GPT-6.1 Sol xhigh, matching its executable and documented defaults.
 - Move hardest tasks and Reflect judgment, divergent, and synthesis roles to GPT-6.1 Sol high; align their setup and fallback defaults.
