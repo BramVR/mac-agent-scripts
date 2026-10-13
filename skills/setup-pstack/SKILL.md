@@ -5,8 +5,6 @@ description: "Configure PStack models and reasoning budget per role."
 
 # Setup pstack
 
-_Source: [PStack](https://github.com/cursor/plugins/tree/main/pstack/skills/setup-pstack), MIT license._
-
 Write `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md`, the models file that sets pstack's model per role.
 
 ## Steps
