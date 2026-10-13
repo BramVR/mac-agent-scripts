@@ -7,27 +7,24 @@ description: "Spawn three parallel review subagents over the active transcript, 
 
 Mine the current conversation for durable learnings, then route them into skill edits.
 
-## When to invoke
+Invoke when the user says "reflect" or "$reflect". Skip when the conversation is trivial, off-topic, or already covered by an existing skill the parent followed correctly. One-offs are not learnings.
 
-Invoke when the user says "reflect" or "/reflect". Skip when the conversation is trivial, off-topic, or already covered by an existing skill the parent followed correctly. One-offs are not learnings.
+## 1. Locate the active transcript
 
-## Process
-
-### 1. Locate the active transcript
-
-The parent finds its own transcript file before fanning out. Use the exact ID from `CODEX_THREAD_ID` or `CODEX_SESSION_ID` to locate the matching rollout under `${CODEX_HOME:-$HOME/.codex}/sessions`. Do not read other rollouts; that crosses project boundaries and reads private chats from unrelated work.
+Before fanning out, find this conversation's transcript using the exact ID from `CODEX_THREAD_ID` or `CODEX_SESSION_ID` under `${CODEX_HOME:-$HOME/.codex}/sessions`. Do not read other rollouts. That crosses project boundaries and reads private chats from unrelated work.
 
 ```bash
-find "${CODEX_HOME:-$HOME/.codex}/sessions" -type f -name "rollout-*-${thread_id}.jsonl" -print -quit
+thread_id=${CODEX_THREAD_ID:-${CODEX_SESSION_ID:-}}
+if [ -n "$thread_id" ]; then
+  find "${CODEX_HOME:-$HOME/.codex}/sessions" -type f -name "rollout-*-${thread_id}.jsonl" -print -quit
+fi
 ```
 
-Codex rollout layout: `<sessions>/YYYY/MM/DD/rollout-<timestamp>-<thread-id>.jsonl`.
+Codex rollout layout: `<sessions>/YYYY/MM/DD/rollout-<timestamp>-<thread-id>.jsonl`. Read the matching rollout's `response_item` records with `payload.type: message` and `payload.role: user`; their `input_text` content holds the user prompts. The first JSONL record is session metadata, not a user message. Confirm the opening user prompt belongs to this conversation. If the ID or matching rollout is unavailable, pass a tight digest of the session instead.
 
-For each candidate, read the first JSONL line and check that `message.content[0].text` contains the conversation's opening user prompt. Take the matching path. If no path resolves, write a tight digest of the session and pass that instead.
+## 2. Spawn three reviewers in parallel
 
-### 2. Spawn three reviewers in parallel
-
-One message, three agent calls, explicit `model:` and `reasoning_effort` on each. Reviewers need MCP access for context lookups (tickets, chat threads, observability traces referenced in the transcript). Readonly strips MCPs.
+Spawn three Codex collaboration agents concurrently, with explicit `model` and `reasoning_effort` on each. Reviewers need MCP access to look up the tickets, chat threads, and observability traces the transcript references.
 
 | Lens | `model` | Prompt template |
 |---|---|---|
@@ -37,30 +34,30 @@ One message, three agent calls, explicit `model:` and `reasoning_effort` on each
 
 Pass each template verbatim, substituting the transcript path or digest where marked. Reviewers return findings in the agent response body.
 
-### 3. Synthesize
+## 3. Synthesize
 
-One agent call, using your configured `reflect judgment` model from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` (default `gpt-6.1-sol` at `high` reasoning). The synthesizer's quality check includes spot-verifying citations, which can require MCP access. Readonly strips MCPs. Use `references/synthesizer.md` verbatim, with each reviewer's full output inlined where marked. The synthesizer returns a structured Accepted / Rejected / Backlog list.
+One agent call, using your configured `reflect judgment` model from `${CODEX_HOME:-$HOME/.codex}/skills/poteto-mode/references/models.md` (default `gpt-6.1-sol` at `high` reasoning). Pass the effort as `reasoning_effort`. It spot-verifies citations through MCP. Pass `references/synthesizer.md` verbatim, with each reviewer's full output inlined where marked. It returns an Accepted / Rejected / Backlog list.
 
-### 4. Structural enforcement check
+## 4. Structural enforcement check
 
-Sanity-check the synthesizer's Accepted list. For any item that would be enforced more reliably by a lint rule, script, metadata flag, or runtime check, move it from Accepted to Backlog. See the **encode-lessons-in-structure** principle skill.
+Move any Accepted item that a lint rule, script, metadata flag, or runtime check would enforce more reliably to Backlog. See the **encode-lessons-in-structure** principle skill.
 
-### 5. Apply
+## 5. Apply
 
-Before applying any Accepted edit, present the synthesizer's full Accepted/Rejected/Backlog output to the user and wait for explicit approval. The user picks which subset to apply and may redirect routings. Skill changes affect every future agent in the org. Do not auto-apply.
+Present the synthesizer's full Accepted / Rejected / Backlog output and wait for explicit approval before applying any Accepted edit. The user picks the subset and may redirect routings. Skill changes affect every future agent in the org. Do not auto-apply.
 
-Backlog items file to whatever devex / backlog tracker your team uses automatically. Only the Accepted list waits for approval.
+File each Backlog item to your team's devex or backlog tracker without waiting. Only the Accepted list waits for approval.
 
-For each approved Accepted item, follow the Routing field exactly:
+Follow each approved row's Routing exactly:
 
-- Trivial existing-skill edit (a one-line bullet, a tightened sentence, a stale fact corrected): parent does directly.
+- Trivial existing-skill edit (a one-line bullet, a tightened sentence, a stale fact corrected): the parent does it directly.
 - Substantive existing-skill edit (a new section, a new pattern table, more than ~10 lines): hand to Codex's built-in `skill-creator` skill and run its draft / test / iterate loop.
 - `tune description: <skill path>` (the skill exists but didn't trigger when it should have): hand to `skill-creator` and run its description-optimization loop.
 - `new skill via skill-creator: <kebab-name>`: hand creation to `skill-creator`. Do not invent the shape ad hoc.
 
-If your environment ships a SKILL.md validator, run it on every touched skill before declaring done. Skip this step if it doesn't.
+If your environment ships a SKILL.md validator, run it on every touched skill before declaring done.
 
-### 6. Summarize for the user
+## 6. Summarize for the user
 
 Short list, no preamble:
 

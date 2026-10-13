@@ -13,6 +13,8 @@
 
 The 2026-10-11 landing retains the local plan checker's fenced-code handling and required checklist boxes after regression proof. Upstream skill wording and model policy remain unchanged.
 
+- 2026-10-11 targeted PStack refresh: ported `cursor/plugins` `pstack` through `978ca6e9c0e012047cd5058b8e829240336e704e` (0.15.17). Added `poteto-help`, `ketchup`, prompting references, and the standalone guide; applied upstream prompt distillation and Architect grounding correction. Preserved existing models, efforts, panels, aliases, fallback policy, and executable helpers; skipped upstream setup defaults and the model-only verifier fixture rename. Required Codex changes are invocation policy, agent fields and local transports, exact-thread rollout parsing, installation and documentation paths, and separate goals versus heartbeat scheduling. Guide images are upstream bytes. Cursor plugin packaging, personal README biography, and dormant Benny automation pack remain upstream-only. No per-skill licenses or source banners added. Global marker unchanged.
+
 ## Flow (repeat per pass)
 
 ```bash

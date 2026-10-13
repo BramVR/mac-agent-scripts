@@ -5,8 +5,6 @@ description: "Use for \"automate me\", \"create/update/refresh my -mode skill\",
 
 # Automate me
 
-_Source: [PStack](https://github.com/cursor/plugins/tree/main/pstack/skills/automate-me), MIT license._
-
 A guided flow for turning the user's working conventions into a skill agents will follow. The output is one `-mode` skill tailored to them (e.g. `jay-mode`, `priya-mode`).
 
 This skill orchestrates three others: an inline mining pass (see step 1), Codex's built-in `skill-creator` (authoring), and the **unslop** skill (prose discipline). It sequences them. It doesn't replace them.

@@ -4,6 +4,12 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## 2026-10-11: PStack workflow and guide refresh
+- Ported PStack 0.15.17 through `978ca6e9c0`, preserving all existing models, efforts, panel sizes, aliases, fallback policy, and executable helpers.
+- Added explicitly invoked `poteto-help` and `ketchup`, prompting references, and the ten-page PStack guide with upstream images.
+- Applied upstream prompt distillation and Architect grounding correction; changed only the Codex invocation, agent, transcript, installation, goal, and scheduler interfaces.
+- Removed remaining PStack per-skill license copies and source banners, preserving the root license and existing skill instructions.
+
 ## 2026-10-04: PStack workflow refresh
 - Ported upstream PStack 0.15.9 workflows through `e43c7ee26e`, preserving every local model, effort, panel, and model-routing override.
 - Added `correct`, `benchmark-checklist`, and `principle-explain-the-number`; strengthened Architect ownership/API checks and schema-first TypeScript validation examples.
