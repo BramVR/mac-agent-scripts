@@ -1,0 +1,72 @@
+#!/usr/bin/env python3
+"""Merge the T3 pstack preset into SDK settings before launching Claude."""
+
+import json
+import os
+from pathlib import Path
+import shutil
+import sys
+
+
+def read_settings(value):
+    try:
+        try:
+            settings = json.loads(value)
+        except json.JSONDecodeError:
+            settings = json.loads(Path(value).read_text(encoding="utf-8"))
+    except (OSError, ValueError, UnicodeError):
+        raise ValueError("cannot read settings JSON") from None
+    if not isinstance(settings, dict):
+        raise ValueError("settings must be a JSON object")
+    for key in ("enabledPlugins", "skillOverrides"):
+        if key in settings and not isinstance(settings[key], dict):
+            raise ValueError("settings maps must be JSON objects")
+    return settings
+
+
+def merge_settings(settings, incoming):
+    for key, value in incoming.items():
+        if key in ("enabledPlugins", "skillOverrides"):
+            settings.setdefault(key, {}).update(value)
+        else:
+            settings[key] = value
+
+
+def main():
+    settings = {}
+    forwarded = []
+    arguments = iter(sys.argv[1:])
+    for argument in arguments:
+        if argument == "--":
+            forwarded.append(argument)
+            forwarded.extend(arguments)
+            break
+        if argument == "--settings":
+            value = next(arguments, None)
+            if value is None or value.startswith("--"):
+                raise ValueError("--settings requires a value")
+            merge_settings(settings, read_settings(value))
+        elif argument.startswith("--settings="):
+            merge_settings(settings, read_settings(argument.split("=", 1)[1]))
+        else:
+            forwarded.append(argument)
+
+    preset = Path(__file__).resolve().parent.parent / "config/t3-pstack/claude-t3-settings.json"
+    merge_settings(settings, read_settings(str(preset)))
+    binary = os.environ.get("T3_PSTACK_CLAUDE_BINARY")
+    if binary is None:
+        binary = shutil.which("claude")
+    if not binary:
+        raise ValueError("Claude executable not found")
+    if os.path.samefile(binary, __file__):
+        raise ValueError("recursive Claude executable")
+    os.execv(binary, [binary, "--settings", json.dumps(settings), *forwarded])
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except (OSError, ValueError, UnicodeError, RuntimeError):
+        # Avoid echoing argv, paths, or JSON that may contain secrets.
+        print("t3-claude: invalid settings or unavailable Claude executable", file=sys.stderr)
+        sys.exit(1)

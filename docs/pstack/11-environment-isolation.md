@@ -8,10 +8,12 @@ read_when:
 
 T3 uses the plugin's namespaced pstack skills. Terminal sessions use the personal pstack skills. Custom skills such as `autoreview` and `hermes-win` stay available in both environments. Keep the skill symlinks stable so simultaneous sessions cannot switch each other's skills.
 
-Set the per-provider **Launch arguments** in T3's **Settings > Providers**:
+Configure each provider in T3's **Settings > Providers**:
 
-- Codex: paste [codex-t3-launch-args.txt](../../config/t3-pstack/codex-t3-launch-args.txt). It enables `t3-pstack@t3-pstack` and disables the personal pstack skills by their canonical `SKILL.md` paths.
-- Claude: use `--settings /Users/bram/Projects/agent-scripts/config/t3-pstack/claude-t3-settings.json`. [That settings file](../../config/t3-pstack/claude-t3-settings.json) enables the plugin and hides the overlapping personal skill names with `skillOverrides`.
+- Codex: paste [codex-t3-launch-args.txt](../../config/t3-pstack/codex-t3-launch-args.txt) into **Launch arguments**. It enables `t3-pstack@t3-pstack` and disables the personal pstack skills by their canonical `SKILL.md` paths.
+- Claude: set **Binary path** to `/Users/bram/Projects/agent-scripts/scripts/t3-claude` and leave **Launch arguments** empty. The launcher merges [claude-t3-settings.json](../../config/t3-pstack/claude-t3-settings.json) into the SDK's settings. It enables the plugin and hides overlapping personal skill names with `skillOverrides`, while preserving model options and unrelated settings.
+
+Claude needs the launcher because T3's SDK supplies its own `--settings` value for model options. A `--settings` file supplied through Launch arguments is overwritten by the SDK. The launcher combines them at the final process boundary and calls the normal `claude` executable from `PATH`. Terminal sessions continue to call that normal executable directly.
 
 The Codex preset contains absolute paths for this checkout, including an extra local `teach` copy. Regenerate its paths if the checkout moves or personal pstack copies change. Review both presets after a pstack update adds or renames skills.
 

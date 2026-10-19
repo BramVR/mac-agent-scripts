@@ -4,6 +4,9 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 
 # Changelog
 
+## Unreleased
+- Isolated T3 plugin pstack from personal terminal skills with per-provider presets and a Claude launcher that preserves SDK settings.
+
 ## 2026-10-11: PStack workflow and guide refresh
 - Ported PStack 0.15.17 through `978ca6e9c0`, preserving all existing models, efforts, panel sizes, aliases, fallback policy, and executable helpers.
 - Added explicitly invoked `poteto-help` and `ketchup`, prompting references, and the ten-page PStack guide with upstream images.
