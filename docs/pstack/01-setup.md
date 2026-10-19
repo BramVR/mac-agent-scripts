@@ -29,6 +29,19 @@ You only override what you care about. A role with no line in the rule keeps the
 
 You might be wondering what happens if you use Auto. Set a role to `inherit-parent` or `auto` and pstack omits the subagent `model` field, so the subagent inherits your parent chat model. Both values mean the same thing, and neither is a model slug. For a panel role the value is a list, and one subagent runs per entry, so the list length sets the panel size. Setup also configures `swarm workers`, the default model for every `$swarm` worker unless a race names a model for each arm.
 
+## Use separate profiles in T3
+
+The `t3-pstack` plugin normally shares one model sheet across Claude and Codex. The routing rule in [AGENTS.MD](../../AGENTS.MD) overrides that selection for this setup:
+
+- Codex chats read `${CODEX_HOME:-$HOME/.codex}/t3-pstack-models.md`, linked to [the Codex profile](../../config/t3-pstack/codex-models.md).
+- Claude chats read `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/t3-pstack-models.md`, linked to [the Claude profile](../../config/t3-pstack/claude-models.md).
+
+Both profiles live in this repository. Each profile has its own role models, reasoning settings, and panels. Setup changes only the current host's resolved profile. Keep both host links separate when rerunning the plugin's setup, which normally links both hosts to its shared sheet.
+
+The Codex profile preserves the local Codex choices in T3 target syntax. Mixed panels still dispatch Claude entries through `claudeAgent` and GPT entries through `codex`. Standalone Codex continues to use the local port's role file above.
+
+This selection is a user-instruction override, not a change to the plugin. It requires the shared `AGENTS.MD` routing rule to be loaded. Start a new chat after changing that rule.
+
 ## Accept the verification offer, or don't
 
 At the end of setup, `$setup-pstack` looks for a way to prove app behavior in your project, either a `verify-*` skill or an existing harness. If it finds neither, it offers once to generate one with [`$create-verification-skill`](../../skills/create-verification-skill/SKILL.md).
