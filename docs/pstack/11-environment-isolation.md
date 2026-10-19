@@ -22,4 +22,3 @@ Verify a fresh T3 runtime advertises `t3-pstack:poteto-mode`, hides bare `poteto
 Only after that T3 check passes, disable `t3-pstack@t3-pstack` in each harness's normal user configuration. For Codex, set `enabled = false` under `[plugins."t3-pstack@t3-pstack"]` in `~/.codex/config.toml`. For Claude, run `claude plugin disable t3-pstack@t3-pstack --scope user`. T3's launch overrides enable it for T3 sessions. Verify a fresh terminal session has personal pstack, no plugin pstack, and custom skills.
 
 Codex's CLI override key is `plugins.t3-pstack@t3-pstack.enabled=true`, without embedded quotes around the plugin ID. The CLI splits the key on dots; TOML table-header quoting does not apply there.
-
