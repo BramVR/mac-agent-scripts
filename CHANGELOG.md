@@ -5,6 +5,7 @@ summary: Timeline of guardrail helper changes mirrored from Sweetistics and rela
 # Changelog
 
 ## Unreleased
+- Added `statechart-report`: renders `t3-pstack:statechart` output as an interactive Pele report (Field Notes theme) with per-failure step replay, rule status, TLC traces, and bounds.
 - Isolated T3 plugin pstack from personal terminal skills with per-provider presets and a Claude launcher that preserves SDK settings.
 
 ## 2026-10-11: PStack workflow and guide refresh

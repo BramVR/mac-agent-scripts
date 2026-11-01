@@ -1,0 +1,4 @@
+interface:
+  display_name: "Statechart Report"
+  short_description: "Interactive report for statechart model-check results"
+  default_prompt: "Use $statechart-report to show these statechart results as an interactive report."

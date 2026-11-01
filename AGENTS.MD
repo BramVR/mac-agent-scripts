@@ -28,6 +28,7 @@ Codex CLI output: avoid Markdown tables by default; they render poorly there. Us
 
 - T3 pstack: separate role profiles per chat harness. Codex reads `${CODEX_HOME:-$HOME/.codex}/t3-pstack-models.md`; Claude reads `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/t3-pstack-models.md`. Host profile overrides plugin instructions to prefer the shared `~/.config/t3-pstack/models.md`; shared sheet is fallback only when host profile is absent. Use T3 provider targets from that profile, including intentional mixed panels.
 - T3 pstack setup: update only the current host's resolved profile; preserve the other host's choices. Never relink an independent host profile to the shared sheet. Profile sources: `~/Projects/agent-scripts/config/t3-pstack/codex-models.md` and `claude-models.md` in that directory.
+- `t3-pstack:statechart` results: after its hand-off, run `$statechart-report` on the `--out` folder; show via T3 `html_preview` then `html_render`.
 - Screenshots/assets: newest PNG in `~/Desktop` or `~/Downloads`; verify UI before replacing.
 - Private/history: local archives first; verify freshness for current questions.
 - Secrets: check `~/.profile` anytime you need an API key or for e2e testing; `$one-password` for op/1Password.
