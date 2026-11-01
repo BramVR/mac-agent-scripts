@@ -246,7 +246,7 @@ lists.forEach(function(l,i){l.hidden=i!==sel});
 lists[sel].querySelectorAll('li').forEach(function(li,i){li.classList.toggle('cur',i===cur)});
 all('g.pele-node,g.pele-edge,g.pele-edge-label').forEach(function(g){g.classList.remove('rp-off','rp-path','rp-cur','rp-bad')});
 var pn=[],pe=[];r.steps.slice(0,cur+1).forEach(function(x){pn=pn.concat(x.nodes);pe=pe.concat(x.edges)});
-if(s.nodes.length){all('g.pele-node:not([data-id^="lg"]),g.pele-edge,g.pele-edge-label').forEach(function(g){g.classList.add('rp-off')});
+if(s.nodes.length&&svg){all('g.pele-node:not([data-id^="lg"]),g.pele-edge,g.pele-edge-label').forEach(function(g){g.classList.add('rp-off')});
 mark(pn,'rp-path');mark(pe,'rp-path');pn.concat(pe).forEach(function(id){all('[data-id="'+id+'"]').forEach(function(g){g.classList.remove('rp-off')})});
 mark(s.nodes,'rp-cur');mark(s.edges,'rp-cur');if(cur===r.steps.length-1)mark(s.nodes,'rp-bad');
 var box=svg.parentNode,g=svg.querySelector('g.pele-node.rp-cur');if(g&&box.scrollWidth>box.clientWidth){var b=g.getBoundingClientRect(),c=box.getBoundingClientRect();box.scrollLeft+=b.left+b.width/2-(c.left+c.width/2)}}

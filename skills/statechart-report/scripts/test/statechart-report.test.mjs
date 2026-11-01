@@ -226,3 +226,16 @@ test("the initial-states caveat appears once, in its own rule's row", async () =
   const { doc } = await page("InitOnlyUnchecked");
   assert.equal(doc.match(/TLC checked Shade only in the initial states/g).length, 1);
 });
+
+test("the replay still steps through when Pele could not draw the chart", () => {
+  const input = load(fixture("TwoPhase"));
+  const { JSDOM, VirtualConsole } = jsdom();
+  const errors = [];
+  const virtualConsole = new VirtualConsole();
+  virtualConsole.on("jsdomError", (e) => errors.push(e.message));
+  const { window } = new JSDOM(html(model(input), undefined, { message: "PeleError", mmd: input.mmd }), { runScripts: "dangerously", virtualConsole });
+  const d = window.document;
+  d.getElementById("next").click();
+  assert.deepEqual(errors, []);
+  assert.equal(d.getElementById("pos").textContent, "Step 1 of 5");
+});
