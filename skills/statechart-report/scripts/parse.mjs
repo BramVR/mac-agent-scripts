@@ -37,13 +37,17 @@ export function parseChart(text) {
     } else if ((m = line.match(/^class (\w+) (\w+)$/))) nodes.get(m[1])?.classes.add(m[2]);
     else if ((m = line.match(/^(\w+): (.*)$/)) && top()?.id !== "legend") {
       const path = [];
+      const parents = [];
       let region;
       for (let b = top(); b; b = b.parent) {
         if (b.parent?.id === "all") region = b;
-        else if (b.id !== "all" && !region) path.unshift(b.label);
+        else if (b.id !== "all" && !region) {
+          path.unshift(b.label);
+          parents.push(b.id);
+        }
       }
       path.push(decode(m[2]));
-      nodes.set(m[1], { id: m[1], key: path.join(" / "), region: region?.label, classes: new Set() });
+      nodes.set(m[1], { id: m[1], key: path.join(" / "), region: region?.label, parents, classes: new Set() });
     }
   }
   const byKey = new Map();
@@ -57,7 +61,8 @@ export function resolveState(chart, s) {
   if (!chart) return null;
   const find = (region, key) => chart.byKey.get(`${region ?? ""}\u0000${key}`);
   if (!chart.regions.length) {
-    const id = find(undefined, s);
+    // A view with one region still prefixes its name ("Count 1"), but the chart draws no region box.
+    const id = find(undefined, s) ?? find(undefined, s.slice(s.indexOf(" ") + 1));
     return id ? [id] : null;
   }
   const walk = (rest, i) => {
@@ -109,6 +114,12 @@ export function parseReport(text) {
       add(m[1], "breaks", { raw: steps, loop, traceFile, offChart: steps.length === 0 });
     } else if (title === "Rules that hold") {
       for (const n of splitList(lines[0] ?? "")) add(n, "holds");
+      for (const l of lines.slice(1)) {
+        const only = l.match(/^TLC checked (\S+) only in the initial states/);
+        const rule = only && report.rules.find((r) => r.name === only[1]);
+        if (rule) rule.initialOnly = l;
+        else report.notes.push(l);
+      }
     } else if (title === "Rules not checked") {
       for (const n of splitList(lines[0] ?? "")) add(n, "not checked");
       const rest = lines.slice(1).join("\n");
@@ -157,10 +168,15 @@ export function parseTlc(text) {
     } else if ((m = line.match(/^State (\d+): (.*)$/))) {
       cur = { n: Number(m[1]), ...action(m[2]), vars: [] };
       out.trace.push(cur);
-    } else if (cur && (m = line.match(/^\/\\ (\w+) = (.*)$/))) cur.vars.push([m[1], m[2]]);
+    } else if (cur && (m = line.match(/^(?:\/\\ )?(\w+) = (.*)$/)) && (!cur.vars.length || line.startsWith("/\\ ")))
+      // A spec with one variable prints "x = 0" without the conjunction prefix.
+      cur.vars.push([m[1], m[2]]);
     else if (cur && line.trim() && cur.vars.length) cur.vars.at(-1)[1] += `\n${line}`;
     else if (!line.trim()) cur = undefined;
-    else if (/^Back to state/.test(line)) out.trace.push({ n: 0, action: line, vars: [] });
+    else if ((m = line.match(/^Back to state (\d+)/))) {
+      out.backTo = Number(m[1]);
+      out.trace.push({ n: 0, action: line, vars: [] });
+    }
   }
   const rule = out.error?.match(/(?:Invariant|Action property) (\S+) is violated/);
   out.rule = rule?.[1];
@@ -177,7 +193,7 @@ function action(text) {
 export function parseConfig(text) {
   const sections = {};
   let key;
-  for (const raw of text.replace(/\\\*.*$/gm, "").split("\n")) {
+  for (const raw of text.replace(/\(\*[\s\S]*?\*\)/g, "").replace(/\\\*.*$/gm, "").split("\n")) {
     const line = raw.trim();
     if (!line) continue;
     const m = line.match(/^([A-Z_]+)\b\s*(.*)$/);

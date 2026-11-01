@@ -23,7 +23,7 @@ Writes into `OUT_DIR`:
 - `report.embed.html`: same page for T3 `html_render`, drawn as one rounded paper card with no page background.
 - `chart.svg`: `chart.mmd` rendered with Pele, using the statechart skill's `references/render.md` mark classes in Flexoki light and dark colors.
 
-`--config` defaults to `SPEC.cfg` beside the spec path TLC printed in `tlc.out`. Pass it when the spec folder moved.
+Pass the same `--config` the statechart run used. Without it, the report shows `SPEC.cfg` beside the spec path in `tlc.out` and labels it as assumed.
 
 ## Show
 

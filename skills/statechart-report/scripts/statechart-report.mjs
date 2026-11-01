@@ -53,7 +53,9 @@ export function load(dir, configFile) {
     chart: mmd ? parseChart(mmd) : undefined,
     traces,
     specs,
-    config: cfgText ? { name: path.basename(cfgPath), text: cfgText, ...parseConfig(cfgText) } : undefined,
+    config: cfgText
+      ? { name: path.basename(cfgPath), text: cfgText, assumed: !configFile, ...parseConfig(cfgText) }
+      : undefined,
   };
 }
 
@@ -80,32 +82,34 @@ function traceFor(traces, rule, isDeadlock) {
 function transitions(chart, from, to, label) {
   const changes = [];
   const edges = [];
+  // An arrow can start or end on a parent state that holds the leaf.
+  const within = (end, id) => end === id || chart.nodes.get(id).parents.includes(end);
+  const strip = (l) => l.replace(/ \[[^\]]*\]$/, "");
+  const named = (e) => strip(e.label).split(" or ").includes(strip(label));
   for (const [i, a] of from.entries()) {
     const b = to[i];
     if (a === b) continue;
     changes.push({ region: chart.regions[i], from: chart.nodes.get(a).key, to: chart.nodes.get(b).key });
-    const all = chart.edges.filter((e) => e.from === a && e.to === b);
-    const named = all.filter((e) =>
-      e.label
-        .replace(/ \[[^\]]*\]$/, "")
-        .split(" or ")
-        .includes(label.replace(/ \[[^\]]*\]$/, "")),
-    );
-    edges.push(...(named.length ? named : all).map((e) => e.id));
+    const all = chart.edges.filter((e) => within(e.from, a) && within(e.to, b));
+    edges.push(...(all.some(named) ? all.filter(named) : all).map((e) => e.id));
   }
+  // A step that keeps every label shows only when the chart draws it as a loop with the step's label.
+  if (!changes.length)
+    for (const a of from) edges.push(...chart.edges.filter((e) => within(e.from, a) && within(e.to, a) && named(e)).map((e) => e.id));
   return { changes, edges };
 }
 
 export function model({ report, chart, traces, specs, config }) {
-  const deadlockNames = new Set(["NoDeadlock", "CHECK_DEADLOCK"]);
   const known = new Set(report.rules.map((r) => r.name));
+  // The statechart command names the deadlock rule CHECK_DEADLOCK when the spec already has a NoDeadlock rule.
+  const deadlockName = known.has("CHECK_DEADLOCK") ? "CHECK_DEADLOCK" : "NoDeadlock";
   const rules = report.rules.map((r) => ({ ...r }));
   for (const name of config?.rules ?? [])
     if (!known.has(name)) rules.push({ name, status: "unavailable" });
   for (const r of rules) {
     r.source = definition(specs, r.name);
     if (r.status !== "breaks") continue;
-    const trace = traceFor(traces, r, deadlockNames.has(r.name));
+    const trace = traceFor(traces, r, r.name === deadlockName);
     if (trace)
       r.trace = {
         file: trace.file,
@@ -120,7 +124,11 @@ export function model({ report, chart, traces, specs, config }) {
     const quoted = new Set([...(r.loop ?? "").matchAll(/"([^"]+)"/g)].map((m) => m[1]));
     const steps = (r.raw ?? []).map((line, i) => splitStep(chart, line, i === 0));
     let loopStart;
-    if (r.loop)
+    const back = trace?.trace.length === steps.length && trace.backTo;
+    const stutters = trace?.trace.length === steps.length + 1 && trace.trace.at(-1).action === "Stuttering";
+    if (r.loop && back) loopStart = back - 1;
+    else if (r.loop && stutters) loopStart = steps.length - 1;
+    else if (r.loop)
       for (let i = steps.length - 1; i >= 0 && quoted.has(steps[i].state); i--) loopStart = i;
     r.loopStart = loopStart;
     r.steps = steps.map((s, i) => {
@@ -130,13 +138,13 @@ export function model({ report, chart, traces, specs, config }) {
       const notes = [];
       if (!chart) notes.push("No chart.mmd, so this step has no chart position.");
       else if (!nodes) notes.push("This state is not in the chart.");
-      else if (i > 0 && prev && !t.changes.length)
+      else if (i > 0 && prev && !t.changes.length && !t.edges.length)
         notes.push("No chart label changes in this step, so the chart draws no arrow for it.");
       else if (t.changes.length && !t.edges.length) notes.push("The chart hides the arrow for this step.");
       if (loopStart !== undefined && i === loopStart)
-        notes.push(steps.length - 1 === i && r.loop?.includes("stops in") ? r.loop : `From here: ${r.loop}`);
+        notes.push(`${steps.length - 1 === i && r.loop?.includes("stops in") ? r.loop : `From here: ${r.loop}`} So ${r.name} breaks.`);
       if (i === steps.length - 1 && loopStart === undefined)
-        notes.push(deadlockNames.has(r.name) ? `No step leads out of this state, so ${r.name} breaks.` : `${r.name} breaks here.`);
+        notes.push(r.name === deadlockName ? `No step leads out of this state, so ${r.name} breaks.` : `${r.name} breaks here.`);
       return { ...s, nodes: nodes ?? [], edges: t.edges, changes: t.changes, notes };
     });
     delete r.raw;
@@ -150,7 +158,7 @@ export function model({ report, chart, traces, specs, config }) {
     stopped: report.stopped,
     rules,
     tlc: main && { version: main.version, workers: main.workers, facts: main.facts },
-    config: config && { name: config.name, text: config.text, sections: config.sections },
+    config: config && { name: config.name, text: config.text, sections: config.sections, assumed: config.assumed },
   };
 }
 
@@ -248,14 +256,14 @@ document.getElementById('controls').hidden=false;show();
 
 function rulesTable(m) {
   const rows = m.rules.map((r) => {
-    const [label, meaning] = STATUS[r.status];
+    const [label, meaning] = r.initialOnly ? ["Holds in initial states", r.initialOnly] : STATUS[r.status];
     const detail =
       r.status === "breaks"
         ? r.offChart
           ? `Counterexample in ${r.traceFile ?? "a tlc-RULE.out file"}; report.md gives no chart path.`
-          : `Shortest path: ${r.steps.length - 1} step${r.steps.length === 2 ? "" : "s"}.${r.loop ? ` ${r.loop}` : ""}`
+          : `${r.traceFile ? `TLC's counterexample in ${r.traceFile}` : "Shortest path in TLC's state graph"}: ${r.steps.length - 1} step${r.steps.length === 2 ? "" : "s"}.${r.loop ? ` ${r.loop}` : ""}`
         : meaning;
-    return `<tr><td class="mono">${esc(r.name)}</td><td><span class="chip s-${r.status.replace(" ", "-")}">${label}</span></td><td>${esc(detail)}</td><td class="mono">${esc(r.source ?? "")}</td></tr>`;
+    return `<tr><td class="mono">${esc(r.name)}</td><td><span class="chip s-${r.initialOnly ? "not-checked" : r.status.replace(" ", "-")}">${label}</span></td><td>${esc(detail)}</td><td class="mono">${esc(r.source ?? "")}</td></tr>`;
   });
   return `<table><thead><tr><th>Rule</th><th>Result</th><th>Meaning</th><th>Defined at</th></tr></thead><tbody>${rows.join("")}</tbody></table>`;
 }
@@ -298,7 +306,7 @@ export function html(m, svg, chartError, embed = false) {
     : `<div class="panel">${chartError ? `Pele could not render chart.mmd: <code>${esc(chartError.message)}</code><pre>${esc(chartError.mmd)}</pre>` : "No chart.mmd in this folder. The statechart command writes none above 500 states when every rule holds."}</div>`;
   const replay = fails.length
     ? `<section id="replay"><h2>Failure replay</h2>
-<p class="sub">Each step is one step of the shortest path that the statechart command took from TLC's state graph. The chart groups model states under one label, so a step can stay in one chart state.</p>
+<p class="sub">Each step comes from report.md: the shortest path in TLC's state graph for an invariant, or TLC's own counterexample for a property. The chart groups model states under one label, so a step can stay in one chart state.</p>
 <div id="controls" class="controls" hidden><span role="tablist">${fails.map((r) => `<button role="tab" data-rule="${esc(r.name)}">${esc(r.name)}</button>`).join(" ")}</span>
 <button id="prev" type="button">Previous</button><button id="next" type="button">Next</button><span id="pos" class="mono"></span></div>
 <div id="explain" class="panel explain" aria-live="polite"></div>
@@ -309,7 +317,7 @@ ${fails.map((r) => `<div class="failure"><h3>${esc(r.name)} breaks</h3><ol class
   const offChart = m.rules.filter((r) => r.status === "breaks" && !r.steps?.length);
   const traced = m.rules.filter((r) => r.status === "breaks");
   const cfg = m.config
-    ? `<p class="sub">Config ${esc(m.config.name)}. ${["CONSTANT", "CONSTRAINT", "ACTION_CONSTRAINT", "VIEW", "SYMMETRY"].some((k) => m.config.sections[k]) ? "" : "No CONSTANT, CONSTRAINT, VIEW, or SYMMETRY lines."}</p><pre>${esc(m.config.text.trim())}</pre>`
+    ? `<p class="sub">${m.config.assumed ? `Assumed config ${esc(m.config.name)}, the default beside the spec. If the statechart run used --config, rerun this report with the same --config.` : `Config ${esc(m.config.name)}.`} ${["CONSTANT", "CONSTRAINT", "ACTION_CONSTRAINT", "VIEW", "SYMMETRY"].some((k) => m.config.sections[k]) ? "" : "No CONSTANT, CONSTRAINT, VIEW, or SYMMETRY lines."}</p><pre>${esc(m.config.text.trim())}</pre>`
     : `<p class="sub">No config found next to the spec, so bounds come only from report.md and tlc.out.</p>`;
   const tlc = m.tlc
     ? `<ul>${[m.tlc.version, m.tlc.workers && `${m.tlc.workers} worker`, ...m.tlc.facts].filter(Boolean).map((f) => `<li>${esc(f)}</li>`).join("")}</ul>`

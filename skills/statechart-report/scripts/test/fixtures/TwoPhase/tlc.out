@@ -2,7 +2,7 @@ TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
 Warning: Please run the Java VM which executes TLC with a throughput optimized garbage collector by passing the "-XX:+UseParallelGC" property.
 (Use the -nowarning option to disable this warning.)
 Running breadth-first search Model-Checking with fp 0 and seed -489604121870210736 with 1 worker on 18 cores with 12288MB heap and 64MB offheap memory [pid] (host).
-Parsing file /spec-not-copied/TwoPhase/TwoPhase.tla
+Parsing file /spec-not-copied/TwoPhase.tla
 Semantic processing of module TwoPhase
 Starting... (2026-11-01 11:06:41)
 Computing initial states...

@@ -6,6 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
+import { parseConfig } from "../parse.mjs";
 import { html, load, loadPele, model } from "../statechart-report.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -87,4 +88,64 @@ test("Previous and Next walk the checker path on the rendered chart", async () =
   assert.equal(d.getElementById("next").disabled, true);
   assert.deepEqual([...d.querySelectorAll("g.pele-node.rp-bad")].map((g) => g.dataset.id), ["s1", "s5", "s8"]);
   assert.equal(d.getElementById("pos").textContent, "Step 5 of 5");
+});
+
+test("a rule TLC checked only in the initial states is not shown as checked everywhere", async () => {
+  const { m, doc } = await page("Shadow");
+  const shade = m.rules.find((r) => r.name === "Shade");
+  assert.match(shade.initialOnly, /only in the initial states/);
+  assert.match(doc, /Holds in initial states<\/span><\/td><td>TLC checked Shade only in the initial states/);
+});
+
+test("a user invariant named NoDeadlock is not described as a deadlock", () => {
+  const m = model(load(fixture("UserNoDeadlock")));
+  const user = m.rules.find((r) => r.name === "NoDeadlock");
+  const deadlock = m.rules.find((r) => r.name === "CHECK_DEADLOCK");
+  assert.deepEqual(user.steps.at(-1).notes, ["NoDeadlock breaks here."]);
+  assert.match(deadlock.steps.at(-1).notes.join(" "), /No step leads out/);
+});
+
+test("a looping counterexample starts its loop where TLC goes back to, and keeps single-variable values", () => {
+  const r = model(load(fixture("CounterLoopView"))).rules.find((x) => x.name === "ReachesThree");
+  assert.equal(r.loopStart, 1);
+  assert.match(r.steps[1].notes.join(" "), /From here: The run loops .* So ReachesThree breaks\./);
+  assert.deepEqual(r.trace.states.slice(0, 3).map((s) => s.vars), [[["x", "0"]], [["x", "1"]], [["x", "2"]]]);
+});
+
+test("an arrow drawn from a parent state is highlighted, not reported as hidden", () => {
+  const r = model(load(fixture("LoginReset"))).rules.find((x) => x.name === "NoResetEmail");
+  const last = r.steps.at(-1);
+  assert.deepEqual(last.edges, ["edge14"]);
+  assert.doesNotMatch(last.notes.join(" "), /hides the arrow/);
+});
+
+test("block comments in the config do not become rules", () => {
+  assert.deepEqual(parseConfig("SPECIFICATION Spec\nINVARIANT\n  TypeOK (* shape *)\n  LoudWhenStopped\n").rules, ["TypeOK", "LoudWhenStopped"]);
+});
+
+test("a config the user did not pass is labelled as assumed", () => {
+  const m = model(load(fixture("MediaPlayerFixed")));
+  m.config = { name: "Spec.cfg", text: "CONSTANT N = 2", sections: { CONSTANT: ["N = 2"] }, assumed: true };
+  assert.match(html(m), /Assumed config Spec\.cfg/);
+  m.config.assumed = false;
+  assert.doesNotMatch(html(m), /Assumed config/);
+});
+
+test("a one-region view resolves its prefixed states to chart nodes", () => {
+  const r = model(load(fixture("SingleRegion"))).rules.find((x) => x.name === "ReachesThree");
+  assert.deepEqual(r.steps.map((s) => s.nodes), [["s0"], ["s1"], ["s2"], ["s1"]]);
+  assert.deepEqual(r.steps.map((s) => s.edges), [[], ["edge1"], ["edge2"], ["edge3"]]);
+});
+
+test("a step drawn as a self-loop highlights that loop", () => {
+  const r = model(load(fixture("CollapsedLoop"))).rules.find((x) => x.name === "ReachesThree");
+  assert.deepEqual(r.steps.slice(1).map((s) => s.edges), [["edge1"], ["edge1"], ["edge1"]]);
+  assert.doesNotMatch(r.steps.flatMap((s) => s.notes).join(" "), /draws no arrow/);
+});
+
+test("a property counterexample is labelled as TLC's counterexample, not a shortest path", async () => {
+  const { doc } = await page("CounterLoopView");
+  assert.match(doc, /TLC&#39;s counterexample in tlc-ReachesThree\.out: 3 steps\./);
+  const { doc: invariant } = await page("TwoPhase");
+  assert.match(invariant, /Shortest path in TLC&#39;s state graph: 5 steps\./);
 });
