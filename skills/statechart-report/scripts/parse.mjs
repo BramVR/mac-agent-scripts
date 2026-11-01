@@ -61,8 +61,7 @@ export function resolveState(chart, s) {
   if (!chart) return null;
   const find = (region, key) => chart.byKey.get(`${region ?? ""}\u0000${key}`);
   if (!chart.regions.length) {
-    // A view with one region still prefixes its name ("Count 1"), but the chart draws no region box.
-    const id = find(undefined, s) ?? find(undefined, s.slice(s.indexOf(" ") + 1));
+    const id = find(undefined, s) ?? (chart.prefix && s.startsWith(chart.prefix) && find(undefined, s.slice(chart.prefix.length)));
     return id ? [id] : null;
   }
   const walk = (rest, i) => {
@@ -85,6 +84,18 @@ export function resolveState(chart, s) {
 }
 
 const splitList = (s) => s.split(/,\s*/).filter(Boolean);
+const INITIAL_ONLY = /^TLC checked (\S+) only in the initial states/;
+
+// A view with one region names it in report.md ("Current count 1"), but the
+// chart draws no region box. Learn that name once from a path's start state.
+export function learnPrefix(chart, start) {
+  if (!chart || chart.regions.length || resolveState(chart, start)) return;
+  for (let at = start.indexOf(" "); at >= 0; at = start.indexOf(" ", at + 1))
+    if (chart.byKey.has(`\u0000${start.slice(at + 1)}`)) {
+      chart.prefix = start.slice(0, at + 1);
+      return;
+    }
+}
 
 export function parseReport(text) {
   const [head, ...sections] = text.split(/^## /m);
@@ -114,12 +125,7 @@ export function parseReport(text) {
       add(m[1], "breaks", { raw: steps, loop, traceFile, offChart: steps.length === 0 });
     } else if (title === "Rules that hold") {
       for (const n of splitList(lines[0] ?? "")) add(n, "holds");
-      for (const l of lines.slice(1)) {
-        const only = l.match(/^TLC checked (\S+) only in the initial states/);
-        const rule = only && report.rules.find((r) => r.name === only[1]);
-        if (rule) rule.initialOnly = l;
-        else report.notes.push(l);
-      }
+      report.notes.push(...lines.slice(1).filter((l) => !INITIAL_ONLY.test(l)));
     } else if (title === "Rules not checked") {
       for (const n of splitList(lines[0] ?? "")) add(n, "not checked");
       const rest = lines.slice(1).join("\n");
@@ -129,7 +135,12 @@ export function parseReport(text) {
     } else if (title === "TLC stopped") {
       const fence = body.join("\n").match(/exit (\S+?):\s*```\n([\s\S]*?)```/);
       report.stopped = { status: fence?.[1], message: fence?.[2].trim() ?? lines.join("\n") };
-    } else report.notes.push(`${title}: ${lines.join(" ")}`);
+    } else report.notes.push(`${title}: ${lines.filter((l) => !INITIAL_ONLY.test(l)).join(" ")}`);
+  }
+  // report.md appends these lines at its end, after whichever section came last.
+  for (const l of text.split("\n")) {
+    const rule = report.rules.find((r) => r.name === l.match(INITIAL_ONLY)?.[1] && r.status === "holds");
+    if (rule) Object.assign(rule, { status: "holds initially", initialOnly: l });
   }
   return report;
 }
@@ -193,7 +204,10 @@ function action(text) {
 export function parseConfig(text) {
   const sections = {};
   let key;
-  for (const raw of text.replace(/\(\*[\s\S]*?\*\)/g, "").replace(/\\\*.*$/gm, "").split("\n")) {
+  let bare = text;
+  // TLC block comments nest, so strip the innermost one until none is left.
+  for (let prev; prev !== bare; ) [prev, bare] = [bare, bare.replace(/\(\*(?:(?!\(\*|\*\))[\s\S])*\*\)/g, "")];
+  for (const raw of bare.replace(/\\\*.*$/gm, "").split("\n")) {
     const line = raw.trim();
     if (!line) continue;
     const m = line.match(/^([A-Z_]+)\b\s*(.*)$/);

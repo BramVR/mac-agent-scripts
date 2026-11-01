@@ -6,7 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
-import { parseChart, parseConfig, parseReport, parseTlc, resolveState, splitStep } from "./parse.mjs";
+import { learnPrefix, parseChart, parseConfig, parseReport, parseTlc, resolveState, splitStep } from "./parse.mjs";
 
 const USAGE = `Usage: statechart-report.mjs OUT_DIR [--config FILE] [--html FILE] [--svg FILE]
 
@@ -47,6 +47,7 @@ export function load(dir, configFile) {
   const main = files.find((f) => path.basename(f, ".tla") === report.module) ?? files[0];
   const cfgPath = configFile ?? (main && main.replace(/\.tla$/, ".cfg"));
   const cfgText = cfgPath && read(cfgPath);
+  if (configFile && cfgText === undefined) fail(`--config ${configFile} does not exist`);
   return {
     report,
     mmd,
@@ -85,7 +86,8 @@ function transitions(chart, from, to, label) {
   // An arrow can start or end on a parent state that holds the leaf.
   const within = (end, id) => end === id || chart.nodes.get(id).parents.includes(end);
   const strip = (l) => l.replace(/ \[[^\]]*\]$/, "");
-  const named = (e) => strip(e.label).split(" or ").includes(strip(label));
+  // Merged arrows join labels with " or ", but a label can also contain the phrase itself.
+  const named = (e) => strip(e.label) === strip(label) || strip(e.label).split(" or ").includes(strip(label));
   for (const [i, a] of from.entries()) {
     const b = to[i];
     if (a === b) continue;
@@ -102,7 +104,10 @@ function transitions(chart, from, to, label) {
 export function model({ report, chart, traces, specs, config }) {
   const known = new Set(report.rules.map((r) => r.name));
   // The statechart command names the deadlock rule CHECK_DEADLOCK when the spec already has a NoDeadlock rule.
-  const deadlockName = known.has("CHECK_DEADLOCK") ? "CHECK_DEADLOCK" : "NoDeadlock";
+  // A NoDeadlock that the config lists, or that TLC reports as an invariant, is the user's own rule.
+  const userNoDeadlock = config?.rules.includes("NoDeadlock") || traces.get("tlc.out")?.rule === "NoDeadlock";
+  const deadlockName = known.has("CHECK_DEADLOCK") || userNoDeadlock ? "CHECK_DEADLOCK" : "NoDeadlock";
+  for (const r of report.rules) if (r.raw?.length) learnPrefix(chart, r.raw[0]);
   const rules = report.rules.map((r) => ({ ...r }));
   for (const name of config?.rules ?? [])
     if (!known.has(name)) rules.push({ name, status: "unavailable" });
@@ -168,6 +173,7 @@ const esc = (s) =>
 const STATUS = {
   breaks: ["Breaks", "TLC found a counterexample."],
   holds: ["Holds", "TLC checked every reachable state of this bounded model."],
+  "holds initially": ["Holds in initial states", "TLC checked this rule only in the initial states."],
   "not checked": ["Not checked", "TLC did not finish checking this rule. It can hold or break."],
   unavailable: ["No result", "The config lists this rule, but report.md gives no result for it."],
 };
@@ -190,7 +196,7 @@ const PAGE_CSS = `:root{--bg:#fffcf0;--fg:#100f0f;--mute:#6f6e69;--panel:#f2f0e5
 main{max-width:1200px;margin:0 auto;padding:24px 20px 48px;background:var(--bg);color:var(--fg)}h1{font-size:24px;font-weight:600;margin:0 0 4px}h2{font-size:17px;font-weight:600;margin:30px 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px}h3{font-size:15px;font-weight:600}
 .sub{color:var(--mute);margin:0 0 12px}code,pre,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px}pre{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px;overflow:auto;white-space:pre-wrap}
 .chips{display:flex;flex-wrap:wrap;gap:8px}.chip{border-radius:3px;padding:1px 9px;font:13px/1.6 var(--sans);background:var(--panel);color:var(--na)}
-.s-breaks{background:var(--bad-bg);color:var(--bad)}.s-holds{background:var(--ok-bg);color:var(--ok)}.s-not-checked{background:var(--warn-bg);color:var(--warn)}.s-unavailable{background:transparent;color:var(--na);outline:1px dashed var(--edge)}
+.s-breaks{background:var(--bad-bg);color:var(--bad)}.s-holds{background:var(--ok-bg);color:var(--ok)}.s-not-checked,.s-holds-initially{background:var(--warn-bg);color:var(--warn)}.s-unavailable{background:transparent;color:var(--na);outline:1px dashed var(--edge)}
 table{border-collapse:collapse;width:100%}td,th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--mute);font:500 13px var(--sans)}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px}
 .chart{overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:16px;margin:10px 0}
@@ -256,14 +262,15 @@ document.getElementById('controls').hidden=false;show();
 
 function rulesTable(m) {
   const rows = m.rules.map((r) => {
-    const [label, meaning] = r.initialOnly ? ["Holds in initial states", r.initialOnly] : STATUS[r.status];
+    const [label, generic] = STATUS[r.status];
+    const meaning = r.initialOnly ?? generic;
     const detail =
       r.status === "breaks"
         ? r.offChart
           ? `Counterexample in ${r.traceFile ?? "a tlc-RULE.out file"}; report.md gives no chart path.`
           : `${r.traceFile ? `TLC's counterexample in ${r.traceFile}` : "Shortest path in TLC's state graph"}: ${r.steps.length - 1} step${r.steps.length === 2 ? "" : "s"}.${r.loop ? ` ${r.loop}` : ""}`
         : meaning;
-    return `<tr><td class="mono">${esc(r.name)}</td><td><span class="chip s-${r.initialOnly ? "not-checked" : r.status.replace(" ", "-")}">${label}</span></td><td>${esc(detail)}</td><td class="mono">${esc(r.source ?? "")}</td></tr>`;
+    return `<tr><td class="mono">${esc(r.name)}</td><td><span class="chip s-${r.status.replace(" ", "-")}">${label}</span></td><td>${esc(detail)}</td><td class="mono">${esc(r.source ?? "")}</td></tr>`;
   });
   return `<table><thead><tr><th>Rule</th><th>Result</th><th>Meaning</th><th>Defined at</th></tr></thead><tbody>${rows.join("")}</tbody></table>`;
 }
@@ -288,7 +295,7 @@ function rawTrace(r) {
     return `<tr><td>${s.n || ""}</td><td class="mono">${esc(s.action)}</td><td class="mono">${esc(s.source ?? "")}</td><td class="mono">${vars}</td></tr>`;
   });
   return `<details><summary>TLC's printed counterexample for ${esc(r.name)} (${esc(r.trace.file)}: ${esc(r.trace.error ?? "")})</summary>
-<p class="sub">Raw TLC output. When this differs from the replay above, both are shortest paths that TLC found. The replay follows report.md, the path the chart marks.</p>
+<p class="sub">Raw TLC output. When this differs from the replay above, both are real paths that TLC found. The replay follows report.md, the path the chart marks.</p>
 <table><thead><tr><th>#</th><th>Action</th><th>Source</th><th>Values (changes in bold blue)</th></tr></thead><tbody>${rows.join("")}</tbody></table></details>`;
 }
 
@@ -374,8 +381,12 @@ async function main() {
   }
   const by = (s) => m.rules.filter((r) => r.status === s).map((r) => r.name);
   console.error(
-    `breaks: ${by("breaks").join(", ") || "none"}; holds: ${by("holds").join(", ") || "none"}; not checked: ${by("not checked").join(", ") || "none"}; no result: ${by("unavailable").join(", ") || "none"}`,
+    `breaks: ${by("breaks").join(", ") || "none"}; holds: ${by("holds").join(", ") || "none"}; holds in initial states only: ${by("holds initially").join(", ") || "none"}; not checked: ${by("not checked").join(", ") || "none"}; no result: ${by("unavailable").join(", ") || "none"}`,
   );
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(fs.realpathSync(process.argv[1])).href) await main();
+if (process.argv[1] && import.meta.url === pathToFileURL(fs.realpathSync(process.argv[1])).href)
+  await main().catch((e) => {
+    console.error(e.message);
+    process.exit(2);
+  });

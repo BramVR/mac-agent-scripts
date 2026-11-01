@@ -149,3 +149,45 @@ test("a property counterexample is labelled as TLC's counterexample, not a short
   const { doc: invariant } = await page("TwoPhase");
   assert.match(invariant, /Shortest path in TLC&#39;s state graph: 5 steps\./);
 });
+
+test("a step label with a colon keeps its colon when the chart is flat", () => {
+  const r = model(load(fixture("R2Colon"))).rules.find((x) => x.name === "ReachesThree");
+  assert.equal(r.steps[1].step, "User: Up");
+  assert.equal(r.steps[1].state, "1");
+});
+
+test("a one-region view with a multiword name resolves to chart nodes", () => {
+  const r = model(load(fixture("R2Multiword"))).rules.find((x) => x.name === "ReachesThree");
+  assert.deepEqual(r.steps.map((s) => s.nodes), [["s0"], ["s1"], ["s2"], ["s1"]]);
+});
+
+test("NoDeadlock listed as an invariant is not a deadlock when deadlock checking is off", () => {
+  const m = model(load(fixture("R2Disabled"), fixture("R2Disabled/checked.cfg")));
+  assert.deepEqual(m.rules.find((r) => r.name === "NoDeadlock").steps.at(-1).notes, ["NoDeadlock breaks here."]);
+});
+
+test("nested config comments do not become rules", () => {
+  const m = model(load(fixture("R2Nested"), fixture("R2Nested/checked.cfg")));
+  assert.deepEqual(m.rules.filter((r) => r.status === "unavailable"), []);
+});
+
+test("summary chips count initial-state-only rules apart from rules that hold everywhere", async () => {
+  const { m, doc } = await page("Shadow");
+  assert.deepEqual(m.rules.map((r) => [r.name, r.status]), [["Shadow", "holds"], ["Shade", "holds initially"], ["Hold", "holds initially"]]);
+  assert.match(doc, /1 holds<\/span><span class="chip s-holds-initially">2 holds in initial states</);
+});
+
+test("a --config path that does not exist is an error, not a missing default", () => {
+  assert.throws(() => load(fixture("TwoPhase"), fixture("TwoPhase/missing.cfg")), /--config .*missing\.cfg does not exist/);
+});
+
+test("a self-loop whose own label contains ' or ' is highlighted", () => {
+  const r = model(load(fixture("OrLabel"))).rules.find((x) => x.name === "ReachesThree");
+  assert.deepEqual(r.steps[1].edges, ["edge1"]);
+  assert.doesNotMatch(r.steps[1].notes.join(" "), /draws no arrow/);
+});
+
+test("the initial-states caveat is kept when report.md ends with a Rules not checked section", () => {
+  const m = model(load(fixture("InitOnlyUnchecked")));
+  assert.equal(m.rules.find((r) => r.name === "Shade").status, "holds initially");
+});
