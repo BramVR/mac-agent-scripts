@@ -61,7 +61,7 @@ export function resolveState(chart, s) {
   if (!chart) return null;
   const find = (region, key) => chart.byKey.get(`${region ?? ""}\u0000${key}`);
   if (!chart.regions.length) {
-    const id = find(undefined, s) ?? (chart.prefix && s.startsWith(chart.prefix) && find(undefined, s.slice(chart.prefix.length)));
+    const id = chart.prefix ? s.startsWith(chart.prefix) && find(undefined, s.slice(chart.prefix.length)) : find(undefined, s);
     return id ? [id] : null;
   }
   const walk = (rest, i) => {
@@ -87,14 +87,20 @@ const splitList = (s) => s.split(/,\s*/).filter(Boolean);
 const INITIAL_ONLY = /^TLC checked (\S+) only in the initial states/;
 
 // A view with one region names it in report.md ("Current count 1"), but the
-// chart draws no region box. Learn that name once from a path's start state.
-export function learnPrefix(chart, start) {
-  if (!chart || chart.regions.length || resolveState(chart, start)) return;
-  for (let at = start.indexOf(" "); at >= 0; at = start.indexOf(" ", at + 1))
-    if (chart.byKey.has(`\u0000${start.slice(at + 1)}`)) {
-      chart.prefix = start.slice(0, at + 1);
-      return;
-    }
+// chart draws no region box. Pick the name that lets the most path lines end
+// in a chart state; a start label can also be a bare chart label by chance.
+export function learnPrefix(chart, lines) {
+  if (!chart || chart.regions.length || !lines.length) return;
+  const fits = (prefix, line) => {
+    const starts = [0];
+    for (let at = line.indexOf(": "); at >= 0; at = line.indexOf(": ", at + 1)) starts.push(at + 2);
+    return starts.some((i) => line.startsWith(prefix, i) && chart.byKey.has(`\u0000${line.slice(i + prefix.length)}`));
+  };
+  const candidates = [""];
+  for (let at = lines[0].indexOf(" "); at >= 0; at = lines[0].indexOf(" ", at + 1)) candidates.push(lines[0].slice(0, at + 1));
+  const score = (p) => lines.filter((l) => fits(p, l)).length;
+  const best = candidates.reduce((a, b) => (score(b) > score(a) ? b : a));
+  if (best) chart.prefix = best;
 }
 
 export function parseReport(text) {
@@ -128,7 +134,7 @@ export function parseReport(text) {
       report.notes.push(...lines.slice(1).filter((l) => !INITIAL_ONLY.test(l)));
     } else if (title === "Rules not checked") {
       for (const n of splitList(lines[0] ?? "")) add(n, "not checked");
-      const rest = lines.slice(1).join("\n");
+      const rest = lines.slice(1).filter((l) => !INITIAL_ONLY.test(l)).join("\n");
       report.notChecked = rest;
       const fence = rest.match(/TLC stopped with exit (\S+?)[ :][\s\S]*?```\n([\s\S]*?)```/);
       if (fence) report.stopped = { status: fence[1], message: fence[2].trim() };

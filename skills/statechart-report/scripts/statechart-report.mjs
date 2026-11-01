@@ -86,8 +86,8 @@ function transitions(chart, from, to, label) {
   // An arrow can start or end on a parent state that holds the leaf.
   const within = (end, id) => end === id || chart.nodes.get(id).parents.includes(end);
   const strip = (l) => l.replace(/ \[[^\]]*\]$/, "");
-  // Merged arrows join labels with " or ", but a label can also contain the phrase itself.
-  const named = (e) => strip(e.label) === strip(label) || strip(e.label).split(" or ").includes(strip(label));
+  // Merged arrows join labels with " or ", and a label can contain the phrase itself, so match whole segments.
+  const named = (e) => ` or ${strip(e.label)} or `.includes(` or ${strip(label)} or `);
   for (const [i, a] of from.entries()) {
     const b = to[i];
     if (a === b) continue;
@@ -104,10 +104,15 @@ function transitions(chart, from, to, label) {
 export function model({ report, chart, traces, specs, config }) {
   const known = new Set(report.rules.map((r) => r.name));
   // The statechart command names the deadlock rule CHECK_DEADLOCK when the spec already has a NoDeadlock rule.
-  // A NoDeadlock that the config lists, or that TLC reports as an invariant, is the user's own rule.
-  const userNoDeadlock = config?.rules.includes("NoDeadlock") || traces.get("tlc.out")?.rule === "NoDeadlock";
+  // NoDeadlock is the user's own rule when TLC reports it as an invariant, or when TLC reports no
+  // deadlock and the spec defines it or a config the user passed lists it. An assumed config is no evidence.
+  const tlc = [...traces.values()];
+  const userNoDeadlock =
+    tlc.some((t) => t.rule === "NoDeadlock") ||
+    (!tlc.some((t) => t.deadlock) &&
+      Boolean(definition(specs, "NoDeadlock") || (config && !config.assumed && config.rules.includes("NoDeadlock"))));
   const deadlockName = known.has("CHECK_DEADLOCK") || userNoDeadlock ? "CHECK_DEADLOCK" : "NoDeadlock";
-  for (const r of report.rules) if (r.raw?.length) learnPrefix(chart, r.raw[0]);
+  learnPrefix(chart, report.rules.flatMap((r) => r.raw ?? []));
   const rules = report.rules.map((r) => ({ ...r }));
   for (const name of config?.rules ?? [])
     if (!known.has(name)) rules.push({ name, status: "unavailable" });

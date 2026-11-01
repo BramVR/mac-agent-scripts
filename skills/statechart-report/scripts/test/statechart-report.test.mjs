@@ -191,3 +191,38 @@ test("the initial-states caveat is kept when report.md ends with a Rules not che
   const m = model(load(fixture("InitOnlyUnchecked")));
   assert.equal(m.rules.find((r) => r.name === "Shade").status, "holds initially");
 });
+
+test("a one-region name is learned from the whole path even when the start label collides with a chart label", () => {
+  const r = model(load(fixture("PrefixCollision"))).rules.find((x) => x.status === "breaks");
+  assert.deepEqual(r.steps.map((s) => s.nodes), [["s0"], ["s1"], ["s2"], ["s1"]]);
+  assert.deepEqual(r.steps.slice(1).map((s) => s.step), ["you advance: now", "you advance: now", "you advance: now"]);
+});
+
+test("a merged self-loop whose labels contain ' or ' still highlights for each label", () => {
+  const r = model(load(fixture("OrMergedLoop"))).rules.find((x) => x.status === "breaks");
+  assert.deepEqual(r.steps.slice(1).map((s) => s.edges), [["edge1"], ["edge1"]]);
+});
+
+test("TLC's deadlock report outweighs an assumed config that lists NoDeadlock", () => {
+  const input = load(fixture("DeadlockAssumed"));
+  input.config = { name: "Dl.cfg", text: "INVARIANT NoDeadlock", sections: {}, rules: ["NoDeadlock"], assumed: true };
+  const r = model(input).rules.find((x) => x.name === "NoDeadlock");
+  assert.equal(r.trace.file, "tlc.out");
+  assert.match(r.steps.at(-1).notes.join(" "), /No step leads out/);
+});
+
+test("a merged self-loop matches each label even when both labels contain ' or '", () => {
+  const r = model(load(fixture("OrMergedLoop2"))).rules.find((x) => x.name === "NotTwo");
+  assert.deepEqual(r.steps.slice(1).map((s) => s.edges), [["edge1"], ["edge1"]]);
+});
+
+test("a NoDeadlock the spec defines is the user's rule when TLC reports no deadlock", () => {
+  const input = load(fixture("UserNoDeadlockNoConfig"));
+  input.specs = new Map([["UserND.tla", "---- MODULE UserND ----\nVARIABLE x\nNoDeadlock == x < 2\n===="]]);
+  assert.deepEqual(model(input).rules.find((r) => r.name === "NoDeadlock").steps.at(-1).notes, ["NoDeadlock breaks here."]);
+});
+
+test("the initial-states caveat appears once, in its own rule's row", async () => {
+  const { doc } = await page("InitOnlyUnchecked");
+  assert.equal(doc.match(/TLC checked Shade only in the initial states/g).length, 1);
+});
