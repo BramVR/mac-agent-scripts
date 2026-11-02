@@ -1,0 +1,20 @@
+stateDiagram-v2
+  state "Legend" as legend {
+    lg0: Breaks NoDeadlock or NotThree
+    lg1: Breaks NotTwo in some cases
+    lg2: Path to the NoDeadlock or NotThree or NotTwo bug
+  }
+  class lg0 breaks
+  class lg1 mayBreak
+  class lg2 bugPath
+  s0: Low
+  s1: High
+  [*] --> s0
+  s0 --> s0: you nudge or poke or you add one or more
+  s0 --> s1: you hop or you add one or more
+  classDef breaks fill:#ffecee,stroke:#e72e3b,stroke-width:2.5px,color:#cd2834
+  classDef mayBreak fill:#fff3e6,stroke:#e8730c,stroke-width:2.5px,color:#b85a06
+  class s0 mayBreak
+  class s0 bugPath
+  class s1 breaks
+  class s1 bugPath

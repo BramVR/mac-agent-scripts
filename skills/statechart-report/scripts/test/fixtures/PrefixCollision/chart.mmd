@@ -1,0 +1,17 @@
+stateDiagram-v2
+  state "Legend" as legend {
+    lg0: Path to the ReachesThree bug
+    lg1: Repeats forever, so ReachesThree breaks
+  }
+  class lg0 bugPath
+  class lg1 repeats
+  s0: Ready
+  s1: Count Ready
+  s2: Done
+  [*] --> s0
+  s0 --> s1: you advance: now
+  s1 --> s2: you advance: now
+  s2 --> s1: you advance: now
+  class s0 bugPath
+  class s1 repeats
+  class s2 repeats

@@ -1,0 +1,38 @@
+stateDiagram-v2
+  state "Legend" as legend {
+    lg0: Breaks NoResetEmail
+    lg1: Path to the NoResetEmail bug
+  }
+  class lg0 breaks
+  class lg1 bugPath
+  s0: Signed out
+  state "Trying to sign in" as s1 {
+    s2: Checking first try
+    s3: Wrong password, 2 tries left
+    s4: Checking second try
+    s5: Wrong password, 1 try left
+    s6: Checking last try
+  }
+  s7: Reset email sent
+  s8: Signed in
+  s9: Locked out
+  [*] --> s0
+  s0 --> s2: YouSubmitAPassword
+  s2 --> s8: ThePasswordIsRight
+  s2 --> s3: ThePasswordIsWrong
+  s7 --> s0: YouSetANewPassword
+  s8 --> s0: YouSignOut
+  s3 --> s4: YouSubmitAPassword
+  s4 --> s8: ThePasswordIsRight
+  s4 --> s5: ThePasswordIsWrong
+  s5 --> s6: YouSubmitAPassword
+  s6 --> s8: ThePasswordIsRight
+  s6 --> s9: ThePasswordIsWrong
+  s9 --> s0: S15MinutesPass
+  s9 --> s7: YouTapForgotPassword
+  s1 --> s7: YouTapForgotPassword
+  classDef breaks fill:#ffecee,stroke:#e72e3b,stroke-width:2.5px,color:#cd2834
+  class s0 bugPath
+  class s2 bugPath
+  class s7 breaks
+  class s7 bugPath

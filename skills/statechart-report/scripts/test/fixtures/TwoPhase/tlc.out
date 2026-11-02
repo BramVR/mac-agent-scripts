@@ -1,0 +1,52 @@
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Warning: Please run the Java VM which executes TLC with a throughput optimized garbage collector by passing the "-XX:+UseParallelGC" property.
+(Use the -nowarning option to disable this warning.)
+Running breadth-first search Model-Checking with fp 0 and seed -489604121870210736 with 1 worker on 18 cores with 12288MB heap and 64MB offheap memory [pid] (host).
+Parsing file /spec-not-copied/TwoPhase.tla
+Semantic processing of module TwoPhase
+Starting... (2026-11-01 11:06:41)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-01 11:06:41.
+Error: Invariant TCConsistent is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ msgs = {}
+/\ rmState = (r1 :> "working" @@ r2 :> "working")
+/\ tmState = "init"
+/\ tmPrepared = {}
+
+State 2: <RMPrepare line 43, col 3 to line 46, col 38 of module TwoPhase>
+/\ msgs = {[type |-> "Prepared", rm |-> r1]}
+/\ rmState = (r1 :> "prepared" @@ r2 :> "working")
+/\ tmState = "init"
+/\ tmPrepared = {}
+
+State 3: <TMRcvPrepared line 24, col 3 to line 27, col 41 of module TwoPhase>
+/\ msgs = {[type |-> "Prepared", rm |-> r1]}
+/\ rmState = (r1 :> "prepared" @@ r2 :> "working")
+/\ tmState = "init"
+/\ tmPrepared = {r1}
+
+State 4: <TMCommit line 30, col 3 to line 34, col 38 of module TwoPhase>
+/\ msgs = {[type |-> "Commit"], [type |-> "Prepared", rm |-> r1]}
+/\ rmState = (r1 :> "prepared" @@ r2 :> "working")
+/\ tmState = "done"
+/\ tmPrepared = {r1}
+
+State 5: <RMRcvCommitMsg line 54, col 3 to line 56, col 44 of module TwoPhase>
+/\ msgs = {[type |-> "Commit"], [type |-> "Prepared", rm |-> r1]}
+/\ rmState = (r1 :> "committed" @@ r2 :> "working")
+/\ tmState = "done"
+/\ tmPrepared = {r1}
+
+State 6: <RMChooseToAbort line 49, col 3 to line 51, col 44 of module TwoPhase>
+/\ msgs = {[type |-> "Commit"], [type |-> "Prepared", rm |-> r1]}
+/\ rmState = (r1 :> "committed" @@ r2 :> "aborted")
+/\ tmState = "done"
+/\ tmPrepared = {r1}
+
+117 states generated, 52 distinct states found, 16 states left on queue.
+The depth of the complete state graph search is 6.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 5 and the 95th percentile is 4).
+Finished in 00s at (2026-11-01 11:06:41)
+

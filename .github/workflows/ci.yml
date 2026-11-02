@@ -30,6 +30,9 @@ jobs:
       - name: Test skill mirror
         run: bash tests/sync-skills.sh
 
+      - name: Test statechart report
+        run: node --test skills/statechart-report/scripts/test/*.test.mjs
+
       - name: Install video transcript downloader dependencies
         working-directory: skills/video-transcript-downloader
         run: npm ci
