@@ -13,9 +13,9 @@ why investigators: codex/gpt-6.1-sol reasoningEffort=low
 why synthesizer: codex/gpt-6.1-sol reasoningEffort=high
 reflect tooling: codex/gpt-6.1-sol reasoningEffort=high
 reflect judgment, divergent, synthesizer: codex/gpt-6.1-sol reasoningEffort=high
-arena runners: codex/gpt-6.1-sol reasoningEffort=high, claudeAgent/claude-opus-5-5 effort=high, claudeAgent/claude-fable-5-1 effort=high
+arena runners: codex/gpt-6.1-sol reasoningEffort=high, claudeAgent/claude-opus-5-5 effort=high, claudeAgent/claude-fable-5-2 effort=high
 arena cross-judge pool: codex/gpt-6.1-sol reasoningEffort=high, claudeAgent/claude-opus-5-5 effort=high
 swarm workers: codex/gpt-6.1-sol reasoningEffort=low
-architect runners: codex/gpt-6.1-sol reasoningEffort=xhigh, claudeAgent/claude-opus-5-5 effort=high, claudeAgent/claude-fable-5-1 effort=high
+architect runners: codex/gpt-6.1-sol reasoningEffort=xhigh, claudeAgent/claude-opus-5-5 effort=high, claudeAgent/claude-fable-5-2 effort=high
 interrogate reviewers: codex/gpt-6.1-sol reasoningEffort=xhigh, claudeAgent/claude-opus-5-5 effort=xhigh
 session hook: on
